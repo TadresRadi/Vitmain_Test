@@ -1,0 +1,4 @@
+from .custom_user_serializer import CustomUserSerializer
+from .register_serializer import RegisterSerializer
+from .supervisor_create_serializer import SupervisorCreateSerializer
+from .my_token_obtain_pair_serializer import MyTokenObtainPairSerializer
