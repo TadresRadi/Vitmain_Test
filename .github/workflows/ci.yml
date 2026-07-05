@@ -36,6 +36,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: vitmain_test
+          ALLOWED_HOSTS: localhost,127.0.0.1,testserver
         options: >-
           --health-cmd "pg_isready -U postgres -d vitmain_test"
           --health-interval 10s
