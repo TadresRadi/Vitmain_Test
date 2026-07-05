@@ -7,7 +7,6 @@ import logging.config
 
 
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOG_DIR = BASE_DIR / "logs"
@@ -465,6 +464,53 @@ LOGGING['loggers']['django.db.backends'] = {
 
 
 print(LOGGING["handlers"]["file"]["filename"])
+# Structured JSON logging (optional)
+USE_JSON_LOGS = os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
+if USE_JSON_LOGS:
+    try:
+        from pythonjsonlogger import jsonlogger
+    except Exception:
+        # python-json-logger not installed; fall back to text logs
+        USE_JSON_LOGS = False
+
+LOGGING.setdefault('version', 1)
+LOGGING.setdefault('disable_existing_loggers', False)
+
+LOGGING['formatters'] = LOGGING.get('formatters', {})
+if USE_JSON_LOGS:
+    LOGGING['formatters']['json'] = {
+        '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+        'fmt': '%(levelname)s %(asctime)s %(module)s %(message)s'
+    }
+else:
+    LOGGING['formatters']['verbose'] = {
+        'format': '{levelname} {asctime} {module} {message}',
+        'style': '{',
+    }
+
+LOGGING['handlers'].setdefault('console', {
+    'class': 'logging.StreamHandler',
+    'formatter': 'json' if USE_JSON_LOGS else 'verbose',
+})
+
+# Add a dedicated file handler for slow queries / DB warnings
+LOGGING['handlers'].setdefault('db_file', {
+    'class': 'logging.handlers.RotatingFileHandler',
+    'filename': os.environ.get('DB_LOG_FILE', str(LOG_DIR / 'db.log')),
+    'maxBytes': 10 * 1024 * 1024,
+    'backupCount': 3,
+    'formatter': 'json' if USE_JSON_LOGS else 'verbose',
+})
+
+# Ensure DB logger logs warnings (slow queries)
+LOGGING['loggers'].setdefault('django.db.backends', {
+    'handlers': ['db_file', 'console'],
+    'level': 'WARNING',  # WARNING logs queries slower than DEBUG and all SQL errors
+    'propagate': False,
+})
+
+# Optional: detect per-query duration and log slow ones with warnings using Django DB backend instrumentation in production
+SLOW_QUERY_THRESHOLD_MS = int(os.environ.get("SLOW_QUERY_THRESHOLD_MS", "200"))
 logging.config.dictConfig(LOGGING)
 
 print("=" * 60)
