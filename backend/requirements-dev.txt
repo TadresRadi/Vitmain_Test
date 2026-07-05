@@ -1,0 +1,12 @@
+-r requirements.txt
+
+bandit==1.8.6
+cyclonedx-python-lib==9.1.0
+dparse==0.6.4
+license-expression==30.4.4
+packageurl-python==0.17.6
+pip-api==0.0.34
+pip-audit==2.9.0
+pip-requirements-parser==32.0.1
+safety==3.8.1
+safety-schemas==0.0.16
