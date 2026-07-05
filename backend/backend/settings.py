@@ -93,6 +93,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'core.middleware.slow_query.QueryTimingMiddleware',
     # CORS Middleware MUST be at the top to handle preflight requests
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sites.middleware.CurrentSiteMiddleware',
@@ -476,7 +477,9 @@ LOGGING['loggers']['django.db.backends'] = {
     'level': 'WARNING',
     'propagate': False,
 }
-
+SLOW_QUERY_THRESHOLD_MS = int(
+    os.environ.get("SLOW_QUERY_THRESHOLD_MS", "500")
+)
 
 print(LOGGING["handlers"]["file"]["filename"])
 # Structured JSON logging (optional)
