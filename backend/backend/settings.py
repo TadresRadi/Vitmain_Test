@@ -156,16 +156,27 @@ DATABASES = {
 # ============================================================================
 # Used for CSRF tokens, rate limiting, OAuth state, etc.
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'vitmain-cache',
-        'TIMEOUT': 3600,  # Default timeout: 1 hour
-        'OPTIONS': {
-            'MAX_ENTRIES': 10000
+REDIS_URL = os.environ.get("REDIS_URL")
+
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "TIMEOUT": 3600,
         }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "vitmain-cache",
+            "TIMEOUT": 3600,
+            "OPTIONS": {
+                "MAX_ENTRIES": 10000,
+            },
+        }
+    }
 
 # For production, use Redis:
 # CACHES = {
