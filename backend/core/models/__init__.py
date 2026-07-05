@@ -1,1 +1,1 @@
-from .user_activity_log import UserActivityLog
+from .user_activity_log import AuditLog

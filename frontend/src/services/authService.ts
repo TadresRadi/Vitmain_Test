@@ -1,4 +1,4 @@
-import api, { adminApi } from "@/lib/axios";
+import { api } from "@/lib/axios";
 import type { LoginResponse, ProfileResponse } from "@/types/api";
 
 export interface RegisterPayload {
@@ -44,11 +44,11 @@ export async function getProfile(): Promise<ProfileResponse> {
 }
 
 export async function adminLogin(email: string, password: string): Promise<AdminLoginResponse> {
-  const response = await adminApi.post<AdminLoginResponse>("/admin/auth/login", { email, password });
+  const response = await api.post<AdminLoginResponse>("/admin/auth/login", { email, password });
   return response.data;
 }
 
 export async function getAdminProfile(): Promise<AdminProfileResponse> {
-  const response = await adminApi.get<AdminProfileResponse>("/admin/auth/profile");
+  const response = await api.get<AdminProfileResponse>("/admin/auth/profile");
   return response.data;
 }

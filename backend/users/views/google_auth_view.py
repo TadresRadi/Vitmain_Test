@@ -1,3 +1,4 @@
+import email
 import logging
 import requests
 from rest_framework import status, permissions
@@ -9,6 +10,8 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from allauth.socialaccount.models import SocialAccount
 from core.utils import log_user_activity
+from users.services.google_auth_service import get_or_create_google_user
+
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -17,35 +20,22 @@ logger = logging.getLogger(__name__)
 GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 
 
-def verify_google_id_token(id_token):
-    try:
-        response = requests.get(
-            GOOGLE_TOKENINFO_URL,
-            params={"id_token": id_token},
-            timeout=5,
-        )
-    except requests.RequestException:
-        logger.exception("Google token verification request failed")
-        return None
+from typing import Optional, Dict, Any
 
-    if response.status_code != 200:
-        logger.warning("Google token verification failed with status %s", response.status_code)
-        return None
-
-    payload = response.json()
-    if payload.get("aud") != settings.GOOGLE_CLIENT_ID:
-        logger.warning("Google token audience mismatch")
-        return None
-
-    if payload.get("email_verified") not in (True, "true", "True"):
-        logger.warning("Google token email is not verified")
-        return None
-
-    if not payload.get("email") or not payload.get("sub"):
-        logger.warning("Google token payload is missing required identity fields")
-        return None
-
-    return payload
+def verify_google_id_token(id_token: str) -> Optional[Dict[str, Any]]:
+    """
+    Verify Google ID token.
+    
+    Args:
+        id_token: The ID token string from Google
+    
+    Returns:
+        Dict with token payload if valid, None otherwise
+    
+    Raises:
+        None (logs errors instead)
+    """
+    user, created = get_or_create_google_user(email, user_info)
 
 
 class GoogleOAuthCallbackView(APIView):

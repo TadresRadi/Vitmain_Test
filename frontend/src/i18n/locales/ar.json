@@ -134,7 +134,7 @@
   },
   "login": {
     "title": "مرحباً بعودتك",
-    "description": "حسابات تجريبية: paid@example.com / free@example.com (كلمة المرور: 123456)",
+    "description": "مرحباً مرة أخرى! يرجى إدخال بياناتك لتسجيل الدخول.",
     "email": "البريد الإلكتروني",
     "emailPlaceholder": "you@example.com",
     "password": "كلمة المرور",

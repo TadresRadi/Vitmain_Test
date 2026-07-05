@@ -1,11 +1,47 @@
-from .my_token_obtain_pair_view import MyTokenObtainPairView
-from .register_view import RegisterView
-from .user_profile_view import UserProfileView
+from .auth_views import (
+    MyTokenObtainPairView,
+    RegisterView,
+    GoogleOAuthCallbackView,
+    GoogleAuthConfigView,
+     LogoutView,
+)
 from .supervisor_create_view import SupervisorCreateView
-from .admin_user_list_view import AdminUserListView
-from .admin_user_role_view import AdminUserRoleView
-from .admin_user_activity_logs_view import AdminUserActivityLogsView
+from .profile_views import UserProfileView
 from .user_usage_view import UserUsageView
-from .admin_overview_view import AdminOverviewView
-from .admin_auth_view import AdminAuthLoginView, AdminAuthProfileView
-from .google_auth_view import GoogleOAuthCallbackView, GoogleAuthConfigView
+
+from .admin_views import (
+    AdminUserListView,
+    AdminUserRoleView,
+    AdminAuditLogsView,
+    AdminOverviewView,
+    AdminAuthLoginView,
+    AdminAuthProfileView,
+)
+from .password_views import (
+    PasswordChangeView,
+    PasswordResetRequestView,
+    PasswordResetView,
+    PasswordStrengthCheckView,
+)
+
+__all__ = [
+    "MyTokenObtainPairView",
+    "RegisterView",
+    "GoogleOAuthCallbackView",
+    "GoogleAuthConfigView",
+    "UserProfileView",
+    "UserUsageView",
+    "SupervisorCreateView",
+    "AdminUserListView",
+    "AdminUserRoleView",
+    "AdminAuditLogsView",
+    "AdminOverviewView",
+    "AdminAuthLoginView",
+    "AdminAuthProfileView",
+    'LogoutView',
+    
+    'PasswordChangeView',
+    'PasswordResetRequestView',
+    'PasswordResetView',
+    'PasswordStrengthCheckView',
+]

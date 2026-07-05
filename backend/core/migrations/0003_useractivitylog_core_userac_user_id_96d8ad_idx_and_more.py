@@ -11,11 +11,11 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddIndex(
-            model_name='useractivitylog',
+            model_name='AuditLog',
             index=models.Index(fields=['user', '-created_at'], name='core_userac_user_id_96d8ad_idx'),
         ),
         migrations.AddIndex(
-            model_name='useractivitylog',
+            model_name='AuditLog',
             index=models.Index(fields=['action', '-created_at'], name='core_userac_action_857cb9_idx'),
         ),
     ]

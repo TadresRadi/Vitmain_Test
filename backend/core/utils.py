@@ -1,6 +1,6 @@
 import logging
 
-from core.models import UserActivityLog
+from core.models import AuditLog
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ def log_user_activity(user, action, details=None):
         details = {}
 
     try:
-        UserActivityLog.objects.create(
+        AuditLog.objects.create(
             user=user,
             action=action,
             details=details,
