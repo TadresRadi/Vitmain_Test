@@ -56,6 +56,8 @@ jobs:
       SECRET_KEY: ci-secret-key
       DEBUG: 'false'
       ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      VODAFONE_WEBHOOK_SECRET_TOKEN: ci-test-token
+      VODAFONE_RECEIVER_NUMBER: "01000000000"
 
     steps:
       - uses: actions/checkout@v4

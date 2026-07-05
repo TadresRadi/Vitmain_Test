@@ -3,6 +3,8 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 import logging.config
+import sys
+
 
 
 
@@ -371,15 +373,17 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-VODAFONE_TESTING_PRICE = float(os.environ.get('VODAFONE_TESTING_PRICE', '5.00'))
-VODAFONE_RECEIVER_NUMBER = os.environ.get('VODAFONE_RECEIVER_NUMBER', '')
-VODAFONE_WEBHOOK_SECRET_TOKEN = os.environ.get('VODAFONE_WEBHOOK_SECRET_TOKEN', '')
+VODAFONE_TESTING_PRICE = float(os.environ.get("VODAFONE_TESTING_PRICE", "5.00"))
+VODAFONE_RECEIVER_NUMBER = os.environ.get("VODAFONE_RECEIVER_NUMBER", "")
+VODAFONE_WEBHOOK_SECRET_TOKEN = os.environ.get("VODAFONE_WEBHOOK_SECRET_TOKEN", "")
 
-# Validate critical settings
-if not VODAFONE_WEBHOOK_SECRET_TOKEN:
-    raise RuntimeError("VODAFONE_WEBHOOK_SECRET_TOKEN env var is required")
-if not VODAFONE_RECEIVER_NUMBER:
-    raise RuntimeError("VODAFONE_RECEIVER_NUMBER env var is required")
+# Validate only outside development/testing
+if not DEBUG and "test" not in sys.argv:
+    if not VODAFONE_WEBHOOK_SECRET_TOKEN:
+        raise RuntimeError("VODAFONE_WEBHOOK_SECRET_TOKEN env var is required")
+
+    if not VODAFONE_RECEIVER_NUMBER:
+        raise RuntimeError("VODAFONE_RECEIVER_NUMBER env var is required")
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
