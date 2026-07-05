@@ -2,11 +2,34 @@ import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import { useFeaturedProjects } from "@/hooks/queries/usePortfolio"
 
+const fallbackFeaturedProjects = [
+  {
+    id: "fallback-strategy",
+    title: "Brand Campaigns",
+    category: "Strategy",
+    description: "Integrated launches shaped for growth, clarity, and memorable creative presence.",
+    image_url: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=900",
+  },
+  {
+    id: "fallback-content",
+    title: "Content Systems",
+    category: "Creative",
+    description: "Visual and social campaigns built to keep brands consistent across every touchpoint.",
+    image_url: "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&q=80&w=900",
+  },
+  {
+    id: "fallback-growth",
+    title: "Growth Media",
+    category: "Performance",
+    description: "Campaign execution with reporting loops that turn audience insight into momentum.",
+    image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=900",
+  },
+]
+
 export function FeaturedProjectsSection() {
   const { t } = useTranslation()
-  const { data: featuredProjects = [], isLoading } = useFeaturedProjects()
-
-  if (isLoading || featuredProjects.length === 0) return null;
+  const { data: featuredProjects = [] } = useFeaturedProjects()
+  const visibleProjects = featuredProjects.length > 0 ? featuredProjects : fallbackFeaturedProjects
 
   return (
     <section className="relative py-32 px-4 border-t border-white/5 bg-black/20 dark:bg-black/40 backdrop-blur-sm transition-colors duration-1000">
@@ -22,7 +45,7 @@ export function FeaturedProjectsSection() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProjects.map((project: any, i: number) => (
+          {visibleProjects.map((project: any, i: number) => (
             <motion.div
               key={project.id}
               initial={{ opacity: 0, y: 50 }}

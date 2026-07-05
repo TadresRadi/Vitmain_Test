@@ -27,6 +27,7 @@ const AdminLogin = lazy(() => import("@/pages/AdminLogin"))
 const NewOnboarding = lazy(() => import("@/pages/NewOnboarding"))
 const TeslaClients = lazy(() => import("@/pages/TeslaClients"))
 const VodafoneCashPayment = lazy(() => import("@/pages/VodafoneCashPayment"))
+const GeneratedImages = lazy(() => import("@/pages/GeneratedImages"))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -152,6 +153,14 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <Subscription />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/generated-images"
+              element={
+                <ProtectedRoute>
+                  <GeneratedImages />
                 </ProtectedRoute>
               }
             />

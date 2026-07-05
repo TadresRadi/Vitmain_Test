@@ -3,18 +3,13 @@
  * Handles generation and storage of CSRF tokens for API requests
  */
 
-import axios, { AxiosInstance } from 'axios'
-
-const CSRF_TOKEN_HEADER = 'X-CSRF-Token'
+const CSRF_TOKEN_HEADER = 'X-CSRFToken'
 const CSRF_COOKIE_NAME = 'csrftoken'
 
 export class CSRFTokenService {
   private static instance: CSRFTokenService
-  private axiosInstance: AxiosInstance
 
-  private constructor() {
-    this.axiosInstance = axios.create()
-  }
+  private constructor() {}
 
   /**
    * Get singleton instance
@@ -46,24 +41,16 @@ export class CSRFTokenService {
    * @returns CSRF token
    */
   async getToken(): Promise<string> {
-    // First try to get from cookie
-    let token = this.getTokenFromCookie()
+    // Django handles CSRF automatically via cookies
+    // Just try to get from cookie
+    const token = this.getTokenFromCookie()
     if (token) {
       return token
     }
 
-    // If not in cookie, fetch from server
-    try {
-      const response = await this.axiosInstance.get('/api/auth/csrf-token/')
-      token = response.data.csrfToken
-      if (token) {
-        return token
-      }
-    } catch (error) {
-      console.warn('Failed to fetch CSRF token:', error)
-    }
-
-    throw new Error('CSRF token not available')
+    // If not in cookie, Django will set it on the first request
+    // Return empty string and let Django handle it
+    return ''
   }
 
   /**
@@ -75,7 +62,9 @@ export class CSRFTokenService {
   ): Promise<Record<string, string>> {
     try {
       const token = await this.getToken()
-      headers[CSRF_TOKEN_HEADER] = token
+      if (token) {
+        headers[CSRF_TOKEN_HEADER] = token
+      }
       return headers
     } catch (error) {
       console.warn('Could not add CSRF token:', error)

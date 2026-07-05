@@ -55,10 +55,6 @@ class GoogleAuthService:
             logger.error("GOOGLE_CLIENT_ID not configured")
             raise ServiceException("Google OAuth not configured on server")
         
-        if not settings.GOOGLE_CLIENT_SECRET:
-            logger.error("GOOGLE_CLIENT_SECRET not configured")
-            raise ServiceException("Google OAuth not configured on server")
-        
         # Verify token with Google
         try:
             response = requests.get(
@@ -144,8 +140,9 @@ class GoogleAuthService:
                 return None
             
             # Whitelist domains
+            hostname = (parsed.hostname or '').lower()
             domain_allowed = any(
-                domain in parsed.netloc 
+                hostname == domain or hostname.endswith(f'.{domain}')
                 for domain in self.ALLOWED_PICTURE_DOMAINS
             )
             if not domain_allowed:

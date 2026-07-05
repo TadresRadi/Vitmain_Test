@@ -151,7 +151,7 @@ export default function Work() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {projects.map((project, i) => (
+          {Array.isArray(projects) && projects.map((project, i) => (
             <motion.div
               key={project.id}
               initial={{ opacity: 0, scale: 0.95 }}

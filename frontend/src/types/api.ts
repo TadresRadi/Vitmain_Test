@@ -13,6 +13,9 @@ export interface ProfileResponse {
   role: string;
   is_active: boolean;
   language?: string;
+  onboarding_completed?: boolean;
+  auth_provider?: string;
+  profile_picture?: string;
 }
 
 export interface LoginUser {
@@ -20,11 +23,15 @@ export interface LoginUser {
   email: string;
   role: string;
   full_name: string | null;
+  is_active?: boolean;
   onboarding_completed: boolean;
+  auth_provider?: string;
+  profile_picture?: string;
 }
 
 export interface LoginResponse {
   access_token: string;
+  refresh_token: string;
   access: string;
   refresh: string;
   user: LoginUser;

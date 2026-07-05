@@ -1,12 +1,10 @@
 import { secureAxios } from './secure-axios'
 
+// Export the secure axios instance for all API calls
 export default secureAxios.getInstance()
-import axios from "axios";
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-});
+// Export the instance directly for convenience
+export const api = secureAxios.getInstance()
 
-export const adminApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-});
+// Admin API uses the same secure instance
+export const adminApi = secureAxios.getInstance()

@@ -62,7 +62,7 @@ class Command(BaseCommand):
         suspicious_ips = AuditLogQueries.get_suspicious_ips(hours)
         for ip_data in suspicious_ips[:10]:
             self.stdout.write(
-                f"  {ip_data['user_ip']}: {ip_data['count']} attempts"
+                f"  {ip_data['details__user_ip']}: {ip_data['count']} attempts"
             )
 
     def _user_report(self, email: str, hours: int):
@@ -74,5 +74,5 @@ class Command(BaseCommand):
         for log in timeline[:20]:
             self.stdout.write(
                 f"  {log.created_at.strftime('%H:%M:%S')} - "
-                f"{log.event_action} - {log.severity}"
+                f"{log.action} - {log.details.get('severity', 'info')}"
             )

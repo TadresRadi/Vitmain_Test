@@ -17,12 +17,15 @@ from core.audit_service import get_audit_logger
 
 from users.serializers import (
     GoogleAuthCallbackSerializer,
+    MyTokenObtainPairSerializer,
     UserDetailSerializer,
 )
 from users.services import GoogleAuthService
+from core.services import ServiceException
 from core.exceptions import AuthenticationError, ExternalServiceError, ValidationError
 from core.decorators import rate_limit
 from core.decorators import ratelimit
+from core.utils import log_user_activity
 
 logger = logging.getLogger(__name__)
 
@@ -30,20 +33,61 @@ logger = logging.getLogger(__name__)
 class MyTokenObtainPairView(TokenObtainPairView):
     """
     Login view - exchange email/password for JWT tokens.
-    
+
     POST /api/auth/login
     {
         "email": "user@example.com",
         "password": "password"
     }
     """
-    pass
+    serializer_class = MyTokenObtainPairSerializer
+
+    @rate_limit(endpoint='auth_login', rate='5/m')
+    def post(self, request, *args, **kwargs):
+        audit_logger = get_audit_logger()
+        user_ip = self._get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+        try:
+            response = super().post(request, *args, **kwargs)
+
+            # Log successful login
+            email = request.data.get('email', 'unknown')
+            audit_logger.log_authentication(
+                user_email=email,
+                success=True,
+                auth_method='local',
+                user_ip=user_ip,
+                user_agent=user_agent,
+            )
+
+            return response
+        except Exception as e:
+            # Log failed login
+            email = request.data.get('email', 'unknown')
+            audit_logger.log_authentication(
+                user_email=email,
+                success=False,
+                auth_method='local',
+                user_ip=user_ip,
+                user_agent=user_agent,
+                error_message=str(e),
+            )
+            raise
+
+    @staticmethod
+    def _get_client_ip(request) -> str:
+        """Get client IP."""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR', 'unknown')
 
 
 class RegisterView(APIView):
     """
     User registration view.
-    
+
     POST /api/auth/register
     {
         "email": "user@example.com",
@@ -52,11 +96,22 @@ class RegisterView(APIView):
     }
     """
     permission_classes = [permissions.AllowAny]
-    
+
+    @rate_limit(endpoint='auth_register', rate='3/h')
     def post(self, request):
-        """Register new user."""
-        # Validation would be done by serializer
-        pass
+        from users.serializers import RegisterSerializer
+        from core.utils import log_user_activity
+
+        serializer = RegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user = serializer.save()
+        log_user_activity(user, 'user_registered_local', {
+            'email': user.email,
+        })
+
+        return Response({'message': 'Registration successful'}, status=status.HTTP_201_CREATED)
 
 
 class GoogleOAuthCallbackView(APIView):
@@ -131,6 +186,9 @@ class GoogleOAuthCallbackView(APIView):
             raise
         except ValidationError:
             raise
+        except ServiceException as e:
+            logger.warning("Google OAuth service error: %s", str(e))
+            raise ExternalServiceError(str(e))
         except Exception as e:
             logger.exception("Unexpected error in Google OAuth callback")
             raise ExternalServiceError("Authentication failed")
@@ -156,10 +214,7 @@ class GoogleAuthConfigView(APIView):
         """Get Google OAuth configuration."""
         return Response({
             'google_client_id': settings.GOOGLE_CLIENT_ID,
-            'enabled': bool(
-                settings.GOOGLE_CLIENT_ID and 
-                settings.GOOGLE_CLIENT_SECRET
-            ),
+            'enabled': bool(settings.GOOGLE_CLIENT_ID),
         })
 
 class LogoutView(APIView):
@@ -219,102 +274,3 @@ class LogoutView(APIView):
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0].strip()
         return request.META.get('REMOTE_ADDR', 'unknown')
-        try:
-            from users.services.token_service import get_token_service
-            
-            token_service = get_token_service()
-            
-            # Get refresh token from request
-            refresh_token = request.data.get('refresh_token')
-            
-            # Blacklist access token from Authorization header
-            auth_header = request.META.get('HTTP_AUTHORIZATION', '').split()
-            if len(auth_header) == 2 and auth_header[0] == 'Bearer':
-                access_token = auth_header[1]
-                token_service.blacklist_token(access_token)
-            
-            # Blacklist refresh token
-            if refresh_token:
-                token_service.blacklist_token(refresh_token)
-            
-            return Response(
-                {'message': 'Successfully logged out'},
-                status=status.HTTP_200_OK
-            )
-        
-        except Exception as e:
-            logger.exception("Logout error")
-            raise ExternalServiceError("Logout failed")
-        
-class MyTokenObtainPairView(TokenObtainPairView):
-    """Login view with rate limiting."""
-    
-    @rate_limit(endpoint='auth_login', rate='5/m')
-    def post(self, request, *args, **kwargs):
-        audit_logger = get_audit_logger()
-        user_ip = self._get_client_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
-
-        try:
-            response = super().post(request, *args, **kwargs)
-            
-            # Log successful login
-            email = request.data.get('email', 'unknown')
-            audit_logger.log_authentication(
-                user_email=email,
-                success=True,
-                auth_method='local',
-                user_ip=user_ip,
-                user_agent=user_agent,
-            )
-            
-            return response
-        except Exception as e:
-            # Log failed login
-            email = request.data.get('email', 'unknown')
-            audit_logger.log_authentication(
-                user_email=email,
-                success=False,
-                auth_method='local',
-                user_ip=user_ip,
-                user_agent=user_agent,
-                error_message=str(e),
-            )
-            raise
-
-    @staticmethod
-    def _get_client_ip(request) -> str:
-        """Get client IP."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', 'unknown')
-
-class RegisterView(APIView):
-    """Registration view with rate limiting."""
-    permission_classes = [permissions.AllowAny]
-    
-    @rate_limit(endpoint='auth_register', rate='3/h')
-    def post(self, request):
-        # Registration logic
-        pass
-
-
-class GoogleOAuthCallbackView(APIView):
-    """Google OAuth callback with rate limiting."""
-    permission_classes = [permissions.AllowAny]
-    
-    @rate_limit(endpoint='google_callback', rate='10/m')
-    def post(self, request):
-        # OAuth logic
-        pass
-
-
-class LogoutView(APIView):
-    """Logout with rate limiting."""
-    permission_classes = [permissions.IsAuthenticated]
-    
-    @rate_limit(endpoint='auth_logout', rate='10/m')
-    def post(self, request):
-        # Logout logic
-        pass    

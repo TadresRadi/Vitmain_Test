@@ -2,7 +2,7 @@
 Helper queries for audit logs.
 For reporting and monitoring.
 """
-from django.db.models import Q, Count
+from django.db.models import Count
 from django.utils import timezone
 from datetime import timedelta
 from core.models import AuditLog
@@ -24,7 +24,7 @@ class AuditLogQueries:
         """
         since = timezone.now() - timedelta(hours=hours)
         return AuditLog.objects.filter(
-            event_action='login_failure',
+            action='login_failure',
             created_at__gte=since,
         ).count()
     
@@ -42,7 +42,7 @@ class AuditLogQueries:
         """
         since = timezone.now() - timedelta(days=days)
         return AuditLog.objects.filter(
-            user_email=user_email,
+            user__email=user_email,
             created_at__gte=since,
         ).order_by('-created_at')
     
@@ -62,11 +62,11 @@ class AuditLogQueries:
         return (
             AuditLog.objects
             .filter(
-                event_action='login_failure',
+                action='login_failure',
                 created_at__gte=since,
-                user_ip__isnull=False,
+                details__user_ip__isnull=False,
             )
-            .values('user_ip')
+            .values('details__user_ip')
             .annotate(count=Count('id'))
             .filter(count__gte=threshold)
             .order_by('-count')
@@ -85,7 +85,7 @@ class AuditLogQueries:
         """
         since = timezone.now() - timedelta(hours=hours)
         return AuditLog.objects.filter(
-            severity='critical',
+            details__severity='critical',
             created_at__gte=since,
         ).order_by('-created_at')
     
@@ -102,7 +102,7 @@ class AuditLogQueries:
         """
         since = timezone.now() - timedelta(hours=hours)
         return AuditLog.objects.filter(
-            event_action='permission_denied',
+            action='permission_denied',
             created_at__gte=since,
         ).order_by('-created_at')
     
@@ -119,6 +119,6 @@ class AuditLogQueries:
         """
         since = timezone.now() - timedelta(hours=hours)
         return AuditLog.objects.filter(
-            event_action='rate_limit_exceeded',
+            action='rate_limit_exceeded',
             created_at__gte=since,
-        ).order_by('-created_at')
+        ).select_related('user').order_by('-created_at')

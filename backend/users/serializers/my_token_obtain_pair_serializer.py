@@ -28,5 +28,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             'onboarding_completed': self.user.onboarding_completed
         }
         data['access_token'] = data['access']  # Frontend compatibility
+        data['refresh_token'] = data['refresh']  # Frontend compatibility
         log_user_activity(self.user, 'login', {'ip': self.context.get('request').META.get('REMOTE_ADDR')})
         return data

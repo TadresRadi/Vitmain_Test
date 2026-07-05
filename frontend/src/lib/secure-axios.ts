@@ -7,6 +7,26 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosRequestHeaders } from 'a
 import { tokenStorage } from './token-storage'
 import { csrfTokenService } from './csrf'
 
+function getApiBaseURL(): string {
+  const configuredUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  const trimmedUrl = configuredUrl.replace(/\/+$/, '')
+
+  if (trimmedUrl.startsWith('/')) {
+    return trimmedUrl.endsWith('/api') ? trimmedUrl : `${trimmedUrl}/api`
+  }
+
+  try {
+    const url = new URL(trimmedUrl)
+    if (url.pathname === '' || url.pathname === '/') {
+      url.pathname = '/api'
+      return url.toString().replace(/\/+$/, '')
+    }
+    return url.pathname.endsWith('/api') ? trimmedUrl : `${trimmedUrl}/api`
+  } catch {
+    return trimmedUrl
+  }
+}
+
 class SecureAxios {
   private static instance: SecureAxios
   private axiosInstance: AxiosInstance
@@ -30,7 +50,7 @@ class SecureAxios {
    */
   private createSecureInstance(): AxiosInstance {
     const instance = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+      baseURL: getApiBaseURL(),
       timeout: 30000,
       withCredentials: true, // Include cookies in requests
       headers: {
@@ -71,19 +91,24 @@ class SecureAxios {
 
         // Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
+          const refreshToken = tokenStorage.getRefreshToken()
+          if (!refreshToken || originalRequest.url?.includes('/auth/refresh')) {
+            return Promise.reject(error)
+          }
+
           originalRequest._retry = true
 
           try {
             // Try to refresh token
-            const response = await instance.post('/api/auth/token/refresh/', {
-              refresh: tokenStorage.getRefreshToken(),
+            const response = await instance.post('/auth/refresh', {
+              refresh: refreshToken,
             })
 
             if (response.data.access) {
               // Update token
               tokenStorage.setTokens(
                 response.data.access,
-                tokenStorage.getRefreshToken() || ''
+                refreshToken
               )
 
               // Retry original request

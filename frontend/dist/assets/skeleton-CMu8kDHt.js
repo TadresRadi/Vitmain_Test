@@ -1,0 +1,1 @@
+import{j as m}from"./react-vendor-C9tgi_-B.js";import{d as o}from"./index-C2GftTye.js";function a({className:r,...e}){return m.jsx("div",{className:o("animate-pulse rounded-md bg-primary/10",r),...e})}export{a as S};

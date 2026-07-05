@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { adminLogin as adminLoginRequest, getAdminProfile } from '@/services/authService'
+import { tokenStorage } from '@/lib/token-storage'
 
 interface AdminAuthState {
   isAdminAuthenticated: boolean
@@ -26,6 +27,9 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         try {
           const data = await adminLoginRequest(email, password)
           
+          // Store token in both admin store and regular token storage for axios interceptor
+          tokenStorage.setTokens(data.access_token, data.refresh_token)
+          
           set({
             isAdminAuthenticated: true,
             adminToken: data.access_token,
@@ -41,6 +45,8 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       },
 
       adminLogout: () => {
+        // Clear token from regular token storage as well
+        tokenStorage.clear()
         set({
           isAdminAuthenticated: false,
           adminToken: null,

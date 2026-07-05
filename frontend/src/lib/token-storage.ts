@@ -16,7 +16,6 @@ class TokenStorage {
 
   // Constants
   private readonly ACCESS_TOKEN_MEMORY_KEY = 'vitmain_access'
-  private readonly REFRESH_TOKEN_COOKIE = 'vitmain_refresh'
   private readonly TOKEN_EXPIRY_BUFFER = 60 * 1000 // 1 minute buffer
 
   private constructor() {

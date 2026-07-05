@@ -34,14 +34,6 @@ class PasswordChangeView(APIView):
         audit_logger = get_audit_logger()
         user_ip = self._get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
-        
-    @staticmethod
-    def _get_client_ip(request) -> str:
-        """Get client IP."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', 'unknown')
 
         try:
             # Validate request data
@@ -67,6 +59,15 @@ class PasswordChangeView(APIView):
             # Send confirmation email
             email_service = get_email_service()
             email_service.send_password_change_confirmation(request.user.email)
+
+            audit_logger.log_password_change(
+                user=request.user,
+                user_ip=user_ip,
+                user_agent=user_agent,
+            )
+            log_user_activity(request.user, 'password_changed', {
+                'timestamp': timezone.now().isoformat()
+            })
             
             return Response(
                 {'message': message},
@@ -80,6 +81,14 @@ class PasswordChangeView(APIView):
         except Exception as e:
             logger.exception("Password change error")
             raise ValidationError("Failed to change password")
+
+    @staticmethod
+    def _get_client_ip(request) -> str:
+        """Get client IP."""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR', 'unknown')
 
 
 class PasswordResetRequestView(APIView):

@@ -216,7 +216,7 @@ export const CSPHelper = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "img-src 'self' https: data:; " +
       "font-src 'self' https://fonts.gstatic.com; " +
-      "connect-src 'self' https://oauth2.googleapis.com https://tokeninfo.googleapis.com;"
+      "connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 ws://localhost:5173 ws://127.0.0.1:5173 https://accounts.google.com https://oauth2.googleapis.com https://tokeninfo.googleapis.com https://*.googleapis.com;"
     )
   },
 }

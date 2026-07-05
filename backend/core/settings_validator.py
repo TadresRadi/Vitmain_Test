@@ -159,7 +159,7 @@ class SettingsValidator:
                 "SECRET_KEY is shorter than recommended (min 50 characters)"
             )
         
-        if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        if not settings.GOOGLE_CLIENT_ID:
             cls.WARNINGS.append(
-                "Google OAuth credentials not fully configured"
+                "Google OAuth client ID is not configured"
             )

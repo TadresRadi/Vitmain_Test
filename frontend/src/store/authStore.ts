@@ -17,7 +17,7 @@ interface User {
   dob?: string | null;
   user_type?: string;
   role: string;
-  is_active: boolean;
+  is_active?: boolean;
   language?: string;
   onboarding_completed?: boolean;
   auth_provider?: string;
@@ -203,7 +203,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
 
     try {
-      await secureAxios.getInstance().post("/api/auth/logout", {
+      await secureAxios.getInstance().post("/auth/logout", {
         refresh_token: tokenStorage.getRefreshToken(),
       });
     } catch (error) {
@@ -256,7 +256,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       await secureAxios.getInstance().post(
-        "/api/auth/password/change",
+        "/auth/password/change",
         {
           old_password: oldPassword,
           new_password: newPassword,
@@ -290,7 +290,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       await secureAxios
         .getInstance()
-        .post("/api/auth/password/reset-request", {
+        .post("/auth/password/reset-request", {
           email,
         });
 
@@ -323,7 +323,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       await secureAxios.getInstance().post(
-        "/api/auth/password/reset",
+        "/auth/password/reset",
         {
           email,
           token,
@@ -357,7 +357,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const response = await secureAxios
         .getInstance()
-        .post("/api/auth/google/callback", {
+        .post("/auth/google/callback", {
           id_token: idToken,
         });
 

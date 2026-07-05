@@ -2,11 +2,19 @@ import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import { useBrands } from "@/hooks/queries/usePortfolio"
 
+const fallbackBrands = [
+  { id: "fallback-brand-1", name: "VITMAIN", logo_url: null },
+  { id: "fallback-brand-2", name: "NOVA", logo_url: null },
+  { id: "fallback-brand-3", name: "AXIS", logo_url: null },
+  { id: "fallback-brand-4", name: "ORBIT", logo_url: null },
+  { id: "fallback-brand-5", name: "PULSE", logo_url: null },
+  { id: "fallback-brand-6", name: "LUMEN", logo_url: null },
+]
+
 export function BrandsCarousel() {
   const { t } = useTranslation()
-  const { data: brands = [], isLoading } = useBrands()
-
-  if (isLoading || brands.length === 0) return null;
+  const { data: brands = [] } = useBrands()
+  const visibleBrands = brands.length > 0 ? brands : fallbackBrands
 
   return (
     <section className="py-24 border-y border-white/5 bg-white/5 transition-colors duration-1000 overflow-hidden">
@@ -27,20 +35,22 @@ export function BrandsCarousel() {
         <div className="pointer-events-none absolute right-0 top-0 h-full w-32 z-10 bg-gradient-to-l from-black/60 to-transparent" />
 
         <div className="flex animate-marquee w-max">
-          {brands.map((brand: any) => (
+          {visibleBrands.map((brand: any) => (
             <div key={brand.id} className="flex items-center justify-center h-16 w-32 group cursor-pointer shrink-0">
-              <img
-                src={brand.logo_url}
-                alt={brand.name}
-                className="max-h-12 max-w-28 object-contain opacity-40 group-hover:opacity-100 transition-opacity duration-300 filter brightness-0 invert"
-                onError={(e) => {
-                  const el = e.currentTarget
-                  el.style.display = 'none'
-                  const fb = el.nextElementSibling as HTMLElement
-                  if (fb) fb.style.display = 'block'
-                }}
-              />
-              <span className="hidden text-white/30 font-cinematic font-bold text-xl tracking-widest group-hover:text-white transition-colors duration-300">
+              {brand.logo_url && (
+                <img
+                  src={brand.logo_url}
+                  alt={brand.name}
+                  className="max-h-12 max-w-28 object-contain opacity-40 group-hover:opacity-100 transition-opacity duration-300 filter brightness-0 invert"
+                  onError={(e) => {
+                    const el = e.currentTarget
+                    el.style.display = 'none'
+                    const fb = el.nextElementSibling as HTMLElement
+                    if (fb) fb.style.display = 'block'
+                  }}
+                />
+              )}
+              <span className={`${brand.logo_url ? "hidden" : "block"} text-white/30 font-cinematic font-bold text-xl tracking-widest group-hover:text-white transition-colors duration-300`}>
                 {brand.name}
               </span>
             </div>

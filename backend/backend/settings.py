@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
     
     # Third-party apps
     'rest_framework',
@@ -91,11 +92,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    
+    # CORS Middleware MUST be at the top to handle preflight requests
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sites.middleware.CurrentSiteMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
         # NEW: Security middleware
     # 'core.https_middleware.HTTPSEnforcerMiddleware',
@@ -200,34 +201,33 @@ if DEBUG and not CORS_ALLOWED_ORIGINS:
 CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "false").lower() == "true"
 CORS_ALLOW_CREDENTIALS = os.environ.get("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
 
-# CSRF Configuration
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if origin.strip()
+# Additional CORS settings for preflight requests
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
-if DEBUG and not CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ]
-
-# Security Cookies
-SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", str(not DEBUG)).lower() == "true"
-CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", str(not DEBUG)).lower() == "true"
-
-# HTTPS/SSL Configuration
-SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "0" if DEBUG else "31536000"))
-SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get("SECURE_HSTS_INCLUDE_SUBDOMAINS", str(not DEBUG)).lower() == "true"
-SECURE_HSTS_PRELOAD = os.environ.get("SECURE_HSTS_PRELOAD", "false").lower() == "true"
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 if DEBUG:
-    CORS_ALLOWED_ORIGINS.extend([
-        "https://lilac-awkward-sprain.ngrok-free.dev",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ])
+    for origin in ["https://lilac-awkward-sprain.ngrok-free.dev"]:
+        if origin not in CORS_ALLOWED_ORIGINS:
+            CORS_ALLOWED_ORIGINS.append(origin)
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -284,7 +284,7 @@ SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Disabled for Google OAuth
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
 ACCOUNT_UNIQUE_EMAIL = True
 
 # Custom Adapters
@@ -313,29 +313,6 @@ SOCIALACCOUNT_PROVIDERS = {
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
-# CORS configuration
-# Default to safer CORS settings; allow all only when explicitly enabled.
-CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "false").lower() == "true"
-CORS_ALLOW_CREDENTIALS = os.environ.get("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
-if DEBUG and not CORS_ALLOWED_ORIGINS and not CORS_ALLOW_ALL_ORIGINS:
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ]
-
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if origin.strip()
-]
-
-SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", str(not DEBUG)).lower() == "true"
-CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", str(not DEBUG)).lower() == "true"
-SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "false").lower() == "true"
-SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "0" if DEBUG else "31536000"))
-SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get("SECURE_HSTS_INCLUDE_SUBDOMAINS", str(not DEBUG)).lower() == "true"
-SECURE_HSTS_PRELOAD = os.environ.get("SECURE_HSTS_PRELOAD", "false").lower() == "true"
-
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -352,9 +329,6 @@ USE_TZ = True
 
 # URL handling
 APPEND_SLASH = True
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
 
 # ============================================================================
 # SECURITY CONFIGURATION
@@ -396,30 +370,6 @@ if DEBUG and not CSRF_TRUSTED_ORIGINS:
 # Security Headers
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-
-# Email validator
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Development
-
-# Password validation
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {
-            'min_length': 8,
-        }
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 VODAFONE_TESTING_PRICE = float(os.environ.get('VODAFONE_TESTING_PRICE', '5.00'))
@@ -506,6 +456,14 @@ LOGGING = {
         },
     },
 }
+
+LOGGING['loggers']['django.db.backends'] = {
+    'handlers': ['file'],
+    'level': 'WARNING',
+    'propagate': False,
+}
+
+
 print(LOGGING["handlers"]["file"]["filename"])
 logging.config.dictConfig(LOGGING)
 
@@ -535,20 +493,3 @@ else:
 # Default from email
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@vitmain.com')
 SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'server@vitmain.com')
-
-# Email templates
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]

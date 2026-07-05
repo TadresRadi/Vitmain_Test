@@ -32,31 +32,19 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setLoading(true)
     try {
-      // Decode the JWT token to get user info
       const token = credentialResponse.credential
       if (!token) throw new Error('No credential returned')
-      const base64Url = token.split('.')[1]
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      )
-      const userInfo = JSON.parse(jsonPayload)
 
-      // Send to backend
       const response = await api.post('/auth/google/callback', {
         id_token: token,
-        user_info: userInfo
       })
 
-      // Store token and update auth state
-      localStorage.setItem('token', response.data.access_token)
-      useAuthStore.setState({
-        isAuthenticated: true,
-        onboarding_completed: response.data.user.onboarding_completed
-      })
+      const { setTokens, setUser } = useAuthStore.getState()
+      setTokens(
+        response.data.access_token,
+        response.data.refresh_token
+      )
+      setUser(response.data.user)
 
       toast({
         title: mode === 'login' ? t('login.welcomeBack') : t('register.successMsg'),
@@ -92,7 +80,7 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <div className="w-full">
+      <div className="flex justify-center w-full">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}
@@ -100,12 +88,7 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
           size="large"
           text={mode === 'login' ? 'signin_with' : 'signup_with'}
           shape="rectangular"
-          width="100%"
-          containerProps={{
-            style: {
-              width: '100%',
-            }
-          }}
+          width={400}
         />
         {loading && (
           <div className="flex justify-center mt-2">
