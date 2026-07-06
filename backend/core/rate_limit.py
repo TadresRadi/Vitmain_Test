@@ -5,7 +5,7 @@ Supports per-IP, per-user, and sliding window algorithms.
 import logging
 import hashlib
 from typing import Optional, Tuple
-from datetime import datetime, timedelta
+import time
 from django.core.cache import cache
 from rest_framework import status
 from rest_framework.response import Response
@@ -126,12 +126,18 @@ class RateLimiter:
             cache_key = f"{RateLimiter.PREFIX}{identifier}:{endpoint}"
             
             # Get current count and timestamp
-            data = cache.get(cache_key, {'count': 0, 'window_start': None})
-            
-            now = datetime.utcnow().timestamp()
-            window_start = data.get('window_start', now)
+            data = cache.get(cache_key)
+
+            now = time.time()
+
+            if not data or data.get("window_start") is None:
+                data = {
+                    "count": 0,
+                    "window_start": now,
+                }
+
+            window_start = data["window_start"]
             elapsed = now - window_start
-            
             # Reset window if expired
             if elapsed > window_seconds:
                 data = {'count': 1, 'window_start': now}

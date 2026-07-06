@@ -210,7 +210,11 @@ class APIKeyAuditLog(models.Model):
     
     # Request info
     ip_address = models.GenericIPAddressField(null=True, blank=True)
-    endpoint = models.CharField(max_length=255, blank=True)
+    endpoint = models.CharField(
+    max_length=255,
+    blank=True,
+    null=True,
+        )
     status_code = models.IntegerField(null=True, blank=True)
     
     # Metadata
