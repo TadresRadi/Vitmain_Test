@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { HeroSection } from "@/components/landing/HeroSection"
 import { FeaturedProjectsSection } from "@/components/landing/FeaturedProjectsSection"
-import { TeslaClientsSection } from "@/components/landing/TeslaClientsSection"
+import TeslaClientsSection from "@/components/landing/TeslaClientsSection"
 import { BrandsCarousel } from "@/components/landing/BrandsCarousel"
 
 export default function Landing() {

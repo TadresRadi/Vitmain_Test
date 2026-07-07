@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -34,32 +34,101 @@ export default function SupportSection({}: SupportSectionProps) {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [chatMessage, setChatMessage] = useState('')
 
+  const messagesRef = useRef<HTMLDivElement | null>(null)
+
+  // Normalize payloads that may be arrays or paginated { results: [...] }
+  const normalizeList = (payload: any) => {
+    if (Array.isArray(payload)) return payload
+    if (payload && Array.isArray(payload.results)) return payload.results
+    return []
+  }
+
+  // Fetch conversations and return the normalized list
   const fetchConversations = async () => {
     try {
       const response = await adminApi.get('/admin/support/chats')
-      setConversations(response.data)
+      const payload = response.data
+      const list = normalizeList(payload)
+      setConversations(list)
+      return list
     } catch (err) {
       console.error("Failed to fetch conversations:", err)
+      return [] as Conversation[]
     }
   }
 
   useEffect(() => {
+    // initial load
     fetchConversations()
   }, [])
 
+  // Scroll to bottom of messages container
+  const scrollToBottom = () => {
+    const el = messagesRef.current
+    if (!el) return
+    // Smooth scroll
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }
+
+  // When selected conversation changes, scroll to bottom
+  useEffect(() => {
+    // delay slightly to allow DOM update
+    const tId = setTimeout(scrollToBottom, 50)
+    return () => clearTimeout(tId)
+  }, [selectedConversation?.messages?.length, selectedConversation?.id])
+
+  // Send a reply as admin
   const handleSendMessage = async () => {
     if (!chatMessage.trim() || !selectedConversation) return
 
     try {
-      await adminApi.post('/admin/support/reply', {
-        conversation_id: selectedConversation.id,
+      const response = await adminApi.post('/admin/support/reply', {
+        chat_id: selectedConversation.id, // backend expects this
         content: chatMessage
       })
+
+      const newMessage = response.data // server-created message
+
+      // Clear input immediately
       setChatMessage('')
-      fetchConversations()
-    } catch (err) {
+
+      // Optimistically append to currently open conversation so admin sees the message instantly
+      setSelectedConversation((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          messages: [...(prev.messages || []), newMessage],
+        }
+      })
+
+      // Also update the conversations list (sidebar). We'll refresh conversations
+      // and keep the selected conversation expanded.
+      const updatedList = await fetchConversations()
+
+      // Make sure selectedConversation is the latest object from updatedList (preserves server state)
+      const refreshed = updatedList.find((c) => c.id === selectedConversation.id)
+      if (refreshed) {
+        setSelectedConversation(refreshed)
+      }
+
+      // After replacing with refreshed object, scroll to bottom
+      setTimeout(scrollToBottom, 50)
+    } catch (err: any) {
       console.error("Failed to send message:", err)
-      alert("Failed to send message")
+      const serverData = err?.response?.data
+      if (serverData) {
+        if (typeof serverData === 'object') {
+          const messages: string[] = []
+          for (const key of Object.keys(serverData)) {
+            messages.push(`${key}: ${JSON.stringify(serverData[key])}`)
+          }
+          alert(messages.join('\n'))
+        } else {
+          alert(String(serverData))
+        }
+      } else {
+        alert(t('adminDashboard.failedToSendMessage', 'Failed to send message'))
+      }
     }
   }
 
@@ -147,7 +216,7 @@ export default function SupportSection({}: SupportSectionProps) {
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-grow overflow-y-auto p-6 space-y-4">
+              <div ref={messagesRef} className="flex-grow overflow-y-auto p-6 space-y-4">
                 {selectedConversation.messages.map((msg) => {
                   const isAdminSender = msg.sender_email === 'support@vitmain.com' || msg.sender_name === 'Vitmain Support' || msg.sender === adminUser?.id
                   

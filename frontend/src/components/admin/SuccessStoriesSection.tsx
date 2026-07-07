@@ -40,10 +40,18 @@ export default function SuccessStoriesSection({}: SuccessStoriesSectionProps) {
   const [savingSettings, setSavingSettings] = useState(false)
   const [selectedVideoPreview, setSelectedVideoPreview] = useState<SuccessStory | null>(null)
 
+  // Normalize list payloads (array or paginated {results: [...]})
+  const normalizeList = (payload: any) => {
+    if (Array.isArray(payload)) return payload
+    if (payload && Array.isArray(payload.results)) return payload.results
+    return []
+  }
+
   const fetchSuccessStory = async () => {
     try {
       const response = await adminApi.get('/portfolio/success-stories/')
-      setSuccessStories(response.data)
+      const list = normalizeList(response.data)
+      setSuccessStories(list)
     } catch (err) {
       console.error("Failed to fetch success stories:", err)
     }
@@ -52,11 +60,26 @@ export default function SuccessStoriesSection({}: SuccessStoriesSectionProps) {
   const fetchStorySettings = async () => {
     try {
       const response = await adminApi.get('/portfolio/success-story-settings/')
-      if (response.data.length > 0) {
+      const payload = response.data
+
+      // payload may be:
+      // - an array (take first)
+      // - a paginated object with results (take first)
+      // - a single object (use it)
+      let settingsObj: any = null
+      if (Array.isArray(payload) && payload.length > 0) {
+        settingsObj = payload[0]
+      } else if (Array.isArray(payload?.results) && payload.results.length > 0) {
+        settingsObj = payload.results[0]
+      } else if (payload && typeof payload === 'object' && payload.mode !== undefined) {
+        settingsObj = payload
+      }
+
+      if (settingsObj) {
         setStorySettings({
-          mode: response.data[0].mode,
-          rotation_interval: response.data[0].rotation_interval,
-          featured_video_id: response.data[0].featured_video?.id || null
+          mode: settingsObj.mode,
+          rotation_interval: settingsObj.rotation_interval,
+          featured_video_id: settingsObj.featured_video?.id || null
         })
       }
     } catch (err) {
@@ -73,13 +96,15 @@ export default function SuccessStoriesSection({}: SuccessStoriesSectionProps) {
     setSavingSettings(true)
     try {
       const response = await adminApi.get('/portfolio/success-story-settings/')
+      const payload = response.data
+      const settingsList = normalizeList(payload)
       const settingsData = {
         mode: storySettings.mode,
         rotation_interval: storySettings.rotation_interval,
         featured_video_id: storySettings.featured_video_id
       }
-      if (response.data.length > 0) {
-        await adminApi.put(`/portfolio/success-story-settings/${response.data[0].id}/`, settingsData)
+      if (settingsList.length > 0) {
+        await adminApi.put(`/portfolio/success-story-settings/${settingsList[0].id}/`, settingsData)
       } else {
         await adminApi.post('/portfolio/success-story-settings/', settingsData)
       }
@@ -106,9 +131,8 @@ export default function SuccessStoriesSection({}: SuccessStoriesSectionProps) {
       }
 
       if (editingSuccessStory) {
-        await adminApi.put(`/portfolio/success-stories/${editingSuccessStory.id}/`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
+        // Do not set Content-Type manually; let the browser set the multipart boundary
+        await adminApi.put(`/portfolio/success-stories/${editingSuccessStory.id}/`, formData)
         alert(t('adminDashboard.successStoryUpdatedSuccess'))
       } else {
         if (successStories.length >= 12) {
@@ -116,11 +140,10 @@ export default function SuccessStoriesSection({}: SuccessStoriesSectionProps) {
           setSavingSuccessStory(false)
           return
         }
-        await adminApi.post('/portfolio/success-stories/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
+        await adminApi.post('/portfolio/success-stories/', formData)
         alert(t('adminDashboard.successStoryCreatedSuccess'))
       }
+
       setEditingSuccessStory(null)
       setSuccessStoryForm({
         content_en: '',
@@ -131,7 +154,23 @@ export default function SuccessStoriesSection({}: SuccessStoriesSectionProps) {
       fetchSuccessStory()
     } catch (err: any) {
       console.error("Failed to save success story", err)
-      alert(err.response?.data?.detail || t('adminDashboard.failedSaveSuccessStory'))
+
+      // Show validation errors returned from the backend (400 responses)
+      const serverData = err?.response?.data
+      if (serverData) {
+        if (typeof serverData === 'object') {
+          const messages: string[] = []
+          for (const key of Object.keys(serverData)) {
+            // serverData[key] may be an array of messages or string
+            messages.push(`${key}: ${JSON.stringify(serverData[key])}`)
+          }
+          alert(messages.join('\n'))
+        } else {
+          alert(JSON.stringify(serverData))
+        }
+      } else {
+        alert(t('adminDashboard.failedSaveSuccessStory'))
+      }
     } finally {
       setSavingSuccessStory(false)
     }
