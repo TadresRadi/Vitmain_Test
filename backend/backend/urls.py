@@ -4,8 +4,11 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.conf.urls.static import static
 from core.health import HealthCheckView, SecurityStatusView
+import os
+from core.metrics import inc_api_key_usage
 
 def welcome_api(request):
+    inc_api_key_usage("web", "/")
     return JsonResponse({
         "message": "Welcome to Vitmain Marketing API (Django)",
         "version": "1.0.0",
@@ -13,6 +16,7 @@ def welcome_api(request):
     })
 
 urlpatterns = [
+    
     # Welcome & Admin
     path('', welcome_api, name='welcome_api'),
     path('admin/', admin.site.urls),
@@ -29,8 +33,14 @@ urlpatterns = [
     path('api/', include('support.urls')),
     path('api/portfolio/', include('portfolio.urls')),
     path('api/payments/', include('payments.urls', namespace='payments')),
-      path('api/', include('core.urls')),
+    path('api/', include('core.urls')),
+    path("", include("django_prometheus.urls")),
 ]
+
+if os.environ.get("ENABLE_PROMETHEUS", "false").lower() == "true":
+    urlpatterns += [
+        path("", include("django_prometheus.urls")),
+    ]
 
 # Serve media files in development
 if settings.DEBUG:
