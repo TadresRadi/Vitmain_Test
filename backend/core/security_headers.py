@@ -1,75 +1,12 @@
-"""
-Security headers middleware.
-Adds HTTP security headers to all responses.
-"""
-import logging
+from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
-
-logger = logging.getLogger(__name__)
-
-
-class SecurityHeadersMiddleware(MiddlewareMixin):
-    """
-    Add security-related HTTP headers to responses.
-    
-    Headers added:
-    - Strict-Transport-Security (HSTS)
-    - X-Content-Type-Options
-    - X-Frame-Options
-    - X-XSS-Protection
-    - Referrer-Policy
-    - Content-Security-Policy
-    - Permissions-Policy
-    """
-    
-    def process_response(self, request, response):
-        """Add security headers to response."""
-        
-        # Strict-Transport-Security (HSTS)
-        # Forces HTTPS for 1 year, including subdomains
-        response['Strict-Transport-Security'] = (
-            'max-age=31536000; includeSubDomains; preload'
-        )
-        
-        # X-Content-Type-Options
-        # Prevents MIME type sniffing attacks
-        response['X-Content-Type-Options'] = 'nosniff'
-        
-        # X-Frame-Options
-        # Prevents clickjacking attacks
-        # DENY: Page cannot be displayed in a frame
-        response['X-Frame-Options'] = 'DENY'
-        
-        # X-XSS-Protection
-        # Enables browser XSS protection (older browsers)
-        response['X-XSS-Protection'] = '1; mode=block'
-        
-        # Referrer-Policy
-        # Controls how much referrer info is shared
-        response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-        
-        # Permissions-Policy (formerly Feature-Policy)
-        # Controls which browser features can be used
-        response['Permissions-Policy'] = (
-            'accelerometer=(), '
-            'camera=(), '
-            'geolocation=(), '
-            'gyroscope=(), '
-            'magnetometer=(), '
-            'microphone=(), '
-            'payment=(), '
-            'usb=()'
-        )
-        
-        return response
-
 
 class CSPHeaderMiddleware(MiddlewareMixin):
     """
     Content-Security-Policy header middleware.
     Prevents XSS and injection attacks.
     """
-    
+
     # CSP directives
     CSP_DIRECTIVES = {
         'default-src': ["'self'"],
@@ -112,25 +49,38 @@ class CSPHeaderMiddleware(MiddlewareMixin):
         'frame-ancestors': ["'none'"],
         'upgrade-insecure-requests': [],
     }
-    
+
     def process_response(self, request, response):
         """Add Content-Security-Policy header."""
-        
+
+        # Copy directives so we can mutate per-request
+        directives = {k: list(v) for k, v in self.CSP_DIRECTIVES.items()}
+
+        # If in DEBUG (development), allow the backend origin (where media is served)
+        # so frontend (served on a different origin) can load media from this backend.
+        if settings.DEBUG:
+            try:
+                backend_origin = f"{request.scheme}://{request.get_host()}"
+                if backend_origin not in directives['img-src']:
+                    directives['img-src'].append(backend_origin)
+            except Exception:
+                # If anything goes wrong, do not break response generation
+                pass
+
         # Build CSP header value
         csp_parts = []
-        for directive, sources in self.CSP_DIRECTIVES.items():
+        for directive, sources in directives.items():
             if sources:
                 csp_parts.append(f"{directive} {' '.join(sources)}")
             else:
                 csp_parts.append(directive)
-        
+
         csp_header = '; '.join(csp_parts)
-        
-        # Add CSP header
-        # Use Report-Only for development, enforcement in production
-        if request.META.get('DEBUG'):
+
+        # Use Report-Only in DEBUG so you can iterate safely; enforce in production.
+        if settings.DEBUG:
             response['Content-Security-Policy-Report-Only'] = csp_header
         else:
             response['Content-Security-Policy'] = csp_header
-        
+
         return response

@@ -72,6 +72,32 @@ export const useAdminAuthStore = create<AdminAuthState>()(
     }),
     {
       name: 'admin-auth-storage',
+      // Hydrate tokenStorage from persisted admin state after rehydration.
+      // This ensures the axios interceptors will attach Authorization headers
+      // on page load without requiring a manual console injection.
+      onRehydrateStorage: () => (persistedState) => {
+        try {
+          if (!persistedState) return
+          // persistedState shape may vary depending on persist implementation/version.
+          // Try a few potential locations for the adminToken.
+          const maybeToken =
+            (persistedState as any).adminToken ??
+            (persistedState as any).state?.adminToken ??
+            (persistedState as any).state?.state?.adminToken
+
+          if (maybeToken) {
+            // Refresh token is usually handled via httpOnly cookie by the server.
+            // Passing empty string for refreshToken here is acceptable for header hydration.
+            tokenStorage.setTokens(maybeToken, '')
+            // (Optional) mark admin as authenticated in store if not already set
+            // but persist will rehydrate the state itself; tokenStorage hydration is the main goal.
+          }
+        } catch (e) {
+          // Fail silently; don't block app boot on hydration errors.
+          // eslint-disable-next-line no-console
+          console.warn('Admin token hydration skipped:', e)
+        }
+      },
     }
   )
 )

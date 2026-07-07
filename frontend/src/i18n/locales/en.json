@@ -9,9 +9,14 @@
     "login": "Login",
     "getStarted": "Get Started",
     "chat": "Chat",
-    "adminDashboard": "Admin Dashboard"
+    "adminDashboard": "Admin Dashboard",
+    "teslaClients": "Tesla Clients"
   },
   "landing": {
+    "successStoryTitle": "Success Story",
+    "successStorySubtitle": "How we helped customers win",
+    "successStoryHeading": "Featured Success",
+    "successStoryBody": "We partnered with brand X to deliver measurable results. This page is a placeholder — replace with real success stories content.",
     "badge": "Powered Marketing",
     "heroTitle1": "Create Ads That",
     "heroTitle2": "Convert & Captivate",

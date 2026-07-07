@@ -40,9 +40,16 @@ def ratelimit(key='ip', rate='100/h'):
         def wrapper(self, request, *args, **kwargs):
             # Get identifier
             if key == 'ip':
-                identifier = self._get_client_ip(request)
+                try:
+                    identifier = self._get_client_ip(request)
+                except Exception:
+                    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+                    if x_forwarded_for:
+                        identifier = x_forwarded_for.split(',')[0].strip()
+                    else:
+                        identifier = request.META.get('REMOTE_ADDR', 'unknown')
             elif key == 'user':
-                identifier = str(request.user.id) if request.user.is_authenticated else 'anon'
+                 identifier = str(request.user.id) if getattr(request, "user", None) and request.user.is_authenticated else 'anon'
             else:
                 identifier = 'unknown'
             
@@ -71,10 +78,7 @@ def _get_client_ip(request):
     """Get client IP from request."""
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+        return x_forwarded_for.split(',')[0].strip()
 
 def rate_limit(endpoint: str, rate: str = None):
     """

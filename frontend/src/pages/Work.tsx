@@ -38,16 +38,42 @@ export default function Work() {
           api.get("/portfolio/success-stories/"),
           api.get("/portfolio/success-story-settings/")
         ])
-        setProjects(projectsRes.data)
-        // The API returns an array of success stories
-        setSuccessStories(successStoryRes.data)
-        // Get the first settings object or use defaults
-        if (settingsRes.data.length > 0) {
-          const settings = settingsRes.data[0]
+   const projectsPayload = projectsRes.data
+        const projectsList = Array.isArray(projectsPayload)
+          ? projectsPayload
+          : Array.isArray(projectsPayload?.results)
+            ? projectsPayload.results
+            : []
+
+        setProjects(projectsList)
+
+        // Normalize success stories response similarly
+        const storiesPayload = successStoryRes.data
+        const storiesList = Array.isArray(storiesPayload)
+          ? storiesPayload
+          : Array.isArray(storiesPayload?.results)
+            ? storiesPayload.results
+            : []
+
+        setSuccessStories(storiesList)
+
+        // Normalize settings response and pick the first settings object if present
+        const settingsPayload = settingsRes.data
+        let settingsObj = null
+        if (Array.isArray(settingsPayload) && settingsPayload.length > 0) {
+          settingsObj = settingsPayload[0]
+        } else if (Array.isArray(settingsPayload?.results) && settingsPayload.results.length > 0) {
+          settingsObj = settingsPayload.results[0]
+        } else if (settingsPayload && typeof settingsPayload === 'object') {
+          // Sometimes the API may return a single object (non-array)
+          settingsObj = settingsPayload[0] ?? settingsPayload
+        }
+
+        if (settingsObj) {
           setStorySettings({
-            mode: settings.mode,
-            interval: settings.rotation_interval,
-            featured_video_id: settings.featured_video || null
+            mode: settingsObj.mode,
+            interval: settingsObj.rotation_interval,
+            featured_video_id: settingsObj.featured_video || null
           })
           setDataLoaded(true)
         }
