@@ -1,0 +1,16 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'default'
+receivers:
+  - name: 'default'
+    # For testing, we send to a webhook (console printer). Replace with Slack/email integrations.
+    webhook_configs:
+      - url: 'http://localhost:5001/'  # example: a local webhook for testing
+
+  - name: 'slack'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/XXX/YYY/ZZZ'  # replace in prod via secret
+        channel: '#alerts'
+        send_resolved: true

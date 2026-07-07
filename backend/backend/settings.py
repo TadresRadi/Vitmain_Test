@@ -31,7 +31,25 @@ STABILITY_API_TOKEN = os.environ.get("STABILITY_API_TOKEN")
 # DeepAI token (used for AI-generated images)
 DEEPAI_API_TOKEN = os.environ.get("DEEPAI_API_TOKEN")
 
+import os
 
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.django import DjangoIntegration
+
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[DjangoIntegration()],
+            traces_sample_rate=float(
+                os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.0")
+            ),
+            send_default_pii=True,
+        )
+    except ImportError:
+        pass
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 FRONTEND_BASE_URL = os.environ.get('FRONTEND_BASE_URL', '')
@@ -52,6 +70,7 @@ if DEBUG:
         'localhost',
         '127.0.0.1:8000',
         'localhost:8000',
+        "host.docker.internal",
     ])
     # Only add ngrok if explicitly configured
     ngrok_url = os.environ.get('NGROK_URL')
@@ -72,7 +91,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
-    
+    "django_prometheus",
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
@@ -92,8 +111,20 @@ INSTALLED_APPS = [
     'payments.apps.PaymentsConfig',
 ]
 
+ENABLE_PROMETHEUS = (
+    os.environ.get("ENABLE_PROMETHEUS", "false").lower() == "true"
+)
+
+if ENABLE_PROMETHEUS:
+    INSTALLED_APPS = [
+        "django_prometheus",
+        *INSTALLED_APPS,
+    ]
+
 MIDDLEWARE = [
     'core.middleware.slow_query.QueryTimingMiddleware',
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    "core.middleware.slow_query.QueryTimingMiddleware",
     # CORS Middleware MUST be at the top to handle preflight requests
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sites.middleware.CurrentSiteMiddleware',
@@ -105,7 +136,6 @@ MIDDLEWARE = [
     # 'core.https_middleware.SecureProxyHeadersMiddleware',
     # 'core.security_headers.SecurityHeadersMiddleware',
     # 'core.security_headers.CSPHeaderMiddleware',
-
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -113,9 +143,18 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.validation_middleware.RequestValidationMiddleware',
     'core.audit_middleware.AuditLoggingMiddleware',
-]
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 
+]
+MIDDLEWARE.insert(0, 'core.middleware.slow_query.QueryTimingMiddleware')
 ROOT_URLCONF = 'backend.urls'
+
+if ENABLE_PROMETHEUS:
+    MIDDLEWARE = [
+        "django_prometheus.middleware.PrometheusBeforeMiddleware",
+        *MIDDLEWARE,
+        "django_prometheus.middleware.PrometheusAfterMiddleware",
+    ]
 
 TEMPLATES = [
     {
@@ -159,12 +198,15 @@ DATABASES = {
 
 REDIS_URL = os.environ.get("REDIS_URL")
 
+
 if REDIS_URL:
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "BACKEND": "django_redis.cache.RedisCache",
             "LOCATION": REDIS_URL,
-            "TIMEOUT": 3600,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
         }
     }
 else:
@@ -173,24 +215,9 @@ else:
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
             "LOCATION": "vitmain-cache",
             "TIMEOUT": 3600,
-            "OPTIONS": {
-                "MAX_ENTRIES": 10000,
-            },
         }
     }
 
-# For production, use Redis:
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django_redis.cache.RedisCache',
-#         'LOCATION': 'redis://127.0.0.1:6379/1',
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#             'PARSER_KWARGS': {'encoding': 'utf8'},
-#             'POOL_KWARGS': {'max_connections': 50},
-#         }
-#     }
-# }
 
 # ============================================================================
 # CORS Configuration
@@ -477,6 +504,61 @@ LOGGING['loggers']['django.db.backends'] = {
     'level': 'WARNING',
     'propagate': False,
 }
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+USE_JSON_LOGS = (
+    os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
+)
+if ENABLE_PROMETHEUS:
+    # put django_prometheus first
+    INSTALLED_APPS = ['django_prometheus'] + INSTALLED_APPS
+    MIDDLEWARE = ['django_prometheus.middleware.PrometheusBeforeMiddleware'] + MIDDLEWARE + ['django_prometheus.middleware.PrometheusAfterMiddleware']
+
+# 4) Logging additions (append to your LOGGING dict)
+USE_JSON_LOGS = os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
+if USE_JSON_LOGS:
+    try:
+        from pythonjsonlogger import jsonlogger
+    except Exception:
+        USE_JSON_LOGS = False
+
+# ensure keys exist before setting entries
+LOGGING.setdefault("formatters", {})
+LOGGING.setdefault("handlers", {})
+LOGGING.setdefault("loggers", {})
+
+if USE_JSON_LOGS:
+    LOGGING["formatters"]["json"] = {
+        "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+        "fmt": "%(levelname)s %(asctime)s %(module)s %(message)s",
+    }
+else:
+    LOGGING["formatters"]["verbose"] = {
+        "format": "{levelname} {asctime} {module} {message}",
+        "style": "{",
+    }
+
+# console handler
+LOGGING["handlers"].setdefault("console", {
+    "class": "logging.StreamHandler",
+    "formatter": "json" if USE_JSON_LOGS else "verbose",
+})
+
+# db_file handler for slow queries
+LOGGING["handlers"].setdefault("db_file", {
+    "class": "logging.handlers.RotatingFileHandler",
+    "filename": os.environ.get("DB_LOG_FILE", str(LOG_DIR / "db.log")),
+    "maxBytes": 10 * 1024 * 1024,
+    "backupCount": 3,
+    "formatter": "json" if USE_JSON_LOGS else "verbose",
+})
+
+# set django.db.backends logger to capture warnings/slow queries
+LOGGING["loggers"].setdefault("django.db.backends", {
+    "handlers": ["db_file", "console"],
+    "level": "WARNING",
+    "propagate": False,
+})
+
 SLOW_QUERY_THRESHOLD_MS = int(
     os.environ.get("SLOW_QUERY_THRESHOLD_MS", "500")
 )
