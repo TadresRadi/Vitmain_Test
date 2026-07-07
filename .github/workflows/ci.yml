@@ -72,8 +72,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install pytest pytest-django
-      - name: Run migrations & tests
+      - name: Run migrations
         working-directory: backend
         run: |
           python manage.py migrate --noinput
+      - name: Django deploy check
+        working-directory: backend
+        run: |
+          python manage.py check --deploy
+
+      - name: Run tests
+        working-directory: backend
+        run: |
           python manage.py test --verbosity=2
