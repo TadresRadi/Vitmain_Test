@@ -27,7 +27,7 @@ class GoogleAuthService:
     GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
     TIMEOUT = 10
     MAX_RETRIES = 2
-    ALLOWED_PICTURE_DOMAINS = ('google', 'googleapis', 'gstatic', 'lh3', 'lh4', 'lh5', 'lh6')
+    ALLOWED_PICTURE_DOMAINS = ('lh3.googleusercontent.com', 'lh4.googleusercontent.com', 'lh5.googleusercontent.com', 'lh6.googleusercontent.com', 'google', 'googleapis', 'gstatic')
     
     def __init__(self):
         self.user_service = get_user_service()

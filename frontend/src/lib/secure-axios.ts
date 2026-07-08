@@ -8,23 +8,8 @@ import { tokenStorage } from './token-storage'
 import { csrfTokenService } from './csrf'
 
 function getApiBaseURL(): string {
-  const configuredUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-  const trimmedUrl = configuredUrl.replace(/\/+$/, '')
-
-  if (trimmedUrl.startsWith('/')) {
-    return trimmedUrl.endsWith('/api') ? trimmedUrl : `${trimmedUrl}/api`
-  }
-
-  try {
-    const url = new URL(trimmedUrl)
-    if (url.pathname === '' || url.pathname === '/') {
-      url.pathname = '/api'
-      return url.toString().replace(/\/+$/, '')
-    }
-    return url.pathname.endsWith('/api') ? trimmedUrl : `${trimmedUrl}/api`
-  } catch {
-    return trimmedUrl
-  }
+  const configuredUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+  return configuredUrl.replace(/\/+$/, '') // Remove trailing slashes only
 }
 
 class SecureAxios {

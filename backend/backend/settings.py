@@ -253,6 +253,7 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -639,3 +640,4 @@ else:
 # Default from email
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@vitmain.com')
 SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'server@vitmain.com')
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"

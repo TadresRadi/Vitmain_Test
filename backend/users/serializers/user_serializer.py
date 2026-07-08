@@ -94,17 +94,22 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class GoogleAuthCallbackSerializer(serializers.Serializer):
     """Serializer for Google OAuth callback with validation."""
     
-    id_token = serializers.CharField(required=False, allow_blank=True)
-    access_token = serializers.CharField(required=False, allow_blank=True)
+    id_token = serializers.CharField(required=False, allow_blank=False, trim_whitespace=True)
+    access_token = serializers.CharField(required=False, allow_blank=False, trim_whitespace=True)
     state = serializers.CharField(required=False, allow_blank=True)
     
     def validate(self, data):
         """Validate callback data."""
         id_token = data.get('id_token') or data.get('access_token')
+        
         if not id_token:
             raise serializers.ValidationError(
                 "Either 'id_token' or 'access_token' is required"
             )
+        
+        # Token should be minimum 100 chars (Google tokens are ~2000 chars)
+        if len(id_token) < 100:
+            raise serializers.ValidationError("Token too short - must be valid Google token")
         
         if len(id_token) > 10000:
             raise serializers.ValidationError("Token too long")

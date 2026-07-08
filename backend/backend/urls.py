@@ -25,8 +25,10 @@ urlpatterns = [
     path('health/', HealthCheckView.as_view(), name='health_check'),
     path('security-status/', SecurityStatusView.as_view(), name='security_status'),
     
-    # API endpoints
+    # API endpoints - USER URLS FIRST (MOST IMPORTANT!)
     path('api/', include('users.urls')),
+    
+    # Other API endpoints
     path('api/', include('subscriptions.urls')),
     path('api/', include('onboarding.urls')),
     path('api/', include('chat.urls')),

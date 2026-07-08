@@ -31,7 +31,7 @@ urlpatterns = [
     path('auth/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/register', RegisterView.as_view(), name='auth_register'),
     
-    # Google OAuth
+    # Google OAuth - REMOVED 'api/' prefix
     path('auth/google/callback', GoogleOAuthCallbackView.as_view(), name='google_oauth_callback'),
     path('auth/google/config', GoogleAuthConfigView.as_view(), name='google_oauth_config'),
     
@@ -53,7 +53,6 @@ urlpatterns = [
     path('auth/logout', LogoutView.as_view(), name='logout'),
 
     # Password Management
-
     path('auth/password/change', PasswordChangeView.as_view(), name='password_change'),
     path('auth/password/reset-request', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('auth/password/reset', PasswordResetView.as_view(), name='password_reset'),

@@ -118,7 +118,7 @@ class GoogleOAuthCallbackView(APIView):
     """
     Handle Google OAuth callback and return JWT tokens.
     
-    POST /api/auth/google/callback
+    POST /auth/google/callback
     {
         "id_token": "google_id_token_string"
     }
@@ -137,14 +137,17 @@ class GoogleOAuthCallbackView(APIView):
         """
         Authenticate user with Google OAuth token.
         """
-        # Validate request
-        serializer = GoogleAuthCallbackSerializer(data=request.data)
-        if not serializer.is_valid():
-            raise ValidationError(str(serializer.errors))
-        
-        token = serializer.validated_data['token']
-        
         try:
+            # Validate request
+            serializer = GoogleAuthCallbackSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(
+                    {'error': 'Invalid token format', 'detail': serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            token = serializer.validated_data['token']
+            
             # Initialize service
             google_auth_service = GoogleAuthService()
             
@@ -152,12 +155,18 @@ class GoogleOAuthCallbackView(APIView):
             user_info = google_auth_service.verify_id_token(token)
             if not user_info:
                 logger.warning("Invalid Google token provided")
-                raise AuthenticationError("Invalid or expired Google token")
+                return Response(
+                    {'error': 'Invalid or expired Google token'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
             
             email = user_info.get('email')
             if not email:
                 logger.error("Google token missing email after verification")
-                raise AuthenticationError("Invalid Google token")
+                return Response(
+                    {'error': 'Invalid Google token - missing email'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             # Authenticate or create user
             user, created = google_auth_service.authenticate_user(email, user_info)
@@ -170,6 +179,18 @@ class GoogleOAuthCallbackView(APIView):
             user.last_login = timezone.now()
             user.save(update_fields=['last_login'])
             
+            # Log successful authentication
+            audit_logger = get_audit_logger()
+            user_ip = self._get_client_ip(request)
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+            audit_logger.log_authentication(
+                user_email=email,
+                success=True,
+                auth_method='google',
+                user_ip=user_ip,
+                user_agent=user_agent,
+            )
+            
             # Serialize response
             user_serializer = UserDetailSerializer(user)
             response_data = {
@@ -180,18 +201,38 @@ class GoogleOAuthCallbackView(APIView):
             
             return Response(response_data, status=status.HTTP_200_OK)
         
-        except AuthenticationError:
-            raise
-        except ExternalServiceError:
-            raise
-        except ValidationError:
-            raise
-        except ServiceException as e:
-            logger.warning("Google OAuth service error: %s", str(e))
-            raise ExternalServiceError(str(e))
+        except AuthenticationError as e:
+            logger.warning(f"Authentication error: {str(e)}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except ExternalServiceError as e:
+            logger.error(f"External service error: {str(e)}")
+            return Response(
+                {'error': 'Authentication service unavailable'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        except ValidationError as e:
+            logger.warning(f"Validation error: {str(e)}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except Exception as e:
             logger.exception("Unexpected error in Google OAuth callback")
-            raise ExternalServiceError("Authentication failed")
+            return Response(
+                {'error': 'Authentication failed'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @staticmethod
+    def _get_client_ip(request) -> str:
+        """Get client IP."""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR', 'unknown')
 
 
 class GoogleAuthConfigView(APIView):
@@ -199,7 +240,7 @@ class GoogleAuthConfigView(APIView):
     Return Google OAuth configuration for frontend.
     Cached for 1 hour.
     
-    GET /api/auth/google/config
+    GET /auth/google/config
     
     Response:
     {

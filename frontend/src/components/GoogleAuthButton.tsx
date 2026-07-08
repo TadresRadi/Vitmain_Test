@@ -37,25 +37,15 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
 
 
   useEffect(() => {
-
-    api.get('/auth/google/config')
-
+    api.get('auth/google/config')  // ✅ Remove /api prefix
       .then(res => {
-
         if (res.data.enabled && res.data.google_client_id) {
-
           setGoogleClientId(res.data.google_client_id)
-
         }
-
       })
-
       .catch(err => {
-
         console.error('Failed to fetch Google config:', err)
-
       })
-
   }, [])
 
 
@@ -73,9 +63,7 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
 
 
 const response = await api.post('/auth/google/callback', {
-
   id_token: token,
-
 })
 
 
@@ -83,6 +71,7 @@ const response = await api.post('/auth/google/callback', {
 // If backend says signup is required, redirect to signup page
 
 if (response.data?.signup_required) {
+  
 
   const profile = response.data.profile || {}
 
