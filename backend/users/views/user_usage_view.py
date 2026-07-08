@@ -25,7 +25,9 @@ class UserUsageView(APIView):
             max_images = 0
 
         # Get total images generated for this user
-        total_images = GeneratedImage.objects.filter(user=request.user).count()
+        total_images = GeneratedImage.objects.filter(
+            post__session__user=request.user
+        ).count()
 
         # Get total amount paid by this user from completed payment orders
         from payments.models import PaymentOrder
