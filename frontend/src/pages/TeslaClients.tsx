@@ -1,13 +1,29 @@
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
+import api from "@/lib/axios"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
 import AnimatedBackground from "@/components/AnimatedBackground"
-import { useTeslaClientImages } from "@/hooks/queries/usePortfolio"
 
 export default function TeslaClients() {
   const { t } = useTranslation()
-  const { data: teslaClientImages = [], isLoading } = useTeslaClientImages()
+  const [teslaClientImages, setTeslaClientImages] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchTeslaClientImages = async () => {
+      try {
+        const response = await api.get("/portfolio/tesla-client-images/")
+        setTeslaClientImages(response.data)
+      } catch (error) {
+        console.error("Failed to fetch Tesla Client images:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchTeslaClientImages()
+  }, [])
 
   return (
     <div className="min-h-screen relative text-white bg-black/40 dark:bg-black/60 transition-colors duration-1000">
@@ -32,8 +48,8 @@ export default function TeslaClients() {
           </motion.div>
 
           {/* Grid Layout */}
-          {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="aspect-square bg-white/10 rounded-lg animate-pulse" />
               ))}
@@ -43,8 +59,8 @@ export default function TeslaClients() {
               <p className="text-white/60 text-lg">No Tesla clients available at this time.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {teslaClientImages.map((item: any, i: number) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {teslaClientImages.map((item, i) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, scale: 0.95 }}

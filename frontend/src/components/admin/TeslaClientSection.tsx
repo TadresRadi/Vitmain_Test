@@ -57,10 +57,14 @@ export default function TeslaClientSection() {
       }
 
       if (editingImage) {
-await adminApi.put(`/portfolio/tesla-client-images/${editingImage.id}/`, formData)
+        await adminApi.put(`/portfolio/tesla-client-images/${editingImage.id}/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         alert(t('adminDashboard.teslaClientUpdatedSuccess', 'Tesla Client image updated successfully.'))
       } else {
-await adminApi.post('/portfolio/tesla-client-images/', formData)
+        await adminApi.post('/portfolio/tesla-client-images/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         alert(t('adminDashboard.teslaClientCreatedSuccess', 'Tesla Client image added successfully.'))
       }
       setEditingImage(null)

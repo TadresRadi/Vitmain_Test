@@ -1,4 +1,3 @@
-// frontend/src/pages/Login.tsx
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
@@ -67,31 +66,13 @@ export default function Login() {
         description: t("login.loginSuccess"),
       })
 
-      // Fetch usage but don't block navigation if usage endpoint fails.
-      let usageData: UsageResponse | null = null
-      try {
-        const usageRes = await api.get<UsageResponse>("/users/usage")
-        usageData = usageRes.data
-      } catch (usageErr) {
-        // Log but continue. Backend might return 500 temporarily; allow login to proceed.
-        console.warn("Failed to fetch user usage; continuing with login fallback.", usageErr)
-        usageData = {
-          has_access: false,
-          plan_slug: null,
-          plan_name: null,
-          total_images: 0,
-          max_images: 0,
-          remaining_images: 0,
-          total_amount_paid: 0,
-        } as UsageResponse
-      }
+      const usageRes = await api.get<UsageResponse>("/users/usage")
 
-      // Decide navigation using available info. Preference: pro -> onboarding -> chat -> pricing
-      if (usageData.plan_slug === "pro") {
+      if (usageRes.data.plan_slug === "pro") {
         navigate("/support", { replace: true })
       } else if (!response.user.onboarding_completed) {
         navigate("/new-onboarding")
-      } else if (usageData.has_access) {
+      } else if (usageRes.data.has_access) {
         navigate("/chat", { replace: true })
       } else {
         navigate("/pricing", { replace: true })
@@ -111,27 +92,11 @@ export default function Login() {
   }
 
   const handleGoogleSuccess = async () => {
-    // Similar resilient usage fetch for Google login success
-    let usageData: UsageResponse | null = null
-    try {
-      const usageRes = await api.get<UsageResponse>("/users/usage")
-      usageData = usageRes.data
-    } catch (usageErr) {
-      console.warn("Failed to fetch user usage after Google login; continuing with fallback.", usageErr)
-      usageData = {
-        has_access: false,
-        plan_slug: null,
-        plan_name: null,
-        total_images: 0,
-        max_images: 0,
-        remaining_images: 0,
-        total_amount_paid: 0,
-      } as UsageResponse
-    }
+    const usageRes = await api.get<UsageResponse>("/users/usage")
 
-    if (usageData.plan_slug === "pro") {
+    if (usageRes.data.plan_slug === "pro") {
       navigate("/support", { replace: true })
-    } else if (usageData.has_access) {
+    } else if (usageRes.data.has_access) {
       navigate("/chat", { replace: true })
     } else {
       navigate("/pricing", { replace: true })

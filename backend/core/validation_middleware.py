@@ -18,18 +18,17 @@ class RequestValidationMiddleware(MiddlewareMixin):
     - Limits request size
     - Validates JSON format
     """
-
-    # Increase request size for development to allow media uploads (50 MB)
-    MAX_REQUEST_SIZE = 50 * 1024 * 1024  # 50MB
+    
+    MAX_REQUEST_SIZE = 1024 * 1024  # 1MB
     ALLOWED_CONTENT_TYPES = [
         'application/json',
         'application/x-www-form-urlencoded',
         'multipart/form-data',
     ]
-
+    
     def process_request(self, request):
         """Validate incoming request."""
-
+        
         # Check request method
         if request.method not in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']:
             logger.warning(f"Invalid HTTP method: {request.method}")
@@ -37,7 +36,7 @@ class RequestValidationMiddleware(MiddlewareMixin):
                 {'error': 'invalid_method', 'message': 'Invalid HTTP method'},
                 status=status.HTTP_405_METHOD_NOT_ALLOWED
             )
-
+        
         # Check content length for non-GET requests
         if request.method != 'GET':
             content_length = request.META.get('CONTENT_LENGTH', 0)
@@ -47,14 +46,13 @@ class RequestValidationMiddleware(MiddlewareMixin):
                     logger.warning(
                         f"Request too large: {content_length} > {self.MAX_REQUEST_SIZE}"
                     )
-                    # Use numeric 413 status code to avoid referencing unavailable constants
                     return JsonResponse(
                         {'error': 'request_too_large', 'message': 'Request body too large'},
-                        status=413
+                        status=status.HTTP_413_PAYLOAD_TOO_LARGE
                     )
             except (ValueError, TypeError):
                 logger.warning("Invalid content length header")
-
+        
         # Validate JSON for JSON requests
         if request.method in ['POST', 'PUT', 'PATCH']:
             content_type = request.META.get('CONTENT_TYPE', '').split(';')[0]
@@ -67,5 +65,5 @@ class RequestValidationMiddleware(MiddlewareMixin):
                         {'error': 'invalid_json', 'message': 'Invalid JSON format'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-
+        
         return None

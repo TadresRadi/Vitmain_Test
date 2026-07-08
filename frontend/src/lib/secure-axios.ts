@@ -73,24 +73,9 @@ class SecureAxios {
         }
 
         // Add authorization header
-        // Add authorization header
         const token = tokenStorage.getAccessToken()
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`
-        }
-
-        // If we're sending a FormData payload, delete any preset Content-Type so
-        // the browser can set the multipart/form-data boundary automatically.
-        try {
-          if (config.data && typeof FormData !== 'undefined' && config.data instanceof FormData) {
-            if (config.headers && Object.prototype.hasOwnProperty.call(config.headers, 'Content-Type')) {
-              // @ts-ignore - allow deletion for Axios header types
-              delete config.headers['Content-Type']
-            }
-          }
-        } catch (e) {
-          // If FormData isn't available or any error occurs, continue without throwing
-          console.warn('FormData detection failed:', e)
         }
 
         return config

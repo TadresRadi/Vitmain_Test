@@ -1,6 +1,5 @@
-// frontend/src/components/GoogleAuthButton.tsx
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
-import { useState } from 'react'
+import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google'
+import { useEffect, useState } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuthStore } from '@/store/authStore'
 import { useTranslation } from 'react-i18next'
@@ -16,6 +15,19 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
   const { t } = useTranslation()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [googleClientId, setGoogleClientId] = useState<string>('')
+
+  useEffect(() => {
+    api.get('/auth/google/config')
+      .then(res => {
+        if (res.data.enabled && res.data.google_client_id) {
+          setGoogleClientId(res.data.google_client_id)
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch Google config:', err)
+      })
+  }, [])
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setLoading(true)
@@ -23,11 +35,9 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
       const token = credentialResponse.credential
       if (!token) throw new Error('No credential returned')
 
-      const payload: Record<string, string> = {}
-      payload['id_token'] = token
-
-      // Send payload to backend for verification
-      const response = await api.post('/auth/google/callback', payload)
+      const response = await api.post('/auth/google/callback', {
+        id_token: token,
+      })
 
       const { setTokens, setUser } = useAuthStore.getState()
       setTokens(
@@ -64,29 +74,28 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
     })
   }
 
-  // Render only if root provider initialized (main.tsx sets this flag)
-  const providerAvailable = typeof window !== 'undefined' && (window as any).__VITMAIN_GOOGLE_OAUTH__
-
-  if (!providerAvailable) {
-    return null
+  if (!googleClientId) {
+    return null // Don't render if Google OAuth is not configured
   }
 
   return (
-    <div className="flex justify-center w-full">
-      <GoogleLogin
-        onSuccess={handleGoogleSuccess}
-        onError={handleGoogleError}
-        theme="outline"
-        size="large"
-        text={mode === 'login' ? 'signin_with' : 'signup_with'}
-        shape="rectangular"
-        width={400}
-      />
-      {loading && (
-        <div className="flex justify-center mt-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-        </div>
-      )}
-    </div>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <div className="flex justify-center w-full">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          theme="outline"
+          size="large"
+          text={mode === 'login' ? 'signin_with' : 'signup_with'}
+          shape="rectangular"
+          width={400}
+        />
+        {loading && (
+          <div className="flex justify-center mt-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </div>
+        )}
+      </div>
+    </GoogleOAuthProvider>
   )
 }
