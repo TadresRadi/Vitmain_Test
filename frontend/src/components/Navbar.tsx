@@ -33,12 +33,7 @@ export default function Navbar() {
     { name: t("navbar.about", { defaultValue: "About Us" }), path: "/about" },
     { name: t("navbar.work", { defaultValue: "Our Work" }), path: "/work" },
     { name: t("navbar.pricing"), path: "/pricing" },
-
-    // NEW: Tesla
-    { name: t("navbar.teslaClients", { defaultValue: "Tesla Clients" }), path: "/tesla-clients" },
-
     { name: t("contact.title"), path: "/contact" },
-
     ...(isAuthenticated && planSlug !== "pro"
       ? [{ name: t("navbar.chat"), path: "/chat" }]
       : []),

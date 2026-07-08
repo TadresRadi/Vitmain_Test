@@ -31,6 +31,8 @@ STABILITY_API_TOKEN = os.environ.get("STABILITY_API_TOKEN")
 # DeepAI token (used for AI-generated images)
 DEEPAI_API_TOKEN = os.environ.get("DEEPAI_API_TOKEN")
 
+import os
+
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
 
 if SENTRY_DSN:
@@ -127,10 +129,8 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sites.middleware.CurrentSiteMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'core.middleware.no_cache_media.NoCacheMediaMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.middleware.security.SecurityMiddleware',
-     'core.middleware.coop_allow_popups.CoopAllowPopupsMiddleware',
         # NEW: Security middleware
     # 'core.https_middleware.HTTPSEnforcerMiddleware',
     # 'core.https_middleware.SecureProxyHeadersMiddleware',
@@ -240,18 +240,6 @@ if DEBUG and not CORS_ALLOWED_ORIGINS:
 # CORS credentials and other settings
 CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "false").lower() == "true"
 CORS_ALLOW_CREDENTIALS = os.environ.get("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
-    if origin.strip()
-]
-
-# In DEBUG, set defaults
-if DEBUG and not CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ]
 
 # Additional CORS settings for preflight requests
 CORS_ALLOW_HEADERS = [
@@ -330,18 +318,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
-ACCOUNT_USER_MODEL_USERNAME_FIELD = "email"
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = "email"
 
-# Prevent automatic creation of accounts from social logins so frontend can
-# show a signup/onboarding flow instead of silently creating users.
-# Set to True if you prefer auto signups.
-SOCIALACCOUNT_AUTO_SIGNUP = False
-
-# Ensure we request emails from social providers when possible
-SOCIALACCOUNT_QUERY_EMAIL = True
 SITE_ID = 1
 
 ACCOUNT_EMAIL_REQUIRED = True
@@ -538,7 +515,11 @@ if ENABLE_PROMETHEUS:
 
 # 4) Logging additions (append to your LOGGING dict)
 USE_JSON_LOGS = os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
-
+if USE_JSON_LOGS:
+    try:
+        from pythonjsonlogger import jsonlogger
+    except Exception:
+        USE_JSON_LOGS = False
 
 # ensure keys exist before setting entries
 LOGGING.setdefault("formatters", {})
@@ -585,6 +566,12 @@ SLOW_QUERY_THRESHOLD_MS = int(
 print(LOGGING["handlers"]["file"]["filename"])
 # Structured JSON logging (optional)
 USE_JSON_LOGS = os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
+if USE_JSON_LOGS:
+    try:
+        from pythonjsonlogger import jsonlogger
+    except Exception:
+        # python-json-logger not installed; fall back to text logs
+        USE_JSON_LOGS = False
 
 LOGGING.setdefault('version', 1)
 LOGGING.setdefault('disable_existing_loggers', False)

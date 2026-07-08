@@ -96,8 +96,4 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        # Prefer a readable name if available, fall back to email
-        return self.full_name or self.email
-    @property
-    def username(self):
         return self.email

@@ -14,7 +14,6 @@ from django.utils.decorators import method_decorator
 from django.conf import settings
 from core.timing_safe import RandomDelay
 from core.audit_service import get_audit_logger
-from core.decorators import _get_client_ip as get_client_ip
 
 from users.serializers import (
     GoogleAuthCallbackSerializer,
@@ -46,7 +45,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
     @rate_limit(endpoint='auth_login', rate='5/m')
     def post(self, request, *args, **kwargs):
         audit_logger = get_audit_logger()
-        user_ip =get_client_ip(request)
+        user_ip = self._get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
 
         try:
@@ -160,25 +159,7 @@ class GoogleOAuthCallbackView(APIView):
                 logger.error("Google token missing email after verification")
                 raise AuthenticationError("Invalid Google token")
             
-            # If user does not exist, do NOT auto-create here.
-            # Return a response telling the frontend that signup is required.
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            existing_user = User.objects.filter(email=email).first()
-            
-            if existing_user is None:
-                # Provide minimal profile data so frontend can prefill the signup form
-                profile = {
-                    'email': email,
-                    'full_name': user_info.get('name'),
-                    'profile_picture': user_info.get('picture'),
-                }
-                return Response(
-                    {'signup_required': True, 'profile': profile},
-                    status=status.HTTP_200_OK
-                )
-
-            # Existing user — authenticate / link / update as before
+            # Authenticate or create user
             user, created = google_auth_service.authenticate_user(email, user_info)
             
             # Generate JWT tokens
@@ -245,7 +226,7 @@ class LogoutView(APIView):
     def post(self, request):
         """Logout user and blacklist tokens."""
         audit_logger = get_audit_logger()
-        user_ip = get_client_ip(request)
+        user_ip = self._get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
 
         try:
