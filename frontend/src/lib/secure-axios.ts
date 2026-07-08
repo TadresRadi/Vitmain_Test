@@ -85,7 +85,7 @@ class SecureAxios {
 
           try {
             // Try to refresh token
-            const response = await instance.post('/auth/refresh', {
+            const response = await instance.post('auth/refresh', {
               refresh: refreshToken,
             })
 

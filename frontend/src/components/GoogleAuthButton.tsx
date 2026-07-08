@@ -37,17 +37,21 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
 
 
   useEffect(() => {
-    api.get('auth/google/config')  // ✅ Remove /api prefix
+    console.log('Fetching Google config from:', 'auth/google/config')
+    api.get('auth/google/config')
       .then(res => {
+        console.log('Google config response:', res.data)
         if (res.data.enabled && res.data.google_client_id) {
+          console.log('Setting Google Client ID:', res.data.google_client_id)
           setGoogleClientId(res.data.google_client_id)
+        } else {
+          console.warn('Google config disabled or missing client ID')
         }
       })
       .catch(err => {
         console.error('Failed to fetch Google config:', err)
       })
   }, [])
-
 
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
@@ -62,7 +66,7 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
 
 
 
-const response = await api.post('/auth/google/callback', {
+const response = await api.post('auth/google/callback', {
   id_token: token,
 })
 
