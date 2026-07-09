@@ -17,20 +17,55 @@ export default function VodafoneCashPayment() {
   const { t } = useTranslation()
 
   const planName = searchParams.get("plan_name") || "Professional Plan"
-  const [amount, setAmount] = useState(
-    parseFloat(searchParams.get("amount") || "200")
-)
-  // FIX B: Dynamically extract plan slug from URL search parameters
   const planSlug = searchParams.get("plan") || "basic"
 
+  const [amount, setAmount] = useState(
+    parseFloat(searchParams.get("amount") || "200")
+  )
   const [phoneNumber, setPhoneNumber] = useState("")
   const [copied, setCopied] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "waiting" | "completed" | "failed">("idle")
+  const [partialPayment, setPartialPayment] = useState<{
+    received: number
+    remaining: number
+  } | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
-  
-  // FIX C: Initialize with fallback receiver number but load dynamically
   const [receiverNumber, setReceiverNumber] = useState("01094064044")
+  const [checkingPayment, setCheckingPayment] = useState(true)
+
+  // تحقق من وجود طلب دفع سابق مرة واحدة فقط عند تحميل الصفحة
+  useEffect(() => {
+    const savedOrderId = localStorage.getItem("payment_order_id")
+
+
+
+    const checkExistingOrder = async () => {
+      try {
+        const response = await api.get(`/payments/order-status/${savedOrderId}/`)
+
+        setOrderId(savedOrderId)
+
+        if (response.data.status === "partial") {
+          setPaymentStatus("waiting")
+          setPartialPayment({
+            received: Number(response.data.received_amount),
+            remaining:
+              Number(response.data.expected_amount) - Number(response.data.received_amount),
+          })
+          setAmount(Number(response.data.expected_amount))
+        } else if (response.data.status === "completed") {
+          setPaymentStatus("completed")
+        }
+      } catch (error) {
+        console.log(error)
+      } finally {
+        setCheckingPayment(false)
+      }
+    }
+
+    checkExistingOrder()
+  }, [])
 
   const validatePhoneNumber = (phone: string): boolean => {
     const cleanPhone = phone.replace(/\s+/g, "")
@@ -38,7 +73,6 @@ export default function VodafoneCashPayment() {
   }
 
   const handleCopy = () => {
-    // FIX C: Copy dynamic receiverNumber instead of hardcoded variable
     navigator.clipboard.writeText(receiverNumber)
     setCopied(true)
     toast({
@@ -46,10 +80,11 @@ export default function VodafoneCashPayment() {
       description: receiverNumber,
     })
     setTimeout(() => setCopied(false), 2000)
-  } // FIX C: This should be dynamically set from the backend response
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validatePhoneNumber(phoneNumber)) {
       toast({
         title: "Invalid Phone Number",
@@ -60,19 +95,21 @@ export default function VodafoneCashPayment() {
     }
 
     setIsSubmitting(true)
-    
+
     try {
-      // FIX A & B: Removed duplicate '/api' prefix and made 'plan' slug dynamic
       const response = await api.post("/payments/create-order/", {
         expected_sender_number: phoneNumber,
-        plan: planSlug
+        plan: planSlug,
       })
-      setAmount(response.data.amount)
 
       setOrderId(response.data.id)
+      setAmount(response.data.amount)
       setReceiverNumber(response.data.receiver_number)
       setPaymentStatus("waiting")
-      
+
+      localStorage.setItem("payment_order_id", response.data.id)
+      localStorage.setItem("payment_plan", planSlug)
+
       toast({
         title: "Payment Order Created",
         description: `Reference code: ${response.data.reference_code}`,
@@ -90,48 +127,61 @@ export default function VodafoneCashPayment() {
   }
 
   useEffect(() => {
-    if (paymentStatus === "waiting" && orderId) {
-      const pollInterval = setInterval(async () => {
-        try {
-          // FIX A: Removed duplicate '/api' prefix in polling route
-          const response = await api.get(`/payments/order-status/${orderId}/`)
-          
-          if (response.data.status === "completed") {
-            setPaymentStatus("completed")
-            clearInterval(pollInterval)
-            
-            toast({
-              title: "Payment Verified!",
-              description: "Your subscription has been activated successfully.",
-            })
-            
-            setTimeout(() => {
-              const nextUrl = response.data.next_url ?? null
-              if (nextUrl) {
-                // full redirect to backend-provided next_url
-                window.location.href = nextUrl
-              } else {
-                navigate("/chat", { replace: true })
-              }
-            }, 2000)
-          } else if (response.data.status === "failed") {
-            setPaymentStatus("failed")
-            clearInterval(pollInterval)
-            
-            toast({
-              title: "Payment Failed",
-              description: "The payment could not be verified. Please try again.",
-              variant: "destructive",
-            })
-          }
-        } catch (error) {
-          console.error("Failed to check payment status:", error)
-        }
-      }, 3000)
+    if (paymentStatus !== "waiting" || !orderId) return
 
-      return () => clearInterval(pollInterval)
-    }
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await api.get(`/payments/order-status/${orderId}/`)
+
+if (response.data.status === "completed") {
+
+  clearInterval(pollInterval)
+
+  toast({
+    title: "Payment Verified!",
+    description: "Your subscription has been activated successfully.",
+  })
+
+
+  localStorage.removeItem("payment_order_id")
+
+
+  navigate("/chat", {
+    replace: true
+  })
+
+} else if (response.data.status === "partial") {
+          setPaymentStatus("waiting")
+          setPartialPayment({
+            received: Number(response.data.received_amount),
+            remaining:
+              Number(response.data.expected_amount) - Number(response.data.received_amount),
+          })
+        } else if (response.data.status === "failed") {
+          setPaymentStatus("failed")
+          clearInterval(pollInterval)
+
+          toast({
+            title: "Payment Failed",
+            description: "The payment could not be verified. Please try again.",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error("Failed to check payment status:", error)
+      }
+    }, 3000)
+
+    return () => clearInterval(pollInterval)
   }, [paymentStatus, orderId, navigate, toast])
+
+  if (checkingPayment) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    )
+  }
 
   if (paymentStatus === "idle") {
     return (
@@ -164,7 +214,7 @@ export default function VodafoneCashPayment() {
                     <span className="text-white/70 text-lg">{t("vodafoneCashPayment.amountToPay")}</span>
                     <span className="text-4xl font-bold text-vitamin-base">{amount} EGP</span>
                   </div>
-                  
+
                   <div className="border-t border-white/10 pt-4 mt-4">
                     <p className="text-white/60 text-sm mb-2">{t("vodafoneCashPayment.transferToNumber")}</p>
                     <div className="flex items-center gap-3">
@@ -263,7 +313,18 @@ export default function VodafoneCashPayment() {
               <p className="text-white/70 text-lg mb-6">
                 {t("vodafoneCashPayment.waitingInstructions", { amount, receiverNumber })}
               </p>
-              
+
+              {partialPayment && (
+                <div className="mt-6 p-4 rounded-lg bg-yellow-500/20 border border-yellow-400">
+                  <h3 className="text-xl text-yellow-300 font-bold mb-3">
+                    Partial Payment Received
+                  </h3>
+                  <p className="text-white">Paid: {partialPayment.received} EGP</p>
+                  <p className="text-white">Remaining: {partialPayment.remaining} EGP</p>
+                  <p className="text-white/70 mt-2">Waiting for remaining payment...</p>
+                </div>
+              )}
+
               <p className="text-white/50 text-sm">
                 {t("vodafoneCashPayment.autoRedirect")}
               </p>

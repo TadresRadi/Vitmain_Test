@@ -53,7 +53,10 @@ class PremiumPostsView(APIView):
         onboarding = _get_active_onboarding(request.user)
         if not onboarding:
             return Response(
-                {"error": "Please complete the onboarding questionnaire first."},
+                        {
+            "error": "onboarding_required",
+            "message": "Please complete onboarding first."
+        },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

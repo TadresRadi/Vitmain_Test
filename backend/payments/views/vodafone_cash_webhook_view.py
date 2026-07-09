@@ -22,6 +22,8 @@ class VodafoneCashWebhookView(APIView):
 
     def post(self, request, *args, **kwargs):
         logger.info("=== VODAFONE WEBHOOK RECEIVED ===")
+        logger.info("HEADERS = %s", dict(request.headers))
+        logger.info("BODY = %s", request.data)
 
         # Authentication via Bearer token
         auth_header = request.headers.get('Authorization', '')
@@ -71,6 +73,7 @@ class VodafoneCashWebhookView(APIView):
                     raw_sms=raw_sms,
                     reference_code=reference_code
                 )
+                logger.info("MATCH RESULT = %s", result)
 
             # If we matched an order, attach a frontend next_url so callers can open it
             order_id = None
@@ -81,9 +84,8 @@ class VodafoneCashWebhookView(APIView):
             if not frontend_base:
                 frontend_base = f"{request.scheme}://{request.get_host()}"
 
-            if order_id:
-                # Adjust path to match your frontend routing if needed
-                result['next_url'] = f"{frontend_base}/orders/{order_id}/next"
+            if order_id and result.get("order_status") == "completed":
+                result["next_url"] = "/chat"
 
             logger.info(f"Webhook result: {result}")
             return Response(result, status=status.HTTP_200_OK)

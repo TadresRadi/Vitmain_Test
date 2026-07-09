@@ -16,6 +16,10 @@ class OrderStatusView(APIView):
             serializer = PaymentOrderSerializer(order)
             response_data = serializer.data
             response_data['subscription_active'] = (order.status == PaymentOrder.Status.COMPLETED)
+            if not request.user.onboarding_completed:
+                response_data["next_url"] = "/new-onboarding"
+            else:
+                response_data["next_url"] = "/chat"
             return Response(response_data, status=status.HTTP_200_OK)
         except PaymentOrder.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)

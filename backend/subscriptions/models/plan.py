@@ -6,6 +6,7 @@ class Plan(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True, default='')
     features = models.TextField(blank=True, default='')  # Comma-separated or JSON list of features
+    max_images = models.IntegerField(default=10)
 
     def __str__(self):
         return self.name

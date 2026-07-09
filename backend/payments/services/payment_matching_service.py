@@ -53,35 +53,49 @@ class PaymentMatchingService:
                 match_reason = "Priority 2 Fallback: Sender Number Match"
 
         # Save Transaction Record
-        transaction_record = PaymentTransaction.objects.create(
-            id=transaction_id,
-            order=matched_order,
-            amount=numeric_amount,
-            sender_number=sender_number,
-            raw_sms=raw_sms
-        )
-
         if matched_order:
-            matched_order.received_amount += numeric_amount
-            
-            if matched_order.received_amount >= matched_order.expected_amount:
-                matched_order.status = PaymentOrder.Status.COMPLETED
-                PaymentService.activate_subscription(matched_order) # Auto-activates account
-            else:
-                matched_order.status = PaymentOrder.Status.PARTIAL
-                
-            matched_order.save()
-            return {
+
+            with transaction.atomic():
+
+        # Save transaction record
+                PaymentTransaction.objects.create(
+                    id=transaction_id,
+                    order=matched_order,
+                    amount=numeric_amount,
+                    sender_number=sender_number,
+                    raw_sms=raw_sms
+                )
+
+        # Add new payment amount
+        matched_order.received_amount += numeric_amount
+
+
+        # Payment completed
+        if matched_order.received_amount >= matched_order.expected_amount:
+
+            # Calculate extra money
+            matched_order.extra_amount = (
+                matched_order.received_amount -
+                matched_order.expected_amount
+            )
+
+            matched_order.status = PaymentOrder.Status.COMPLETED
+
+            PaymentService.activate_subscription(matched_order)
+
+
+        # Partial payment
+        else:
+
+            matched_order.status = PaymentOrder.Status.PARTIAL
+
+
+        matched_order.save()
+        return {
                 'status': 'matched',
                 'match_reason': match_reason,
                 'order_status': matched_order.status,
                 'received_amount': float(matched_order.received_amount),
                 'expected_amount': float(matched_order.expected_amount),
                 'order_id': str(matched_order.id)   # <-- ADDED
-            }
-        else:
-            # Priority 3: Placed in unmatched queue for admin dashboard review
-            return {
-                'status': 'unmatched',
-                'message': 'Saved to Unmatched Queue.'
             }
