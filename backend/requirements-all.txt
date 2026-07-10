@@ -66,7 +66,7 @@ psycopg2-binary==2.9.12
 py-serializable==2.1.0
 pyasn1==0.6.3
 pycparser==2.23
-pydantic==2.9.2
+pydantic==2.13.4
 pydantic_core==2.23.4
 Pygments==2.20.0
 PyJWT==2.13.0
