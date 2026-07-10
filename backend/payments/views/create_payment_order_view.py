@@ -1,136 +1,134 @@
-from rest_framework.views import APIView
+import secrets
+import re
+
+from django.db import IntegrityError, transaction
+from rest_framework import permissions, status
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from django.conf import settings
+from rest_framework.views import APIView
+
+from subscriptions.models import Plan
+
 from ..models.payment_order import PaymentOrder
 from ..serializers.payment_order_serializer import PaymentOrderSerializer
-import random
-import re
 
 
 class CreatePaymentOrderView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        sender_number = request.data.get("expected_sender_number")
+        plan_slug = request.data.get("plan")
 
-        expected_sender_number = request.data.get('expected_sender_number')
-        plan = request.data.get('plan', 'basic')
-
-        if not expected_sender_number:
+        if not sender_number:
             return Response(
-                {'error': 'expected_sender_number is required'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "expected_sender_number is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Validate Egyptian mobile number
-        clean_number = re.sub(r'\s+', '', expected_sender_number)
-
-        if not re.match(r'^(010|011|012|015)\d{8}$', clean_number):
+        if not plan_slug:
             return Response(
-                {'error': 'Invalid Egyptian mobile number.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "plan is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
+        clean_number = re.sub(r"\s+", "", str(sender_number))
 
-        # Determine amount
-        if plan == 'basic':
-            expected_amount = 5.00  # Testing only
-        else:
-            expected_amount = getattr(
-                settings,
-                'VODAFONE_TESTING_PRICE',
-                5.00
+        if not re.fullmatch(r"(010|011|012|015)\d{8}", clean_number):
+            return Response(
+                {"error": "Invalid Egyptian mobile number."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
+        try:
+            plan = Plan.objects.get(slug=plan_slug)
+        except Plan.DoesNotExist:
+            return Response(
+                {"error": "Plan not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-        receiver_number = getattr(
-            settings,
-            'VODAFONE_RECEIVER_NUMBER',
-            '01094064044'
+        existing_order = (
+            PaymentOrder.objects
+            .filter(
+                user=request.user,
+                plan=plan.slug,
+                status__in=[
+                    PaymentOrder.Status.PENDING,
+                    PaymentOrder.Status.PARTIAL,
+                ],
+            )
+            .order_by("-created_at")
+            .first()
         )
-
-
-        # Check if user already has an unfinished payment
-        existing_order = PaymentOrder.objects.filter(
-            user=request.user,
-            plan=plan,
-            status__in=[
-                PaymentOrder.Status.PENDING,
-                PaymentOrder.Status.PARTIAL
-            ]
-        ).first()
-
 
         if existing_order:
-
-            serializer = PaymentOrderSerializer(existing_order)
-
-            response_data = serializer.data
-
-            remaining_amount = (
-                existing_order.expected_amount -
-                existing_order.received_amount
-            )
-
-            response_data['receiver_number'] = receiver_number
-
-            response_data['amount'] = float(
-                remaining_amount
-            )
-
-            response_data['remaining_amount'] = float(
-                remaining_amount
-            )
-
-            response_data['payment_instructions'] = (
-                f"Send exactly {remaining_amount} EGP "
-                f"to {receiver_number}."
-            )
+            # Update the expected sender if the user corrects their number.
+            if existing_order.expected_sender_number != clean_number:
+                existing_order.expected_sender_number = clean_number
+                existing_order.save(
+                    update_fields=[
+                        "expected_sender_number",
+                        "updated_at",
+                    ]
+                )
 
             return Response(
-                response_data,
-                status=status.HTTP_200_OK
+                self._response_data(existing_order),
+                status=status.HTTP_200_OK,
             )
 
-
-        # Generate unique reference code
-        while True:
-
-            ref_code = f"VFC{random.randint(100,999)}"
-
-            if not PaymentOrder.objects.filter(
-                reference_code=ref_code
-            ).exists():
-                break
-
-
-        # Create new payment order
-        payment_order = PaymentOrder.objects.create(
-            user=request.user,
-            plan=plan,
-            expected_amount=expected_amount,
-            expected_sender_number=clean_number,
-            reference_code=ref_code
-        )
-
-
-        serializer = PaymentOrderSerializer(payment_order)
-
-        response_data = serializer.data
-
-        response_data['receiver_number'] = receiver_number
-
-        response_data['amount'] = float(
-            expected_amount
-        )
-
-        response_data['payment_instructions'] = (
-            f"Send exactly {expected_amount} EGP "
-            f"to {receiver_number}."
-        )
-
+        try:
+            with transaction.atomic():
+                payment_order = PaymentOrder.objects.create(
+                    user=request.user,
+                    plan=plan.slug,
+                    expected_amount=plan.price,
+                    expected_sender_number=clean_number,
+                    reference_code=self._create_reference_code(),
+                )
+        except IntegrityError:
+            return Response(
+                {"error": "Could not create a payment order. Please retry."},
+                status=status.HTTP_409_CONFLICT,
+            )
 
         return Response(
-            response_data,
-            status=status.HTTP_201_CREATED
+            self._response_data(payment_order),
+            status=status.HTTP_201_CREATED,
         )
+
+    @staticmethod
+    def _create_reference_code():
+        for _ in range(20):
+            reference_code = f"VFC{secrets.randbelow(900000) + 100000}"
+
+            if not PaymentOrder.objects.filter(
+                reference_code=reference_code
+            ).exists():
+                return reference_code
+
+        raise IntegrityError("Could not generate a unique reference code")
+
+    @staticmethod
+    def _response_data(order):
+        from django.conf import settings
+
+        receiver_number = settings.VODAFONE_RECEIVER_NUMBER
+        remaining = max(
+            order.expected_amount - order.received_amount,
+            0,
+        )
+
+        data = PaymentOrderSerializer(order).data
+        data.update(
+            {
+                "receiver_number": receiver_number,
+                "amount": remaining,
+                "remaining_amount": remaining,
+                "payment_instructions": (
+                    f"Send exactly {remaining} EGP "
+                    f"to {receiver_number}."
+                ),
+            }
+        )
+        return data

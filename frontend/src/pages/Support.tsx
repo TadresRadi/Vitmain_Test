@@ -35,7 +35,9 @@ export default function Support() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // User details form state
-  const [userDetailsSubmitted, setUserDetailsSubmitted] = useState(false)
+  const [userDetailsSubmitted, setUserDetailsSubmitted] = useState(
+  () => sessionStorage.getItem("support_details_submitted") === "true"
+)
   const [userDetails, setUserDetails] = useState({
     fullName: "",
     businessName: "",
@@ -61,6 +63,7 @@ export default function Support() {
       const detailsMessage = `New Support Request\n\nFull Name: ${userDetails.fullName}\nBusiness Name: ${userDetails.businessName}\nPhone Number: ${userDetails.phoneNumber}`
       await api.post("/support/chat", { content: detailsMessage })
       setUserDetailsSubmitted(true)
+      sessionStorage.setItem("support_details_submitted", "true")
       toast({
         title: t("support.detailsSubmitted", "Details Submitted Successfully"),
         description: t("support.detailsSubmittedDesc", "Thank you! You can now use the support chat."),

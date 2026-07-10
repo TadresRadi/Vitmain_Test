@@ -1,6 +1,7 @@
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from datetime import timedelta
 
 from django.utils import timezone
 from chat.models import AIPostGeneration
@@ -25,11 +26,17 @@ class GenerateImagesView(APIView):
         except AIPostGeneration.DoesNotExist:
             return Response({"error": "Post generation record not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        if post_gen.images_status == 'processing':
-            return Response({
-                "error": "Image generation is already in progress. Please wait for it to complete.",
-                "images_status": "processing"
-            }, status=status.HTTP_409_CONFLICT)
+        if post_gen.images_status == "processing":
+            stale_before = timezone.now() - timedelta(minutes=10)
+
+            if (
+                post_gen.images_generation_started_at
+                and post_gen.images_generation_started_at < stale_before):
+                post_gen.images_status = "failed"
+                post_gen.images_generation_completed_at = timezone.now()
+                post_gen.save(update_fields=["images_status","images_generation_completed_at",])
+            else:
+                return Response({"error": ("Image generation is already in progress. ""Please wait for it to complete."),"images_status": "processing",},status=status.HTTP_409_CONFLICT,)
 
         if post_gen.has_images:
             existing_session = post_gen.generation_sessions.order_by("-created_at").first()

@@ -122,47 +122,58 @@ export default function NewOnboarding() {
 
   const questions = getQuestions()
 
-  const handleNext = () => {
-    const question = questions[currentQuestion]
-    
-    if (question.type === 'select' && checkIfOther(currentAnswer)) {
-      setShowOtherInput(true)
-      return
+const handleNext = () => {
+  const question = questions[currentQuestion]
+
+  if (!question) return
+
+  if (question.type === "select" && checkIfOther(currentAnswer)) {
+    setShowOtherInput(true)
+    setCurrentAnswer("")
+    return
+  }
+
+  if (!currentAnswer.trim()) return
+
+  const nextAnswers = {
+    ...answers,
+    [question.id]: currentAnswer,
+  }
+
+  setAnswers(nextAnswers)
+
+  if (question.id === "businessType") {
+    const subcategories =
+      businessTypeCategories[
+        currentAnswer as keyof typeof businessTypeCategories
+      ]?.subcategories ?? []
+
+    setCurrentQuestion((previous) => previous + 1)
+    setCurrentAnswer("")
+    setShowOtherInput(false)
+
+    // The dynamically computed list automatically includes or excludes
+    // the subtype question on the next render.
+    if (subcategories.length === 0) {
+      setAnswers({
+        ...nextAnswers,
+        businessSubtype: "",
+      })
     }
 
-    if (currentAnswer.trim()) {
-      const nextAnswers = {
-        ...answers,
-        [question.id]: currentAnswer
-      }
-      
-      setAnswers(nextAnswers)
-      
-      // Recalculate questions after business type selection
-      const newQuestions = getQuestions()
-      
-      // If we're on business type question and the next question would be subcategory with no options, skip it
-      if (question.id === 'businessType') {
-        const hasSubcategories = businessTypeCategories[currentAnswer as keyof typeof businessTypeCategories]?.subcategories.length > 0
-        if (!hasSubcategories) {
-          // Skip subcategory question, go to marketing goals
-          const nextQuestionIndex = newQuestions.findIndex(q => q.id === 'marketingGoals')
-          setCurrentQuestion(nextQuestionIndex)
-          setCurrentAnswer("")
-          setShowOtherInput(false)
-          return
-        }
-      }
-      
-      if (currentQuestion < newQuestions.length - 1) {
-        setCurrentQuestion(prev => prev + 1)
-        setCurrentAnswer("")
-        setShowOtherInput(false)
-      } else {
-        void completeOnboarding(nextAnswers as OnboardingFormData)
-      }
-    }
+    return
   }
+
+  if (currentQuestion < questions.length - 1) {
+    setCurrentQuestion((previous) => previous + 1)
+    setCurrentAnswer("")
+    setShowOtherInput(false)
+    return
+  }
+
+  void completeOnboarding(nextAnswers as OnboardingFormData)
+}
+
 
   const handleMultiSelectNext = () => {
     const nextAnswers = {
@@ -207,32 +218,50 @@ export default function NewOnboarding() {
     }
   }
 
-  const handleOtherSubmit = () => {
-    if (currentAnswer.trim()) {
-      const nextAnswers = {
-        ...answers,
-      }
-      
-      const currentQuestionId = questions[currentQuestion].id
-      if (currentQuestionId === 'businessType') {
-        nextAnswers.businessTypeOther = currentAnswer
-        nextAnswers.businessType = currentAnswer
-      } else if (currentQuestionId === 'businessSubtype') {
-        nextAnswers.businessSubtype = currentAnswer
-      } else if (currentQuestionId === 'targetAudience') {
-        nextAnswers.targetAudienceOther = currentAnswer
-        nextAnswers.targetAudience = currentAnswer
-      } else if (currentQuestionId === 'toneOfVoice') {
-        nextAnswers.toneOfVoiceOther = currentAnswer
-        nextAnswers.toneOfVoice = currentAnswer
-      }
-      
-      setAnswers(nextAnswers)
-      setShowOtherInput(false)
-      setCurrentAnswer("")
-      setCurrentQuestion(prev => prev + 1)
+const handleOtherSubmit = () => {
+  const value = currentAnswer.trim()
+  if (!value) return
+
+  const question = questions[currentQuestion]
+  if (!question) return
+
+  let nextAnswers: Partial<OnboardingFormData> = {
+    ...answers,
+  }
+
+  if (question.id === "businessType") {
+    nextAnswers = {
+      ...nextAnswers,
+      businessType: "other",
+      businessTypeOther: value,
+      businessSubtype: "",
+    }
+  } else if (question.id === "businessSubtype") {
+    nextAnswers = {
+      ...nextAnswers,
+      businessSubtype: "other",
+      businessTypeOther: value,
+    }
+  } else if (question.id === "targetAudience") {
+    nextAnswers = {
+      ...nextAnswers,
+      targetAudience: "other",
+      targetAudienceOther: value,
+    }
+  } else if (question.id === "toneOfVoice") {
+    nextAnswers = {
+      ...nextAnswers,
+      toneOfVoice: "other",
+      toneOfVoiceOther: value,
     }
   }
+
+  setAnswers(nextAnswers)
+  setShowOtherInput(false)
+  setCurrentAnswer("")
+  setCurrentQuestion((previous) => previous + 1)
+}
+
 
   const checkIfOther = (value: string) => {
     return value === "other"

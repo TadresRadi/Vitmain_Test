@@ -46,23 +46,37 @@ export default function Register() {
     try {
       await register(email, password, passwordConfirm, fullName, phoneNumber, dob, userType)
       
-      if (plan === "basic" || plan === "pro") {
-        try {
-          const subRes = await api.post("/subscription/subscribe", { plan_slug: plan })
-          toast({
-            title: t("common.success", "Success"),
-            description: t("register.successMsg", "Registration successful! Welcome to Vitamin AI."),
-          })
-          if (subRes.data.action === "redirect_support") {
-            navigate("/support", { replace: true })
-            return
-          }
-          navigate("/new-onboarding", { state: { autoStartCampaign: true }, replace: true })
-          return
-        } catch (subErr) {
-          console.error("Auto-subscription failed:", subErr)
-        }
-      }
+if (plan === "basic" || plan === "pro") {
+  const subRes = await api.post("/subscription/subscribe", {
+    plan_slug: plan,
+  })
+
+  toast({
+    title: t("common.success", "Success"),
+    description: t(
+      "register.successMsg",
+      "Registration successful! Welcome to Vitamin AI."
+    ),
+  })
+
+  if (subRes.data.action === "redirect_payment") {
+    const query = new URLSearchParams({
+      plan: subRes.data.plan_slug,
+      plan_name: subRes.data.plan_name,
+      amount: String(subRes.data.amount),
+    })
+
+    navigate(`/payment/vodafone-cash?${query.toString()}`, {
+      replace: true,
+    })
+    return
+  }
+
+  if (subRes.data.action === "redirect_support") {
+    navigate("/support", { replace: true })
+    return
+  }
+}
 
       toast({
         title: t("common.success", "Success"),
@@ -81,20 +95,29 @@ export default function Register() {
     }
   }
 
-  const handleGoogleSuccess = async () => {
-    if (plan === "basic" || plan === "pro") {
-      try {
-        const subRes = await api.post("/subscription/subscribe", { plan_slug: plan })
-        if (subRes.data.action === "redirect_support") {
-          navigate("/support", { replace: true })
-          return
-        }
-      } catch (subErr) {
-        console.error("Auto-subscription failed:", subErr)
-      }
-    }
-    navigate("/new-onboarding", { state: { autoStartCampaign: true }, replace: true })
+const handleGoogleSuccess = async () => {
+  const { user } = useAuthStore.getState()
+
+  if (!user?.onboarding_completed) {
+    navigate("/new-onboarding", { replace: true })
+    return
   }
+
+  try {
+    const usageRes = await api.get<UsageResponse>("/users/usage")
+
+    if (usageRes.data.plan_slug === "pro") {
+      navigate("/support", { replace: true })
+    } else if (usageRes.data.has_access) {
+      navigate("/chat", { replace: true })
+    } else {
+      navigate("/pricing", { replace: true })
+    }
+  } catch {
+    navigate("/pricing", { replace: true })
+  }
+}
+
 
   return (
     <div className="relative z-10 pt-32 pb-20 px-4 min-h-screen flex items-center justify-center">

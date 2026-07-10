@@ -36,7 +36,6 @@ urlpatterns = [
     path('api/portfolio/', include('portfolio.urls')),
     path('api/payments/', include('payments.urls', namespace='payments')),
     path('api/', include('core.urls')),
-    path("", include("django_prometheus.urls")),
 ]
 
 if os.environ.get("ENABLE_PROMETHEUS", "false").lower() == "true":

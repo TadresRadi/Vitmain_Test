@@ -62,7 +62,7 @@ Generate exactly 5 tailored, creative, engaging, and professional social media m
 - Tone of Voice: {tone_of_voice_desc}
 
 Rules:
-1. Return the posts in Egyptian colloquial Arabic dialect.
+1. Write all posts using this language instruction: {lang_instruction}
 2. The posts should be ready to publish, featuring compelling hooks, call-to-actions, and appropriate hashtags.
 3. Do not Translate the Business Name: {onboarding.business_name} should be used as-is in the posts.
 4. You must format your output EXACTLY as a raw JSON array of strings:

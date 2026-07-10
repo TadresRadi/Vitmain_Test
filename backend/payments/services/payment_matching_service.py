@@ -1,101 +1,189 @@
-from django.db import transaction
+import logging
+from decimal import Decimal, InvalidOperation
+
+from django.db import IntegrityError, transaction
+
 from ..models.payment_order import PaymentOrder
 from ..models.payment_transaction import PaymentTransaction
 from .payment_service import PaymentService
-from decimal import Decimal
-import logging
+
 
 logger = logging.getLogger(__name__)
 
+
 class PaymentMatchingService:
-    
+
     @staticmethod
-    def process_incoming_transaction(sender_number, amount, transaction_id, raw_sms, reference_code=None):
-        # Enforce Idempotency / Prevent Duplicate SMS Processing
-        existing_tx = PaymentTransaction.objects.filter(id=transaction_id).first()
-        if existing_tx:
+    @transaction.atomic
+    def process_incoming_transaction(
+        sender_number,
+        amount,
+        transaction_id,
+        raw_sms,
+        reference_code=None,
+    ):
+        transaction_id = str(transaction_id).strip()
+        sender_number = str(sender_number).strip()
+        reference_code = (
+            str(reference_code).strip() if reference_code else None
+        )
+
+        if not transaction_id:
+            raise ValueError("transaction_id is required")
+
+        if not sender_number:
+            raise ValueError("sender_number is required")
+
+        try:
+            numeric_amount = Decimal(str(amount))
+        except (InvalidOperation, TypeError, ValueError) as exc:
+            raise ValueError("amount must be a valid number") from exc
+
+        if numeric_amount <= 0:
+            raise ValueError("amount must be greater than zero")
+
+        existing_transaction = (
+            PaymentTransaction.objects
+            .select_related("order")
+            .filter(pk=transaction_id)
+            .first()
+        )
+
+        if existing_transaction:
             return {
-                'status': 'ignored',
-                'message': 'Duplicate transaction. Already processed.',
-                'linked_order_id': str(existing_tx.order.id) if existing_tx.order else None
+                "status": "ignored",
+                "message": "Duplicate transaction. Already processed.",
+                "linked_order_id": (
+                    str(existing_transaction.order_id)
+                    if existing_transaction.order_id
+                    else None
+                ),
             }
 
-        numeric_amount = Decimal(str(amount))
         matched_order = None
-        match_reason = ""
+        match_reason = None
+        active_statuses = [
+            PaymentOrder.Status.PENDING,
+            PaymentOrder.Status.PARTIAL,
+        ]
 
-        # Priority 1: Match by reference_code
         if reference_code:
-            matched_order = PaymentOrder.objects.select_for_update().filter(
-                reference_code=reference_code,
-                status__in=[PaymentOrder.Status.PENDING, PaymentOrder.Status.PARTIAL]
-            ).first()
+            matched_order = (
+                PaymentOrder.objects
+                .select_for_update()
+                .filter(
+                    reference_code=reference_code,
+                    status__in=active_statuses,
+                )
+                .first()
+            )
+
             if matched_order:
                 match_reason = "Priority 1: Reference Code Match"
 
-        # Priority 2: Match by sender_number + exact amount
-        if not matched_order:
-            matched_order = PaymentOrder.objects.select_for_update().filter(
-                expected_sender_number=sender_number,
-                expected_amount=numeric_amount,
-                status__in=[PaymentOrder.Status.PENDING, PaymentOrder.Status.PARTIAL]
-            ).first()
+        if matched_order is None:
+            matched_order = (
+                PaymentOrder.objects
+                .select_for_update()
+                .filter(
+                    expected_sender_number=sender_number,
+                    expected_amount=numeric_amount,
+                    status__in=active_statuses,
+                )
+                .order_by("created_at")
+                .first()
+            )
+
             if matched_order:
-                match_reason = "Priority 2: Expected Sender Number + Exact Amount Match"
+                match_reason = (
+                    "Priority 2: Expected Sender Number "
+                    "+ Exact Amount Match"
+                )
 
-        # Priority 2 Fallback: Match by sender_number to any active order (handling different amounts)
-        if not matched_order:
-            matched_order = PaymentOrder.objects.select_for_update().filter(
-                expected_sender_number=sender_number,
-                status__in=[PaymentOrder.Status.PENDING, PaymentOrder.Status.PARTIAL]
-            ).first()
+        if matched_order is None:
+            matched_order = (
+                PaymentOrder.objects
+                .select_for_update()
+                .filter(
+                    expected_sender_number=sender_number,
+                    status__in=active_statuses,
+                )
+                .order_by("created_at")
+                .first()
+            )
+
             if matched_order:
-                match_reason = "Priority 2 Fallback: Sender Number Match"
+                match_reason = (
+                    "Priority 2 Fallback: Sender Number Match"
+                )
 
-        # Save Transaction Record
-        if matched_order:
-
+        try:
             with transaction.atomic():
-
-        # Save transaction record
-                PaymentTransaction.objects.create(
+                payment_transaction = PaymentTransaction.objects.create(
                     id=transaction_id,
                     order=matched_order,
                     amount=numeric_amount,
                     sender_number=sender_number,
-                    raw_sms=raw_sms
+                    raw_sms=raw_sms,
                 )
-
-        # Add new payment amount
-        matched_order.received_amount += numeric_amount
-
-
-        # Payment completed
-        if matched_order.received_amount >= matched_order.expected_amount:
-
-            # Calculate extra money
-            matched_order.extra_amount = (
-                matched_order.received_amount -
-                matched_order.expected_amount
+        except IntegrityError:
+            existing_transaction = (
+                PaymentTransaction.objects
+                .select_related("order")
+                .get(pk=transaction_id)
             )
 
+            return {
+                "status": "ignored",
+                "message": "Duplicate transaction. Already processed.",
+                "linked_order_id": (
+                    str(existing_transaction.order_id)
+                    if existing_transaction.order_id
+                    else None
+                ),
+            }
+
+        if matched_order is None:
+            logger.warning(
+                "Payment transaction %s could not be matched to an order",
+                payment_transaction.pk,
+            )
+
+            return {
+                "status": "unmatched",
+                "message": "Transaction saved for manual review.",
+                "transaction_id": payment_transaction.pk,
+            }
+
+        matched_order.received_amount += numeric_amount
+
+        if matched_order.received_amount >= matched_order.expected_amount:
+            matched_order.extra_amount = (
+                matched_order.received_amount
+                - matched_order.expected_amount
+            )
             matched_order.status = PaymentOrder.Status.COMPLETED
 
             PaymentService.activate_subscription(matched_order)
-
-
-        # Partial payment
         else:
-
+            matched_order.extra_amount = Decimal("0.00")
             matched_order.status = PaymentOrder.Status.PARTIAL
 
+        matched_order.save(
+            update_fields=[
+                "received_amount",
+                "extra_amount",
+                "status",
+                "updated_at",
+            ]
+        )
 
-        matched_order.save()
         return {
-                'status': 'matched',
-                'match_reason': match_reason,
-                'order_status': matched_order.status,
-                'received_amount': float(matched_order.received_amount),
-                'expected_amount': float(matched_order.expected_amount),
-                'order_id': str(matched_order.id)   # <-- ADDED
-            }
+            "status": "matched",
+            "match_reason": match_reason,
+            "order_status": matched_order.status,
+            "received_amount": float(matched_order.received_amount),
+            "expected_amount": float(matched_order.expected_amount),
+            "extra_amount": float(matched_order.extra_amount),
+            "order_id": str(matched_order.id),
+        }

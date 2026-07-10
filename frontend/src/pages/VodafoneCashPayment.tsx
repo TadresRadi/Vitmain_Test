@@ -35,37 +35,66 @@ export default function VodafoneCashPayment() {
   const [checkingPayment, setCheckingPayment] = useState(true)
 
   // تحقق من وجود طلب دفع سابق مرة واحدة فقط عند تحميل الصفحة
-  useEffect(() => {
-    const savedOrderId = localStorage.getItem("payment_order_id")
+useEffect(() => {
+  const savedOrderId = localStorage.getItem("payment_order_id")
+  const savedPlan = localStorage.getItem("payment_plan")
 
-
-
-    const checkExistingOrder = async () => {
-      try {
-        const response = await api.get(`/payments/order-status/${savedOrderId}/`)
-
-        setOrderId(savedOrderId)
-
-        if (response.data.status === "partial") {
-          setPaymentStatus("waiting")
-          setPartialPayment({
-            received: Number(response.data.received_amount),
-            remaining:
-              Number(response.data.expected_amount) - Number(response.data.received_amount),
-          })
-          setAmount(Number(response.data.expected_amount))
-        } else if (response.data.status === "completed") {
-          setPaymentStatus("completed")
-        }
-      } catch (error) {
-        console.log(error)
-      } finally {
-        setCheckingPayment(false)
-      }
+  if (!savedOrderId || savedPlan !== planSlug) {
+    if (savedOrderId && savedPlan !== planSlug) {
+      localStorage.removeItem("payment_order_id")
+      localStorage.removeItem("payment_plan")
     }
 
-    checkExistingOrder()
-  }, [])
+    setCheckingPayment(false)
+    return
+  }
+
+  const restoreOrder = async () => {
+    try {
+      const response = await api.get(
+        `/payments/order-status/${savedOrderId}/`
+      )
+
+      setOrderId(savedOrderId)
+      setAmount(Number(response.data.remaining_amount))
+
+      if (response.data.status === "completed") {
+        localStorage.removeItem("payment_order_id")
+        localStorage.removeItem("payment_plan")
+
+        navigate(response.data.next_url || "/chat", {
+          replace: true,
+        })
+        return
+      }
+
+      if (
+        response.data.status === "pending" ||
+        response.data.status === "partial"
+      ) {
+        setPaymentStatus("waiting")
+
+        if (response.data.status === "partial") {
+          setPartialPayment({
+            received: Number(response.data.received_amount),
+            remaining: Number(response.data.remaining_amount),
+          })
+        }
+      } else {
+        localStorage.removeItem("payment_order_id")
+        localStorage.removeItem("payment_plan")
+      }
+    } catch {
+      localStorage.removeItem("payment_order_id")
+      localStorage.removeItem("payment_plan")
+    } finally {
+      setCheckingPayment(false)
+    }
+  }
+
+  void restoreOrder()
+}, [navigate, planSlug])
+
 
   const validatePhoneNumber = (phone: string): boolean => {
     const cleanPhone = phone.replace(/\s+/g, "")
@@ -134,23 +163,25 @@ export default function VodafoneCashPayment() {
         const response = await api.get(`/payments/order-status/${orderId}/`)
 
 if (response.data.status === "completed") {
-
   clearInterval(pollInterval)
+  setPaymentStatus("completed")
+
+  localStorage.removeItem("payment_order_id")
+  localStorage.removeItem("payment_plan")
 
   toast({
     title: "Payment Verified!",
-    description: "Your subscription has been activated successfully.",
+    description:
+      "Your subscription has been activated successfully.",
   })
 
-
-  localStorage.removeItem("payment_order_id")
-
-
-  navigate("/chat", {
-    replace: true
-  })
-
+  window.setTimeout(() => {
+    navigate(response.data.next_url || "/chat", {
+      replace: true,
+    })
+  }, 1500)
 } else if (response.data.status === "partial") {
+
           setPaymentStatus("waiting")
           setPartialPayment({
             received: Number(response.data.received_amount),
