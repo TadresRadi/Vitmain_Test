@@ -34,7 +34,9 @@ class PasswordResetToken:
             32-byte hex string token
         """
         token = secrets.token_hex(PASSWORD_RESET_TOKEN_LENGTH // 2)
-        logger.debug(f"Generated password reset token: {token[:8]}...")
+        # Do NOT log token prefixes — even 8 chars can help an attacker
+        # narrow down a brute-force search. Log only that a token was generated.
+        logger.debug("Generated password reset token")
         return token
     
     @staticmethod

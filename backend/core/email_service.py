@@ -38,7 +38,7 @@ class EmailService:
         try:
             # Check cooldown to prevent spam
             if not EmailService._check_email_cooldown(user_email, 'password_reset'):
-                logger.warning(f"Email cooldown active for: {user_email}")
+                logger.warning(f"Email cooldown active — skipping send")
                 return False
             
             # Build reset link
@@ -73,7 +73,8 @@ class EmailService:
             )
             
             if success:
-                logger.info(f"Password reset email sent to: {user_email}")
+                # Log without PII — email addresses should not appear in logs
+                logger.info("Password reset email sent successfully")
             
             return success
         

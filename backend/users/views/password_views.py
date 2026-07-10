@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from core.audit_service import get_audit_logger
 
 from users.serializers import PasswordChangeSerializer
 from users.services.password_service import (
@@ -19,7 +20,7 @@ from core.exceptions import ValidationError, AuthenticationError
 from core.decorators import rate_limit
 from core.utils import log_user_activity
 from core.audit_service import get_audit_logger
-
+from core.http_utils import get_client_ip
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class PasswordChangeView(APIView):
     def post(self, request):
         """Change user password."""
         audit_logger = get_audit_logger()
-        user_ip = self._get_client_ip(request)
+        user_ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
 
         try:
@@ -81,14 +82,6 @@ class PasswordChangeView(APIView):
         except Exception as e:
             logger.exception("Password change error")
             raise ValidationError("Failed to change password")
-
-    @staticmethod
-    def _get_client_ip(request) -> str:
-        """Get client IP."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', 'unknown')
 
 
 class PasswordResetRequestView(APIView):

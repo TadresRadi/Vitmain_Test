@@ -24,8 +24,8 @@ from users.services import GoogleAuthService
 from core.services import ServiceException
 from core.exceptions import AuthenticationError, ExternalServiceError, ValidationError
 from core.decorators import rate_limit
-from core.decorators import ratelimit
 from core.utils import log_user_activity
+from core.http_utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
     @rate_limit(endpoint='auth_login', rate='5/m')
     def post(self, request, *args, **kwargs):
         audit_logger = get_audit_logger()
-        user_ip = self._get_client_ip(request)
+        user_ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
 
         try:
@@ -75,13 +75,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
             )
             raise
 
-    @staticmethod
-    def _get_client_ip(request) -> str:
-        """Get client IP."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', 'unknown')
+
 
 
 class RegisterView(APIView):
@@ -132,7 +126,7 @@ class GoogleOAuthCallbackView(APIView):
     """
     permission_classes = [permissions.AllowAny]
     
-    @ratelimit(key='ip', rate='10/m')
+    @rate_limit(endpoint='google_callback', rate='10/m')
     def post(self, request):
         """
         Authenticate user with Google OAuth token.
@@ -181,7 +175,7 @@ class GoogleOAuthCallbackView(APIView):
             
             # Log successful authentication
             audit_logger = get_audit_logger()
-            user_ip = self._get_client_ip(request)
+            user_ip = get_client_ip(request)
             user_agent = request.META.get('HTTP_USER_AGENT', '')
             audit_logger.log_authentication(
                 user_email=email,
@@ -206,6 +200,14 @@ class GoogleOAuthCallbackView(APIView):
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+        except ServiceException as e:
+            # Service-level failures (Google API timeout, config errors, etc.)
+            # should return 503, not 500.
+            logger.error(f"Service error in Google OAuth: {str(e)}")
+            return Response(
+                {'error': 'Authentication service unavailable'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         except ExternalServiceError as e:
             logger.error(f"External service error: {str(e)}")
@@ -267,7 +269,7 @@ class LogoutView(APIView):
     def post(self, request):
         """Logout user and blacklist tokens."""
         audit_logger = get_audit_logger()
-        user_ip = self._get_client_ip(request)
+        user_ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
 
         try:

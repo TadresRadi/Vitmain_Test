@@ -38,6 +38,16 @@ def custom_exception_handler(exc, context):
     else:
         # Unhandled exception
         logger.exception(f"Unhandled exception in {view}", exc_info=exc)
+        
+        # Increment the Prometheus error counter so the HighErrorRate
+        # alert rule can actually fire.
+        try:
+            from core.metrics import inc_app_error
+            inc_app_error()
+        except Exception:
+            # Never let metrics failure mask the original error.
+            pass
+        
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         error_code = 'internal_error'
         message = 'Internal server error'

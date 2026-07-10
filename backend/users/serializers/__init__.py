@@ -1,7 +1,7 @@
+"""User serializers module."""
 from .custom_user_serializer import CustomUserSerializer
 from .register_serializer import RegisterSerializer
 from .my_token_obtain_pair_serializer import MyTokenObtainPairSerializer
-"""User serializers module."""
 from .user_serializer import (
     UserDetailSerializer,
     UserUpdateSerializer,
@@ -23,9 +23,8 @@ __all__ = [
     'MyTokenObtainPairSerializer',
     'RegisterSerializer',
     'SupervisorCreateSerializer',
-
-    "PasswordChangeSerializer",
-    "PasswordResetRequestSerializer",
-    "PasswordResetSerializer",
-    "PasswordStrengthCheckSerializer",
+    'PasswordChangeSerializer',
+    'PasswordResetRequestSerializer',
+    'PasswordResetSerializer',
+    'PasswordStrengthCheckSerializer',
 ]

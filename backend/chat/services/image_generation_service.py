@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from django.conf import settings
 from django.utils import timezone
 
@@ -17,11 +19,18 @@ from chat.services.pollinations_images import generate_pollinations_image_bytes
 from core.utils import log_user_activity
 
 
-def process_image_generation(user, post_gen: AIPostGeneration, request):
+def process_image_generation(user, post_gen: AIPostGeneration, base_url: str):
     """
     Executes the image generation workflow for a given AIPostGeneration.
     Returns (posts_with_images, error_response).
     If successful, error_response is None.
+
+    Args:
+        user: The user who owns the post generation.
+        post_gen: The AIPostGeneration instance to generate images for.
+        base_url: The base URL for building absolute image URLs
+            (e.g., "https://api.example.com/"). The view should pass
+            request.build_absolute_uri("/") for this.
     """
     onboarding = (
         OnboardingResponse.objects
@@ -92,7 +101,8 @@ def process_image_generation(user, post_gen: AIPostGeneration, request):
             with open(out_path, "wb") as f:
                 f.write(image_bytes)
 
-            image_url = request.build_absolute_uri(
+            image_url = urljoin(
+                base_url,
                 f"{settings.MEDIA_URL}{rel_dir}/{i}.jpg"
             )
 

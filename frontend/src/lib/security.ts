@@ -99,7 +99,7 @@ export function validatePasswordStrength(password: string): {
   }
 
   // Special character check
-  if (/[!@#$%^&*()_+\-=\[\]{};:'",.<>?/]/.test(password)) {
+    if (/[!@#$%^&*()_+\-=[\]{};:'",.<>?/]/.test(password)) {
     score += 20
   } else {
     errors.push('At least one special character (!@#$%^&*)')
@@ -189,7 +189,27 @@ export function safeJsonParse<T = any>(json: string): T | null {
  * Generate a nonce for CSP
  * @returns Random nonce string
  */
+/**
+ * Generate a cryptographically secure nonce for CSP
+ * Uses the Web Crypto API (window.crypto.getRandomValues).
+ * Falls back to Math.random only if the Crypto API is unavailable
+ * (extremely old browsers / non-secure contexts).
+ * @returns Random nonce string (base36, ~17+ chars)
+ */
 export function generateNonce(): string {
+  if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+    const bytes = new Uint8Array(16)
+    window.crypto.getRandomValues(bytes)
+    // Convert to a base36 string. 16 bytes = 128 bits of entropy,
+    // which is more than sufficient for CSP nonce purposes.
+    return Array.from(bytes)
+      .map((b) => b.toString(36).padStart(2, '0'))
+      .join('')
+  }
+  // Fallback for environments without Web Crypto API.
+  // This is NOT cryptographically secure and should never run
+  // in a modern browser over HTTPS.
+  console.warn('Web Crypto API unavailable — generateNonce falling back to insecure Math.random')
   return Math.random().toString(36).substring(2, 15)
 }
 
@@ -209,14 +229,49 @@ export const CSPHelper = {
   /**
    * Get CSP meta tag content
    */
+  /**
+   * Get CSP meta tag content
+   * Reads the API URL from VITE_API_URL (same env var used by secure-axios).
+   * In production, set VITE_API_URL to your deployed API URL.
+   */
   getMetaTagContent(): string {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+
+    // Extract the origin from the API URL (strip path).
+    // e.g. "https://api.example.com/api" -> "https://api.example.com"
+    let apiOrigin: string
+    try {
+      const parsed = new URL(apiUrl)
+      apiOrigin = parsed.origin
+    } catch {
+      // Relative URL or malformed — default to 'self'
+      apiOrigin = ''
+    }
+
+    // Build connect-src: always allow 'self', the API origin, Google OAuth endpoints.
+    const connectSources = ["'self'"]
+    if (apiOrigin && apiOrigin !== window.location.origin) {
+      connectSources.push(apiOrigin)
+    }
+    // Google OAuth endpoints
+    connectSources.push(
+      'https://accounts.google.com',
+      'https://oauth2.googleapis.com',
+      'https://tokeninfo.googleapis.com',
+      'https://*.googleapis.com'
+    )
+    // Dev-only: Vite HMR WebSocket
+    if (import.meta.env.DEV) {
+      connectSources.push('ws://localhost:5173', 'ws://127.0.0.1:5173')
+    }
+
     return (
       "default-src 'self'; " +
       "script-src 'self' 'unsafe-inline' https://accounts.google.com https://cdn.jsdelivr.net; " +
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "img-src 'self' https: data:; " +
       "font-src 'self' https://fonts.gstatic.com; " +
-      "connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 ws://localhost:5173 ws://127.0.0.1:5173 https://accounts.google.com https://oauth2.googleapis.com https://tokeninfo.googleapis.com https://*.googleapis.com;"
+      `connect-src ${connectSources.join(' ')};`
     )
   },
 }

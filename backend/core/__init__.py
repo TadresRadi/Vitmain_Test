@@ -14,7 +14,7 @@ from .exceptions import (
 )
 from .services import BaseService, ServiceException
 from .response import APIResponse
-from .decorators import ratelimit
+from .decorators import rate_limit
 from .timing_safe import TimingSafeComparer, RandomDelay
 from .constant_response import ConstantResponse
 
@@ -31,7 +31,7 @@ __all__ = [
     'BaseService',
     'ServiceException',
     'APIResponse',
-    'ratelimit',
+    'rate_limit',
     'TimingSafeComparer',
     'RandomDelay',
     'ConstantResponse',

@@ -7,7 +7,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import get_user_model
 from core.api_key_models import APIKey
-from core.api_key_service import get_api_key_service
+from core.api_key_service import get_api_key_service, API_KEY_PREFIX
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -33,12 +33,18 @@ class APIKeyAuthentication(TokenAuthentication):
     def authenticate(self, request) -> Optional[Tuple[User, APIKey]]:
         """
         Authenticate using API key.
-        
+
         Checks both Authorization header and X-API-Key header.
+
+        If the Authorization header contains a Bearer token that does NOT
+        start with the API key prefix ('vitmain_'), this method returns
+        None so that the next authentication class (JWTAuthentication)
+        can handle it. This is critical because DRF stops at the first
+        AuthenticationFailed — if we raised here, JWT auth would never run.
         """
         # Try Authorization header first
         auth = request.META.get('HTTP_AUTHORIZATION', '').split()
-        
+
         if auth and auth[0].lower() == 'bearer':
             if len(auth) == 1:
                 msg = 'Invalid token header. No credentials provided.'
@@ -46,12 +52,19 @@ class APIKeyAuthentication(TokenAuthentication):
             elif len(auth) > 2:
                 msg = 'Invalid token header. Token string should not contain spaces.'
                 raise AuthenticationFailed(msg)
-            
+
             token = auth[1]
+
+            # If the Bearer token doesn't look like an API key, return None
+            # so JWTAuthentication can try to decode it as a JWT.
+            # Raising here would block JWT auth entirely.
+            if not token.startswith(API_KEY_PREFIX):
+                return None
+
         else:
             # Try X-API-Key header
             token = request.META.get('HTTP_X_API_KEY')
-            
+
             if not token:
                 return None  # No API key provided
 

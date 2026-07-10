@@ -7,6 +7,8 @@ import json
 from django.utils.deprecation import MiddlewareMixin
 from django.utils import timezone
 from core.audit_service import get_audit_logger
+from core.http_utils import get_client_ip
+
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ class AuditLoggingMiddleware(MiddlewareMixin):
 
         try:
             # Get request details
-            user_ip = self._get_client_ip(request)
+            user_ip = get_client_ip(request)
             user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]
             user = request.user if request.user.is_authenticated else None
             user_email = user.email if user else 'anonymous'
@@ -74,13 +76,3 @@ class AuditLoggingMiddleware(MiddlewareMixin):
             logger.error(f"Error in audit logging middleware: {str(e)}")
 
         return response
-
-    @staticmethod
-    def _get_client_ip(request) -> str:
-        """Get client IP from request."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0].strip()
-        else:
-            ip = request.META.get('REMOTE_ADDR', 'unknown')
-        return ip

@@ -21,11 +21,7 @@ interface StorySettings {
   featured_video_id: number | null
 }
 
-interface SuccessStoriesSectionProps {
-  // Add any props if needed
-}
-
-export default function SuccessStoriesSection({}: SuccessStoriesSectionProps) {
+export default function SuccessStoriesSection() {
   const { t } = useTranslation()
   const [successStories, setSuccessStories] = useState<SuccessStory[]>([])
   const [editingSuccessStory, setEditingSuccessStory] = useState<SuccessStory | null>(null)

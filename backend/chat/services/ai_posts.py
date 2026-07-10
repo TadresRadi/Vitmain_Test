@@ -25,7 +25,7 @@ def get_groq_client():
 
 def build_marketing_posts_prompt(onboarding, user_lang="en"):
     """Build the marketing posts prompt from onboarding answers."""
-    from chat.views.utils import get_language_instruction
+    from chat.services.parsing import get_language_instruction
     lang_instruction = get_language_instruction(user_lang)
     
     # Build business type description with subtype
@@ -82,7 +82,7 @@ def generate_posts_from_onboarding(onboarding, user_lang="en"):
     Returns:
         tuple: (posts: list[str], used_ai: bool, error_message: str | None)
     """
-    from chat.views.utils import parse_ai_posts
+    from chat.services.parsing import parse_ai_posts
     client = get_groq_client()
     if not client:
         logger.warning(

@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import { useAuthStore } from "@/store/authStore"
 import { useToast } from "@/hooks/use-toast"
 import api from "@/lib/axios"
+import type { UsageResponse } from "@/types/api"
 import vitaminLogo from "@/components/imge/vitamin-Logo-White.png"
 import GoogleAuthButton from "@/components/GoogleAuthButton"
 

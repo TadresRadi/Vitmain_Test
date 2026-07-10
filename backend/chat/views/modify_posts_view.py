@@ -10,8 +10,7 @@ from rest_framework.views import APIView
 from core.utils import log_user_activity
 from chat.models import AIChatSession, AIChatMessage, AIPostGeneration
 from chat.serializers import AIPostGenerationSerializer
-from .utils import parse_ai_posts, get_language_instruction
-
+from chat.services.parsing import parse_ai_posts, get_language_instruction
 logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")

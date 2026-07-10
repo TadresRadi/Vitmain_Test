@@ -16,11 +16,7 @@ interface Project {
   is_active: boolean
 }
 
-interface ProjectsSectionProps {
-  // Add any props if needed
-}
-
-export default function ProjectsSection({}: ProjectsSectionProps) {
+export default function ProjectsSection() {
   const { t } = useTranslation()
   const [projects, setProjects] = useState<Project[]>([])
   const [editingProject, setEditingProject] = useState<Project | null>(null)

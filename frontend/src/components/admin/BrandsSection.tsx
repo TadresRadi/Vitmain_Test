@@ -14,11 +14,7 @@ interface Brand {
   is_active: boolean
 }
 
-interface BrandsSectionProps {
-  // Add any props if needed
-}
-
-export default function BrandsSection({}: BrandsSectionProps) {
+export default function BrandsSection() {
   const { t } = useTranslation()
   const [brands, setBrands] = useState<Brand[]>([])
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null)

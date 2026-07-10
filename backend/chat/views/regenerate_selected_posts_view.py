@@ -8,11 +8,10 @@ from rest_framework.views import APIView
 
 from core.utils import log_user_activity
 from onboarding.models import OnboardingResponse
-from subscriptions.plan_access import require_active_chat_subscription
+from subscriptions.permissions import HasActiveChatSubscription
 from chat.models import AIChatMessage, AIChatSession, AIPostGeneration
 from chat.serializers import AIPostGenerationSerializer
-from .utils import get_language_instruction, parse_ai_post_text
-
+from chat.services.parsing import get_language_instruction, parse_ai_post_text
 logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
@@ -63,12 +62,10 @@ Return a JSON string only, with no markdown and no text outside the string:
 
 
 class RegenerateSelectedPostsView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasActiveChatSubscription]
 
     def post(self, request):
-        denied = require_active_chat_subscription(request.user)
-        if denied:
-            return denied
+        onboarding = _get_active_onboarding(request.user)
 
         onboarding = _get_active_onboarding(request.user)
         if not onboarding:

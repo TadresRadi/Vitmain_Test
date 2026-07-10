@@ -6,15 +6,11 @@ interface AdminProtectedRouteProps {
 }
 
 export default function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
-  const { isAdminAuthenticated, adminToken } = useAdminAuthStore()
-
-  console.log('AdminProtectedRoute - Auth state:', { isAdminAuthenticated, adminToken })
+  const { isAdminAuthenticated } = useAdminAuthStore()
 
   if (!isAdminAuthenticated) {
-    console.log('AdminProtectedRoute - Redirecting to /admin-login')
     return <Navigate to="/admin-login" replace />
   }
 
-  console.log('AdminProtectedRoute - Rendering children')
   return <>{children}</>
 }

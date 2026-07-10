@@ -5,13 +5,40 @@ from rest_framework.test import APIClient
 
 User = get_user_model()
 
+
 @pytest.mark.django_db
 def test_api_key_auth_header():
-    user = User.objects.create_user(email="akey@example.com", password="pw12345")
+    """A valid API key in the Authorization header should authenticate the request."""
+    user = User.objects.create_user(
+        email="akey@example.com",
+        password="pw12345",
+    )
     svc = get_api_key_service()
-    raw_key, api_key = svc.create_api_key(user=user, name="test")
+    raw_key, _api_key = svc.create_api_key(user=user, name="test")
+
+    # Authenticate with the raw API key
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {raw_key}")
-    resp = client.get("/api/users/profile")  # change to a protected endpoint you have
-    # If you don't have that endpoint, call a simple view that requires auth
-    assert resp.status_code in (200, 401, 403)  # at minimum the request reached auth backend
+
+    # /api/users/profile requires IsAuthenticated — a valid API key
+    # should grant access and return 200.
+    resp = client.get("/api/users/profile")
+
+    assert resp.status_code == 200, (
+        f"API key auth failed: expected 200, got {resp.status_code}. "
+        f"Response: {resp.data}"
+    )
+
+
+@pytest.mark.django_db
+def test_api_key_auth_rejected_with_invalid_key():
+    """An invalid API key should be rejected with 401."""
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION="Bearer vitmain_invalid_key_that_does_not_exist")
+
+    resp = client.get("/api/users/profile")
+
+    assert resp.status_code == 401, (
+        f"Invalid API key should be rejected: expected 401, got {resp.status_code}. "
+        f"Response: {resp.data}"
+    )

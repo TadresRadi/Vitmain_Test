@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from core.utils import log_user_activity
 from onboarding.models import OnboardingResponse
-from subscriptions.plan_access import require_active_chat_subscription
+from subscriptions.permissions import HasActiveChatSubscription
 from chat.models import AIChatMessage
 from chat.serializers import AIChatSessionSerializer, AIPostGenerationSerializer
 from chat.services.ai_posts import (
@@ -46,9 +46,12 @@ class PremiumPostsView(APIView):
         })
 
     def post(self, request):
-        denied = require_active_chat_subscription(request.user)
-        if denied:
-            return denied
+        # Check subscription — can't use permission_classes because GET
+        # doesn't require a subscription, only POST does.
+        self.permission_classes = [permissions.IsAuthenticated, HasActiveChatSubscription]
+        self.check_permissions(request)
+
+        onboarding = _get_active_onboarding(request.user)
 
         onboarding = _get_active_onboarding(request.user)
         if not onboarding:

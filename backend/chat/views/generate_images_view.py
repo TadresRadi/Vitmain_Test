@@ -6,16 +6,13 @@ from datetime import timedelta
 from django.utils import timezone
 from chat.models import AIPostGeneration
 from chat.serializers import AIPostGenerationSerializer
-from subscriptions.plan_access import require_active_chat_subscription
-from chat.services.image_generation_service import process_image_generation
-
+from subscriptions.permissions import HasActiveChatSubscription
+from chat.services import process_image_generation
 class GenerateImagesView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasActiveChatSubscription]
 
     def post(self, request):
-        denied = require_active_chat_subscription(request.user)
-        if denied:
-            return denied
+        post_gen_id = request.data.get("post_generation_id")
 
         post_gen_id = request.data.get("post_generation_id")
         if not post_gen_id:
@@ -67,8 +64,8 @@ class GenerateImagesView(APIView):
         post_gen.images_generation_started_at = timezone.now()
         post_gen.save(update_fields=['images_status', 'images_generation_started_at'])
 
-        posts_with_images, error_response = process_image_generation(request.user, post_gen, request)
-
+        base_url = request.build_absolute_uri("/")
+        posts_with_images, error_response = process_image_generation(request.user, post_gen, base_url)
         if error_response:
             return Response(error_response, status=status.HTTP_502_BAD_GATEWAY)
 

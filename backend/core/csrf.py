@@ -30,7 +30,8 @@ class CSRFTokenManager:
             32-byte hex string token
         """
         token = secrets.token_hex(CSRF_TOKEN_LENGTH // 2)
-        logger.debug(f"Generated CSRF token: {token[:8]}...")
+        # Do NOT log token prefixes — log only that a token was generated.
+        logger.debug("Generated CSRF token")
         return token
     
     @staticmethod

@@ -5,16 +5,13 @@ from rest_framework.views import APIView
 from core.utils import log_user_activity
 from chat.models import AIChatSession, AIChatMessage, AIPostGeneration
 from chat.serializers import AIPostGenerationSerializer
-from subscriptions.plan_access import require_active_chat_subscription
-
+from subscriptions.permissions import HasActiveChatSubscription
 
 class CompletePostReviewView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasActiveChatSubscription]
 
     def post(self, request):
-        denied = require_active_chat_subscription(request.user)
-        if denied:
-            return denied
+        post_gen = AIPostGeneration.objects.filter(user=request.user).order_by('-created_at').first()
 
         post_gen = AIPostGeneration.objects.filter(user=request.user).order_by('-created_at').first()
         if not post_gen:

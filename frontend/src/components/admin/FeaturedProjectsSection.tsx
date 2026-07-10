@@ -16,11 +16,7 @@ interface FeaturedProject {
   is_active: boolean
 }
 
-interface FeaturedProjectsSectionProps {
-  // Add any props if needed
-}
-
-export default function FeaturedProjectsSection({}: FeaturedProjectsSectionProps) {
+export default function FeaturedProjectsSection() {
   const { t } = useTranslation()
   const [featuredProjects, setFeaturedProjects] = useState<FeaturedProject[]>([])
   const [editingFeaturedProject, setEditingFeaturedProject] = useState<FeaturedProject | null>(null)

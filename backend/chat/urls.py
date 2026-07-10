@@ -6,9 +6,9 @@ from chat.views import (
     RegenerateSelectedPostsView,
     CompletePostReviewView,
     PostsHistoryView,
+    ImagesHistoryView,
     ImagesOnlyHistoryView,
 )
-from chat.views.images_history_view import ImagesHistoryView
 
 urlpatterns = [
     path('chat/premium-posts', PremiumPostsView.as_view(), name='premium_posts'),

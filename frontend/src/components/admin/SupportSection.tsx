@@ -23,11 +23,7 @@ interface Conversation {
   }>
 }
 
-interface SupportSectionProps {
-  // Add any props if needed
-}
-
-export default function SupportSection({}: SupportSectionProps) {
+export default function SupportSection() {
   const { t } = useTranslation()
   const { adminUser } = useAdminAuthStore()
   const [conversations, setConversations] = useState<Conversation[]>([])

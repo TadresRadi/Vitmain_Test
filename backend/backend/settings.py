@@ -46,7 +46,9 @@ if SENTRY_DSN:
             traces_sample_rate=float(
                 os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.0")
             ),
-            send_default_pii=True,
+            # Do NOT send PII (user IPs, cookies, request bodies) to Sentry.
+            # This is required for GDPR/CCPA compliance.
+            send_default_pii=False,
         )
     except ImportError:
         pass
@@ -81,6 +83,7 @@ if not ALLOWED_HOSTS and not DEBUG:
     raise RuntimeError("ALLOWED_HOSTS env var is required when DEBUG=false")
 
 # Application definition
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -91,7 +94,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
-    "django_prometheus",
+    'django_prometheus',
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
@@ -99,7 +102,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    
+
     # Local apps
     'core',
     'users',
@@ -115,23 +118,17 @@ ENABLE_PROMETHEUS = (
     os.environ.get("ENABLE_PROMETHEUS", "false").lower() == "true"
 )
 
-if ENABLE_PROMETHEUS:
-    INSTALLED_APPS = [
-        "django_prometheus",
-        *INSTALLED_APPS,
-    ]
-
 MIDDLEWARE = [
+    'core.middleware.request_id.RequestIDMiddleware',
     'core.middleware.slow_query.QueryTimingMiddleware',
-    "django_prometheus.middleware.PrometheusBeforeMiddleware",
-    "core.middleware.slow_query.QueryTimingMiddleware",
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     # CORS Middleware MUST be at the top to handle preflight requests
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sites.middleware.CurrentSiteMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.middleware.security.SecurityMiddleware',
-        # NEW: Security middleware
+    # NEW: Security middleware (uncomment in security hardening phase)
     # 'core.https_middleware.HTTPSEnforcerMiddleware',
     # 'core.https_middleware.SecureProxyHeadersMiddleware',
     # 'core.security_headers.SecurityHeadersMiddleware',
@@ -143,18 +140,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.validation_middleware.RequestValidationMiddleware',
     'core.audit_middleware.AuditLoggingMiddleware',
-    "django_prometheus.middleware.PrometheusAfterMiddleware",
-
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
-MIDDLEWARE.insert(0, 'core.middleware.slow_query.QueryTimingMiddleware')
 ROOT_URLCONF = 'backend.urls'
 
-if ENABLE_PROMETHEUS:
-    MIDDLEWARE = [
-        "django_prometheus.middleware.PrometheusBeforeMiddleware",
-        *MIDDLEWARE,
-        "django_prometheus.middleware.PrometheusAfterMiddleware",
-    ]
 
 TEMPLATES = [
     {
@@ -242,6 +231,7 @@ CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "false").lower
 CORS_ALLOW_CREDENTIALS = os.environ.get("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
 
 # Additional CORS settings for preflight requests
+# Additional CORS settings for preflight requests
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -253,7 +243,6 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
-CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -264,10 +253,11 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+# In development, optionally allow an ngrok tunnel via env var (NGROK_ORIGIN).
 if DEBUG:
-    for origin in ["https://lilac-awkward-sprain.ngrok-free.dev"]:
-        if origin not in CORS_ALLOWED_ORIGINS:
-            CORS_ALLOWED_ORIGINS.append(origin)
+    ngrok_origin = os.environ.get('NGROK_ORIGIN')
+    if ngrok_origin and ngrok_origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(ngrok_origin)
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -291,8 +281,13 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        # APIKeyAuthentication MUST come before JWTAuthentication.
+        # DRF stops at the first AuthenticationFailed, so if JWT runs
+        # first, it raises InvalidToken for API keys and blocks APIKeyAuth.
+        # APIKeyAuth returns None for non-API-key tokens (JWTs), letting
+        # JWTAuthentication handle them.
+        'core.auth_backends.APIKeyAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'core.auth_backends.APIKeyAuthentication',  # Add this
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -418,208 +413,132 @@ VODAFONE_RECEIVER_NUMBER = os.environ.get("VODAFONE_RECEIVER_NUMBER", "")
 VODAFONE_WEBHOOK_SECRET_TOKEN = os.environ.get("VODAFONE_WEBHOOK_SECRET_TOKEN", "")
 
 # Validate only outside development/testing
-if not DEBUG and "test" not in sys.argv:
+# Validate only outside development/testing.
+# Detect both `manage.py test` and `pytest` (including `python -m pytest`).
+_is_test_run = (
+    "test" in sys.argv
+    or any("pytest" in str(arg) for arg in sys.argv)
+)
+if not DEBUG and not _is_test_run:
     if not VODAFONE_WEBHOOK_SECRET_TOKEN:
         raise RuntimeError("VODAFONE_WEBHOOK_SECRET_TOKEN env var is required")
 
     if not VODAFONE_RECEIVER_NUMBER:
         raise RuntimeError("VODAFONE_RECEIVER_NUMBER env var is required")
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-        'simple': {
-            'format': '{levelname} {asctime} {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-    },
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.environ.get(
-    'LOG_FILE',
-    str(LOG_DIR / 'django.log')
-),
-            'maxBytes': 1024 * 1024 * 10,  # 10 MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-        },
-        'security_file': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.environ.get(
-    'SECURITY_LOG_FILE',
-    str(LOG_DIR / 'security.log')
-),
-            'maxBytes': 1024 * 1024 * 10,  # 10 MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.security': {
-            'handlers': ['console', 'security_file'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'users': {
-            'handlers': ['console', 'file', 'security_file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'allauth': {
-            'handlers': ['console', 'file', 'security_file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
-}
+# ============================================================================
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
 
-LOGGING['loggers']['django.db.backends'] = {
-    'handlers': ['file'],
-    'level': 'WARNING',
-    'propagate': False,
-}
-LOG_DIR.mkdir(parents=True, exist_ok=True)
-USE_JSON_LOGS = (
-    os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
-)
-if ENABLE_PROMETHEUS:
-    # put django_prometheus first
-    INSTALLED_APPS = ['django_prometheus'] + INSTALLED_APPS
-    MIDDLEWARE = ['django_prometheus.middleware.PrometheusBeforeMiddleware'] + MIDDLEWARE + ['django_prometheus.middleware.PrometheusAfterMiddleware']
-
-# 4) Logging additions (append to your LOGGING dict)
 USE_JSON_LOGS = os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
 if USE_JSON_LOGS:
     try:
-        from pythonjsonlogger import jsonlogger
-    except Exception:
-        USE_JSON_LOGS = False
-
-# ensure keys exist before setting entries
-LOGGING.setdefault("formatters", {})
-LOGGING.setdefault("handlers", {})
-LOGGING.setdefault("loggers", {})
-
-if USE_JSON_LOGS:
-    LOGGING["formatters"]["json"] = {
-        "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-        "fmt": "%(levelname)s %(asctime)s %(module)s %(message)s",
-    }
-else:
-    LOGGING["formatters"]["verbose"] = {
-        "format": "{levelname} {asctime} {module} {message}",
-        "style": "{",
-    }
-
-# console handler
-LOGGING["handlers"].setdefault("console", {
-    "class": "logging.StreamHandler",
-    "formatter": "json" if USE_JSON_LOGS else "verbose",
-})
-
-# db_file handler for slow queries
-LOGGING["handlers"].setdefault("db_file", {
-    "class": "logging.handlers.RotatingFileHandler",
-    "filename": os.environ.get("DB_LOG_FILE", str(LOG_DIR / "db.log")),
-    "maxBytes": 10 * 1024 * 1024,
-    "backupCount": 3,
-    "formatter": "json" if USE_JSON_LOGS else "verbose",
-})
-
-# set django.db.backends logger to capture warnings/slow queries
-LOGGING["loggers"].setdefault("django.db.backends", {
-    "handlers": ["db_file", "console"],
-    "level": "WARNING",
-    "propagate": False,
-})
-
-SLOW_QUERY_THRESHOLD_MS = int(
-    os.environ.get("SLOW_QUERY_THRESHOLD_MS", "500")
-)
-
-print(LOGGING["handlers"]["file"]["filename"])
-# Structured JSON logging (optional)
-USE_JSON_LOGS = os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
-if USE_JSON_LOGS:
-    try:
-        from pythonjsonlogger import jsonlogger
-    except Exception:
+        from pythonjsonlogger import jsonlogger  # noqa: F401
+    except ImportError:
         # python-json-logger not installed; fall back to text logs
         USE_JSON_LOGS = False
 
-LOGGING.setdefault('version', 1)
-LOGGING.setdefault('disable_existing_loggers', False)
-
-LOGGING['formatters'] = LOGGING.get('formatters', {})
-if USE_JSON_LOGS:
-    LOGGING['formatters']['json'] = {
-        '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-        'fmt': '%(levelname)s %(asctime)s %(module)s %(message)s'
-    }
-else:
-    LOGGING['formatters']['verbose'] = {
-        'format': '{levelname} {asctime} {module} {message}',
-        'style': '{',
-    }
-
-LOGGING['handlers'].setdefault('console', {
-    'class': 'logging.StreamHandler',
-    'formatter': 'json' if USE_JSON_LOGS else 'verbose',
-})
-
-# Add a dedicated file handler for slow queries / DB warnings
-LOGGING['handlers'].setdefault('db_file', {
-    'class': 'logging.handlers.RotatingFileHandler',
-    'filename': os.environ.get('DB_LOG_FILE', str(LOG_DIR / 'db.log')),
-    'maxBytes': 10 * 1024 * 1024,
-    'backupCount': 3,
-    'formatter': 'json' if USE_JSON_LOGS else 'verbose',
-})
-
-# Ensure DB logger logs warnings (slow queries)
-LOGGING['loggers'].setdefault('django.db.backends', {
-    'handlers': ['db_file', 'console'],
-    'level': 'WARNING',  # WARNING logs queries slower than DEBUG and all SQL errors
-    'propagate': False,
-})
-
-# Optional: detect per-query duration and log slow ones with warnings using Django DB backend instrumentation in production
+# Slow query threshold (requests slower than this are logged to db.log)
 SLOW_QUERY_THRESHOLD_MS = int(os.environ.get("SLOW_QUERY_THRESHOLD_MS", "200"))
+
+_json_formatter_config = {
+    "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+    "fmt": "%(levelname)s %(asctime)s %(module)s %(message)s",
+}
+_verbose_formatter_config = {
+    "format": "{levelname} {asctime} [req:{request_id}] {module} {message}",
+    "style": "{",
+    "datefmt": "%Y-%m-%d %H:%M:%S",
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": _json_formatter_config,
+        "verbose": _verbose_formatter_config,
+        "simple": {
+            "format": "{levelname} {asctime} [req:{request_id}] {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "filters": {
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+        "request_id": {
+            "()": "core.log_filters.RequestIDFilter",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "json" if USE_JSON_LOGS else "simple",
+            "filters": ["request_id"],
+        },
+        "file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.environ.get("LOG_FILE", str(LOG_DIR / "django.log")),
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 5,
+            "formatter": "json" if USE_JSON_LOGS else "verbose",
+            "filters": ["request_id"],
+        },
+        "security_file": {
+            "level": "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.environ.get("SECURITY_LOG_FILE", str(LOG_DIR / "security.log")),
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 5,
+            "formatter": "json" if USE_JSON_LOGS else "verbose",
+            "filters": ["request_id"],
+        },
+        "db_file": {
+            "level": "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.environ.get("DB_LOG_FILE", str(LOG_DIR / "db.log")),
+            "maxBytes": 1024 * 1024 * 10,  # 10 MB
+            "backupCount": 3,
+            "formatter": "json" if USE_JSON_LOGS else "verbose",
+            "filters": ["request_id"],
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["console", "security_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["db_file", "console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "users": {
+            "handlers": ["console", "file", "security_file"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": False,
+        },
+        "allauth": {
+            "handlers": ["console", "file", "security_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
 logging.config.dictConfig(LOGGING)
-
-print("=" * 60)
-print("SECURE_SSL_REDIRECT =", SECURE_SSL_REDIRECT)
-print("DEBUG =", DEBUG)
-print("=" * 60)
-
-
 # ============================================================================
 # EMAIL CONFIGURATION
 # ============================================================================
