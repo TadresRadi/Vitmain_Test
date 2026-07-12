@@ -24,4 +24,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install bandit
-      - run: bandit -r backend -n 5 -c backend/.bandit.yaml
+      - run: bandit -r backend -n 5 -c backend/bandit.yaml
