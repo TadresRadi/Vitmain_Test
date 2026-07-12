@@ -17,8 +17,8 @@ export async function getPremiumPosts(): Promise<PremiumPostsResponse> {
   return response.data;
 }
 
-export async function generatePremiumPosts(): Promise<PremiumPostsResponse> {
-  const response = await api.post<PremiumPostsResponse>("/chat/premium-posts");
+export async function generatePremiumPosts(options?: { force_regenerate?: boolean }): Promise<PremiumPostsResponse> {
+  const response = await api.post<PremiumPostsResponse>("/chat/premium-posts", options || {});
   return response.data;
 }
 

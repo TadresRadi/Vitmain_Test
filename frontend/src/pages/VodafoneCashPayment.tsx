@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,15 +9,21 @@ import AnimatedBackground from "@/components/AnimatedBackground"
 import { useToast } from "@/hooks/use-toast"
 import { useTranslation } from "react-i18next"
 import api from "@/lib/axios"
+import { getRegenerationOption, clearRegenerationOption } from "@/services/regenerationFlowService"
 
 export default function VodafoneCashPayment() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const location = useLocation()
   const { toast } = useToast()
   const { t } = useTranslation()
 
   const planName = searchParams.get("plan_name") || "Professional Plan"
   const planSlug = searchParams.get("plan") || "basic"
+
+  // Check if this is a regeneration flow
+  const isRegenerationFlow = (location.state as { isRegenerationFlow?: boolean })?.isRegenerationFlow || false
+  const regenerationOption = (location.state as { regenerationOption?: string })?.regenerationOption || getRegenerationOption()
 
   const [amount, setAmount] = useState(
     parseFloat(searchParams.get("amount") || "200")
@@ -176,9 +182,32 @@ if (response.data.status === "completed") {
   })
 
   window.setTimeout(() => {
-    navigate(response.data.next_url || "/chat", {
-      replace: true,
-    })
+    // Handle regeneration flow after payment
+    if (isRegenerationFlow && regenerationOption) {
+      clearRegenerationOption()
+      
+      if (regenerationOption === "new_business_info") {
+        // After new business info flow, go to chat with auto-start
+        navigate("/chat", { 
+          state: { autoStartCampaign: true },
+          replace: true 
+        })
+      } else if (regenerationOption === "existing_business_info") {
+        // After existing business info flow, go to chat with auto-start
+        navigate("/chat", { 
+          state: { autoStartCampaign: true },
+          replace: true 
+        })
+      } else {
+        navigate(response.data.next_url || "/chat", {
+          replace: true,
+        })
+      }
+    } else {
+      navigate(response.data.next_url || "/chat", {
+        replace: true,
+      })
+    }
   }, 1500)
 } else if (response.data.status === "partial") {
 

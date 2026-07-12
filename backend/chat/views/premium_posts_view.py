@@ -63,33 +63,38 @@ class PremiumPostsView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Prevent duplicate post generation - check if user already has active posts
-        existing_post_gen = request.user.post_generations.filter(
-            posts_review_complete=False
-        ).order_by("-created_at").first()
-        
-        if existing_post_gen:
-            # Posts already exist in progress, return them instead of regenerating
-            return Response({
-                "session": AIChatSessionSerializer(seed_onboarding_chat_session(request.user, onboarding)).data,
-                "post_generation": AIPostGenerationSerializer(existing_post_gen).data,
-                "posts": existing_post_gen.posts,
-                "message": "Posts already exist, returning existing data."
-            })
+        # Check if this is a forced regeneration request
+        force_regenerate = request.data.get('force_regenerate', False)
 
-        # Also check if user has completed posts and return those if they exist
-        completed_post_gen = request.user.post_generations.filter(
-            posts_review_complete=True
-        ).order_by("-created_at").first()
-        
-        if completed_post_gen:
-            # User already has completed posts, return them
-            return Response({
-                "session": AIChatSessionSerializer(seed_onboarding_chat_session(request.user, onboarding)).data,
-                "post_generation": AIPostGenerationSerializer(completed_post_gen).data,
-                "posts": completed_post_gen.posts,
-                "message": "Posts already exist, returning existing data."
-            })
+        # Prevent duplicate post generation - check if user already has active posts
+        # Only skip this check if force_regenerate is True
+        if not force_regenerate:
+            existing_post_gen = request.user.post_generations.filter(
+                posts_review_complete=False
+            ).order_by("-created_at").first()
+            
+            if existing_post_gen:
+                # Posts already exist in progress, return them instead of regenerating
+                return Response({
+                    "session": AIChatSessionSerializer(seed_onboarding_chat_session(request.user, onboarding)).data,
+                    "post_generation": AIPostGenerationSerializer(existing_post_gen).data,
+                    "posts": existing_post_gen.posts,
+                    "message": "Posts already exist, returning existing data."
+                })
+
+            # Also check if user has completed posts and return those if they exist
+            completed_post_gen = request.user.post_generations.filter(
+                posts_review_complete=True
+            ).order_by("-created_at").first()
+            
+            if completed_post_gen:
+                # User already has completed posts, return them
+                return Response({
+                    "session": AIChatSessionSerializer(seed_onboarding_chat_session(request.user, onboarding)).data,
+                    "post_generation": AIPostGenerationSerializer(completed_post_gen).data,
+                    "posts": completed_post_gen.posts,
+                    "message": "Posts already exist, returning existing data."
+                })
 
         session = seed_onboarding_chat_session(request.user, onboarding)
         user_lang = request.user.language or "en"
@@ -121,7 +126,7 @@ class PremiumPostsView(APIView):
         log_user_activity(
             request.user,
             "generate_marketing_posts",
-            {"post_generation_id": str(post_gen.id), "ai_generated": used_ai},
+            {"post_generation_id": str(post_gen.id), "ai_generated": used_ai, "force_regenerate": force_regenerate},
         )
 
         return Response({

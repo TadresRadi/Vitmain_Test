@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import { useAuthStore } from "@/store/authStore"
 import api from "@/lib/axios"
 import { useToast } from "@/hooks/use-toast"
+import { getRegenerationOption, clearRegenerationOption } from "@/services/regenerationFlowService"
 
 interface Plan {
   id: number
@@ -50,6 +51,10 @@ export default function Pricing() {
   const { isAuthenticated } = useAuthStore()
   const { toast } = useToast()
   const [submittingPlanId, setSubmittingPlanId] = useState<number | null>(null)
+  const location = useLocation()
+  
+  // Check if this is a regeneration flow from onboarding
+  const isRegenerationFlow = (location.state as { isRegenerationFlow?: boolean })?.isRegenerationFlow || false
 
   const handlePlanAction = async (plan: Plan) => {
     if (isAuthenticated) {
@@ -64,22 +69,28 @@ export default function Pricing() {
         
         // Check if the response indicates redirect to payment page
         if (response.data.action === "redirect_payment") {
-          // Redirect to Vodafone Cash payment page
-          navigate(`/payment/vodafone-cash?plan=${response.data.plan_slug}&plan_name=${response.data.plan_name}&amount=${response.data.amount}`)
+          // Redirect to Vodafone Cash payment page with regeneration flow info
+          const regenerationOption = getRegenerationOption()
+          navigate(`/payment/vodafone-cash?plan=${response.data.plan_slug}&plan_name=${response.data.plan_name}&amount=${response.data.amount}`, {
+            state: { 
+              isRegenerationFlow: isRegenerationFlow || regenerationOption !== null,
+              regenerationOption: regenerationOption
+            }
+          })
           return
         }
         
-        // Check if user is coming from regeneration flow
-        const regenerationOption = localStorage.getItem("regeneration_option")
+        // Check if user is coming from regeneration flow (for direct subscription without payment)
+        const regenerationOption = getRegenerationOption()
         
         if (regenerationOption === "new_business_info") {
           // Clear the option and redirect to onboarding
-          localStorage.removeItem("regeneration_option")
+          clearRegenerationOption()
           navigate('/new-onboarding')
           return
         } else if (regenerationOption === "existing_business_info") {
           // Clear the option and trigger regeneration with existing data
-          localStorage.removeItem("regeneration_option")
+          clearRegenerationOption()
           try {
             await api.post("/chat/premium-posts")
             toast({

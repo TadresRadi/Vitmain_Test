@@ -28,7 +28,7 @@ import {
   submitFeedback as submitChatFeedback,
 } from "@/services/chatService"
 import { getOnboarding } from "@/services/onboardingService"
-import { setRegenerationOption } from "@/services/regenerationFlowService"
+import { setRegenerationOption, getRegenerationOption, clearRegenerationOption } from "@/services/regenerationFlowService"
 import type { AIPostGeneration, ApiError, FeedbackPayload, PostWithImage } from "@/types/api"
 
 export default function Chat() {
@@ -177,7 +177,17 @@ export default function Chat() {
   const handleGeneratePosts = async () => {
     setGeneratingPosts(true)
     try {
-      const data = await generatePremiumPosts()
+      // Check if this is a regeneration flow
+      const regenerationOption = getRegenerationOption()
+      const forceRegenerate = regenerationOption !== null
+      
+      const data = await generatePremiumPosts(forceRegenerate ? { force_regenerate: true } : undefined)
+      
+      // Clear regeneration option after successful generation
+      if (regenerationOption) {
+        clearRegenerationOption()
+      }
+      
       if (data.post_generation) {
         setPostGen(data.post_generation)
         toast({
@@ -396,7 +406,7 @@ export default function Chat() {
   const handleUseNewBusinessInfo = () => {
     setShowNewPostsOptions(false)
     setRegenerationOption("new_business_info")
-    navigate("/pricing")
+    navigate("/new-onboarding")
   }
 
   // Handle Option B: Use Existing Business Information

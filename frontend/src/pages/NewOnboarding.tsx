@@ -202,8 +202,17 @@ const handleNext = () => {
         description: t("onboarding.new.savedDesc", "Next, choose a plan to unlock your campaign posts."),
       })
 
+      // Check if this is a regeneration flow
+      const isRegenerationFlow = getRegenerationOption() === "new_business_info"
+
       // Go to pricing; post generation must happen only after plan selection.
-      navigate("/pricing", { replace: true })
+      // For regeneration flow, we want to pass state to indicate this is for regeneration
+      navigate("/pricing", { 
+        replace: true,
+        state: { 
+          isRegenerationFlow: isRegenerationFlow 
+        }
+      })
     } catch (error) {
       const apiError = error as ApiError
       console.error("Onboarding completion failed:", error)
