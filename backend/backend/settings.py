@@ -138,6 +138,8 @@ MIDDLEWARE = [
     'core.validation_middleware.RequestValidationMiddleware',
     'core.audit_middleware.AuditLoggingMiddleware',
     'django_prometheus.middleware.PrometheusAfterMiddleware',
+    # Custom metrics: records request duration histogram
+    'core.middleware.prometheus_metrics.PrometheusMetricsMiddleware',
 ]
 ROOT_URLCONF = 'backend.urls'
 

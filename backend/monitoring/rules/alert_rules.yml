@@ -1,14 +1,16 @@
 groups:
   - name: vitmain.rules
     rules:
+      # ===== Existing rules =====
+
       - alert: High5xxRate
         expr: rate(django_http_responses_total{status=~"5.."}[5m]) > 0.05
         for: 5m
         labels:
           severity: critical
         annotations:
-          summary: "High 5xx rate"
-          description: "High 5xx rate detected over 5 minutes."
+          summary: "High 5xx error rate"
+          description: "More than 0.05 5xx responses/sec over the last 5 minutes."
 
       - alert: HighErrorRate
         expr: increase(vitmain_api_errors_total[5m]) > 10
@@ -17,3 +19,45 @@ groups:
           severity: warning
         annotations:
           summary: "Spike in application errors"
+          description: "More than 10 application errors in 5 minutes."
+
+      # ===== New rules =====
+
+      - alert: HighP95Latency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(vitmain_request_duration_seconds_bucket[5m])) by (le, endpoint)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p95 latency on {{ $labels.endpoint }}"
+          description: "p95 latency is above 2 seconds for 5 minutes on endpoint {{ $labels.endpoint }}."
+
+      - alert: High4xxRate
+        expr: rate(django_http_responses_total{status=~"4.."}[5m]) > 1.0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 4xx error rate"
+          description: "More than 1.0 4xx responses/sec for 10 minutes. May indicate client bugs or abuse."
+
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: django_db_new_connections_total / django_db_connections_total > 0.8
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "More than 80% of database connections are in use for 5 minutes."
+
+      - alert: PrometheusTargetDown
+        expr: up{job="vitmain-app"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Vitmain app is unreachable by Prometheus"
+          description: "Prometheus cannot scrape the vitmain-app target for 2 minutes. The app may be down."

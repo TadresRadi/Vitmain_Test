@@ -1,4 +1,15 @@
-version: '3.8'
+# Local monitoring stack: Prometheus + Alertmanager + Grafana.
+#
+# Usage:
+#   docker compose -f docker-compose.monitor.yml up -d
+#   open http://localhost:3000  (Grafana, login: admin / $GRAFANA_ADMIN_PASSWORD)
+#   open http://localhost:9090  (Prometheus)
+#   open http://localhost:9093  (Alertmanager)
+#
+# Environment variables (set in .env or shell):
+#   GRAFANA_ADMIN_PASSWORD  (required — no default for security)
+#   SLACK_WEBHOOK_URL       (optional — enables Slack alerts)
+
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -9,6 +20,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
     ports:
       - "9090:9090"
+    restart: unless-stopped
 
   alertmanager:
     image: prom/alertmanager:latest
@@ -16,15 +28,25 @@ services:
       - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     ports:
       - "9093:9093"
+    restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:9.5.0
+    image: grafana/grafana:11.4.0
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Password MUST be set via env var — no insecure default.
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # Provision dashboards from /etc/grafana/provisioning/dashboards/
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
     ports:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    restart: unless-stopped
+    depends_on:
+      - prometheus
 
 volumes:
   grafana_data:

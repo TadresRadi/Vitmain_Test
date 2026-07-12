@@ -1,0 +1,14 @@
+# Tell Grafana where to find dashboard JSON files.
+# Any .json file in /var/lib/grafana/dashboards/ will be auto-loaded.
+apiVersion: 1
+
+providers:
+  - name: 'Vitmain Dashboards'
+    orgId: 1
+    folder: 'Vitmain'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
