@@ -4,12 +4,9 @@ Generates and validates CSRF tokens for OAuth and form submissions.
 """
 import logging
 import secrets
-import hashlib
 import hmac
 from typing import Optional, Tuple
-from django.conf import settings
 from django.core.cache import cache
-from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 

@@ -9,15 +9,12 @@ Run: pytest payments/tests/test_payment_matching_service.py -v
 """
 import pytest
 from decimal import Decimal
-from django.db import IntegrityError
 
 from payments.models import PaymentOrder, PaymentTransaction
 from payments.services.payment_matching_service import PaymentMatchingService
-from subscriptions.models import Plan, Subscription
+from subscriptions.models import Subscription
 from tests.factories import (
     UserFactory,
-    PlanFactory,
-    PaymentOrderFactory,
 )
 
 

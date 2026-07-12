@@ -3,11 +3,10 @@ Email service for sending notifications.
 Handles password resets, email verification, etc.
 """
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from django.conf import settings
-from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)

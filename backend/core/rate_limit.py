@@ -3,7 +3,6 @@ Advanced rate limiting for API endpoints.
 Supports per-IP, per-user, and sliding window algorithms.
 """
 import logging
-import hashlib
 from typing import Optional, Tuple
 import time
 from django.core.cache import cache

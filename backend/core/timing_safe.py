@@ -4,7 +4,6 @@ Timing-safe utilities to prevent timing attacks.
 import logging
 import time
 import random
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

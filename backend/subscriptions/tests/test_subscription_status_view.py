@@ -7,7 +7,6 @@ Run: pytest subscriptions/tests/test_subscription_status_view.py -v
 """
 import pytest
 
-from subscriptions.models import Subscription
 
 
 STATUS_URL = "/api/subscription/status"

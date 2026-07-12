@@ -9,7 +9,6 @@ This test file tries the new location first, then falls back.
 
 Run: pytest chat/tests/test_parsing.py -v
 """
-import pytest
 
 
 # Try importing from the new location (Phase 3 Batch 5), fall back to old

@@ -4,15 +4,13 @@ Comprehensive validators for common fields and custom validations.
 """
 import logging
 import re
-from typing import Optional, List
-from django.core.exceptions import ValidationError as DjangoValidationError
+from typing import List
 
 logger = logging.getLogger(__name__)
 
 
 class ValidatorError(Exception):
     """Custom validation error."""
-    pass
 
 
 class InputValidator:

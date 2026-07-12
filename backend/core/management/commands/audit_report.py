@@ -2,9 +2,6 @@
 Management command for generating audit reports.
 """
 from django.core.management.base import BaseCommand
-from django.utils import timezone
-from datetime import timedelta
-from core.models import AuditLog
 from core.audit_queries import AuditLogQueries
 
 

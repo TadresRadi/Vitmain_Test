@@ -27,7 +27,6 @@ class HasActiveChatSubscription(permissions.BasePermission):
         try:
             sub = Subscription.objects.select_related("plan").get(user=user)
         except Subscription.DoesNotExist:
-            from rest_framework import status as http_status
             raise PermissionDenied(
                 detail={
                     "error": "No active subscription found. Plan selection is required.",

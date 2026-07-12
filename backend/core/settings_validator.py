@@ -3,7 +3,6 @@ Validate security settings are properly configured.
 Run at startup to catch configuration issues early.
 """
 import logging
-import os
 from django.conf import settings
 
 logger = logging.getLogger(__name__)

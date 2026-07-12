@@ -4,9 +4,7 @@ Handles token generation, validation, and blacklisting.
 """
 import logging
 from typing import Optional, Dict, Any
-from datetime import timedelta
 from django.core.cache import cache
-from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth import get_user_model
 

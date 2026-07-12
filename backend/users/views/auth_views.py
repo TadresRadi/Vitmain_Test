@@ -12,7 +12,6 @@ from django.utils import timezone
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django.conf import settings
-from core.timing_safe import RandomDelay
 from core.audit_service import get_audit_logger
 
 from users.serializers import (

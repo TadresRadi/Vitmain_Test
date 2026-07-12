@@ -3,10 +3,8 @@ Middleware for automatic audit logging.
 Captures request/response info for audit trail.
 """
 import logging
-import json
 from django.utils.deprecation import MiddlewareMixin
 from django.utils import timezone
-from core.audit_service import get_audit_logger
 from core.http_utils import get_client_ip
 
 

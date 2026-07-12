@@ -2,7 +2,7 @@
 User service for handling user-related business logic.
 """
 import logging
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Dict, Any
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from core.services import BaseService, ServiceException

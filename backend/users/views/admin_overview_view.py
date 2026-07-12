@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from subscriptions.models import Subscription
-from chat.models import AIPostGeneration
 from chat.models.generation_history import GeneratedPost, GeneratedImage
 from django.db.models.functions import TruncDate
 from django.db.models import Count, Sum

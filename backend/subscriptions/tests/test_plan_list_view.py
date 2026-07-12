@@ -8,7 +8,6 @@ Run: pytest subscriptions/tests/test_plan_list_view.py -v
 import pytest
 from decimal import Decimal
 
-from subscriptions.models import Plan
 
 
 PLANS_URL = "/api/plans"

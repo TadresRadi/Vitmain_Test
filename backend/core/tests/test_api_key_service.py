@@ -1,5 +1,4 @@
 import pytest
-from django.utils import timezone
 from core.api_key_service import get_api_key_service
 from django.contrib.auth import get_user_model
 from core.api_key_models import APIKey

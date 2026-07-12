@@ -1,2 +1,0 @@
-from .support_message_serializer import SupportMessageSerializer
-from .support_chat_serializer import SupportChatSerializer
