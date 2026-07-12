@@ -30,9 +30,6 @@ STABILITY_API_TOKEN = os.environ.get("STABILITY_API_TOKEN")
 
 # DeepAI token (used for AI-generated images)
 DEEPAI_API_TOKEN = os.environ.get("DEEPAI_API_TOKEN")
-
-import os
-
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
 
 if SENTRY_DSN:

@@ -1,0 +1,12 @@
+exclude_dirs:
+  - tests
+  - migrations
+  - venv
+  - node_modules
+
+skips:
+  - B324
+  - B105
+  - B106
+  - B110
+  - B311
