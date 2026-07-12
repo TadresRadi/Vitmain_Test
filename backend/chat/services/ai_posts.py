@@ -90,7 +90,7 @@ def generate_posts_from_onboarding(onboarding, user_lang="en"):
             GROQ_API_KEY_ENV,
             onboarding.business_name,
         )
-        return _fallback_posts(onboarding), False, f"{GROQ_API_KEY_ENV} is not configured."
+        return [], False, f"{GROQ_API_KEY_ENV} is not configured."
 
     prompt = build_marketing_posts_prompt(onboarding, user_lang)
     try:

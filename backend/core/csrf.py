@@ -164,7 +164,7 @@ class OAuthStateManager:
             True if stored
         """
         try:
-            cache_key = f"{STATE_PREFIX}{state}"
+            cache_key = f"{OAuthStateManager.STATE_PREFIX}{state}"
             data = {
                 'request_id': request_id,
                 'metadata': metadata or {},
@@ -193,7 +193,7 @@ class OAuthStateManager:
                 logger.warning("Invalid OAuth state format")
                 return False, {}
             
-            cache_key = f"{STATE_PREFIX}{state}"
+            cache_key = f"{OAuthStateManager.STATE_PREFIX}{state}"
             data = cache.get(cache_key)
             
             if not data:

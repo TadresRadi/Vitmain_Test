@@ -3,6 +3,7 @@ Admin configuration for core models.
 """
 
 from django.contrib import admin
+from django.utils.html import format_html
 from core.models import AuditLog
 from core.api_key_models import APIKey, APIKeyAuditLog
 

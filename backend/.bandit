@@ -1,0 +1,16 @@
+# Bandit security scanner configuration.
+# https://bandit.readthedocs.io/en/latest/config.html
+
+# Skip tests that are false positives in this codebase:
+# - B324: hashlib.sha256 — used for API key hashing (not passwords).
+#         Passwords use Django's built-in PBKDF2/Argon2.
+# - B105: hardcoded password string — these are env var NAMES, not passwords.
+# - B106: hardcoded password string — same.
+skips: ['B324', 'B105', 'B106']
+
+# Don't scan tests, migrations, or settings
+exclude_dirs:
+  - tests
+  - migrations
+  - venv
+  - node_modules

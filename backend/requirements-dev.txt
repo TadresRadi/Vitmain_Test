@@ -1,22 +1,24 @@
 -r requirements.txt
 
-# NOTE: All packages below are already pinned in requirements.txt.
-# They are listed here to explicitly mark them as dev-only dependencies.
-# In the Code Quality phase, these will be MOVED OUT of requirements.txt
-# so they no longer ship in the production Docker image.
-#
-# Do NOT override versions here — the versions in requirements.txt are
-# the single source of truth. Overriding them creates conflicts (the
-# original file pinned pytest==8.4.2 here while requirements.txt had
-# pytest==9.1.1, causing non-deterministic installs).
-#
-# bandit          (in requirements.txt as 1.9.4)
-# pip-audit       (in requirements.txt as 2.10.1)
-# safety          (in requirements.txt as 3.8.1)
-# coverage        (in requirements.txt as 7.10.7)
-# pytest          (in requirements.txt as 9.1.1)
-# pytest-cov      (in requirements.txt as 7.1.0)
-# pytest-django   (in requirements.txt as 4.11.1)
-# factory_boy     (in requirements.txt as 3.3.3)
-# Faker           (in requirements.txt as 37.12.0)
-# freezegun       (in requirements.txt as 1.5.5)
+# Testing
+pytest==9.1.1
+pytest-cov==7.1.0
+pytest-django==4.11.1
+factory_boy==3.3.3
+Faker==37.12.0
+freezegun==1.5.5
+coverage==7.10.7
+
+# Security scanning
+bandit==1.9.4
+pip-audit==2.10.1
+safety==3.8.1
+
+# pip-audit dependencies
+cyclonedx-python-lib==9.1.0
+dparse==0.6.4
+license-expression==30.4.4
+packageurl-python==0.17.6
+pip-api==0.0.34
+pip-requirements-parser==32.0.1
+safety-schemas==0.0.16

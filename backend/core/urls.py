@@ -4,9 +4,6 @@ Core app URLs.
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from core.views.api_key_views import APIKeyViewSet
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from core.views.api_key_views import APIKeyViewSet
 from core.health import HealthCheckView, SecurityStatusView
 
 router = DefaultRouter()

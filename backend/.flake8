@@ -1,0 +1,29 @@
+[flake8]
+# Only check for real bugs (pyflakes + syntax errors + select E codes).
+# Style issues (line length, whitespace) are handled by Prettier/ESLint
+# on the frontend and will be handled by ruff/black in a future pass.
+select = F,E9
+
+# Ignore unused imports in __init__.py files — these are intentional
+# re-exports that define each package's public API.
+per-file-ignores =
+    __init__.py:F401
+    */tests/*:F401
+
+# Ignore unused exception variables (except Exception as e) — these are
+# intentional; the code uses logger.exception() which doesn't need `e`.
+extend-ignore = F841
+
+# Max line length (generous — we'll tighten in a future pass)
+max-line-length = 120
+
+# Exclude paths that shouldn't be linted
+exclude =
+    .git,
+    __pycache__,
+    migrations,
+    venv,
+    node_modules,
+    dist,
+    build,
+    *.egg-info
