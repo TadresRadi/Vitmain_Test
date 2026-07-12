@@ -4,17 +4,15 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.conf.urls.static import static
 from core.health import HealthCheckView, SecurityStatusView
+
 import os
-from core.metrics import inc_api_key_usage
 
 def welcome_api(request):
-    inc_api_key_usage("web", "/")
     return JsonResponse({
         "message": "Welcome to Vitmain Marketing API (Django)",
         "version": "1.0.0",
         "status": "running"
     })
-
 urlpatterns = [
     
     # Welcome & Admin

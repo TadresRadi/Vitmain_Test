@@ -7,7 +7,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import get_user_model
 from core.api_key_models import APIKey
-from core.api_key_service import get_api_key_service, API_KEY_PREFIX
+from core.api_key_service import API_KEY_PREFIX
+from core.api_key_service import get_api_key_service
+from core.metrics import inc_api_key_usage
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -75,25 +77,30 @@ class APIKeyAuthentication(TokenAuthentication):
         Authenticate the key string.
         """
         api_key_service = get_api_key_service()
-        
+
         # Get client IP
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0].strip()
         else:
             ip = request.META.get('REMOTE_ADDR')
-        
+
         # Authenticate with service
         api_key = api_key_service.authenticate_with_key(key, ip)
-        
+
         if not api_key:
             raise AuthenticationFailed('Invalid or inactive API key.')
-        
+
         if not api_key.user.is_active:
             raise AuthenticationFailed('User inactive or deleted.')
-        
+
+        # Track API key usage in Prometheus metrics
+        # Use the key prefix (first 32 chars) as identifier — never the full key
+        endpoint = request.path
+        inc_api_key_usage(api_key.key_prefix, endpoint)
+
         # Check permissions based on scope
         request.api_key = api_key
         request.api_key_scope = api_key.scope
-        
+
         return (api_key.user, api_key)
