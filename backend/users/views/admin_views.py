@@ -1,12 +1,28 @@
+import logging
+from uuid import UUID
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
+from django.conf import settings
+from django.db import transaction
+from django.db.utils import IntegrityError
+from django.db.models import Count, Sum
+from django.db.models.functions import TruncDate
 from rest_framework_simplejwt.tokens import RefreshToken
+from core.models import AuditLog
+from core.utils import log_user_activity
+from subscriptions.models import Subscription
+from chat.models.generation_history import GeneratedPost, GeneratedImage
+from users.serializers import CustomUserSerializer
+from payments.models import PaymentOrder
 
+logger = logging.getLogger(__name__)
+User = get_user_model()
 
 ADMIN_ROLES = {"super_admin", "supervisor"}
+VALID_ROLES = ['user', 'supervisor', 'super_admin']
 
 
 class AdminAuthLoginView(APIView):
@@ -73,15 +89,6 @@ class AdminAuthProfileView(APIView):
             'role': request.user.role,
             'full_name': request.user.full_name,
         }, status=status.HTTP_200_OK)
-from rest_framework import status, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.contrib.auth import get_user_model
-from subscriptions.models import Subscription
-from chat.models import AIPostGeneration
-from chat.models.generation_history import GeneratedPost, GeneratedImage
-from django.db.models.functions import TruncDate
-from django.db.models import Count, Sum
 
 User = get_user_model()
 
@@ -100,7 +107,6 @@ class AdminOverviewView(APIView):
         total_images = GeneratedImage.objects.count()
 
         # Calculate total payments received from completed payment orders
-        from payments.models import PaymentOrder
         total_payments = PaymentOrder.objects.filter(
             status=PaymentOrder.Status.COMPLETED
         ).aggregate(total=Sum('received_amount'))['total'] or 0
@@ -136,10 +142,6 @@ class AdminOverviewView(APIView):
             "user_growth": user_growth,
             "subscription_distribution": subscription_distribution
         })
-from rest_framework import status, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from core.models import AuditLog
 
 class AdminAuditLogsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -158,19 +160,7 @@ class AdminAuditLogsView(APIView):
                 'created_at': log.created_at.isoformat()
             })
         return Response(logs_data)
-from uuid import UUID
 
-from rest_framework import status, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.contrib.auth import get_user_model
-from django.db import transaction
-from django.db.utils import IntegrityError
-from django.conf import settings
-import logging
-
-from users.serializers import CustomUserSerializer
-from core.utils import log_user_activity
 
 logger = logging.getLogger(__name__)
 
@@ -248,12 +238,6 @@ class AdminUserListView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-from rest_framework import status, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.contrib.auth import get_user_model
-from users.serializers import CustomUserSerializer
-from core.utils import log_user_activity
 
 User = get_user_model()
 

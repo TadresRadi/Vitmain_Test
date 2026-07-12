@@ -202,7 +202,7 @@ class OAuthStateManager:
             
             # Verify request ID matches
             if data.get('request_id') != request_id:
-                logger.warning(f"OAuth state request_id mismatch")
+                logger.warning("OAuth state request_id mismatch")
                 return False, {}
             
             # Delete state after validation (one-time use)

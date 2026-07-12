@@ -38,7 +38,7 @@ class EmailService:
         try:
             # Check cooldown to prevent spam
             if not EmailService._check_email_cooldown(user_email, 'password_reset'):
-                logger.warning(f"Email cooldown active — skipping send")
+                logger.warning("Email cooldown active — skipping send")
                 return False
             
             # Build reset link

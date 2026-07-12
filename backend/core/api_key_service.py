@@ -218,7 +218,7 @@ class APIKeyService:
                     api_key=api_key,
                     event_type='ip_blocked',
                     ip_address=ip_address,
-                    description=f"Access blocked from unauthorized IP"
+                    description="Access blocked from unauthorized IP"
                 )
                 
                 return None
@@ -231,7 +231,7 @@ class APIKeyService:
                 api_key=api_key,
                 event_type='used',
                 ip_address=ip_address,
-                description=f"API key used"
+                description="API key used"
             )
             
             return api_key

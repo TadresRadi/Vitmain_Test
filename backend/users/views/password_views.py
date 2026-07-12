@@ -11,15 +11,11 @@ from django.utils import timezone
 from core.audit_service import get_audit_logger
 
 from users.serializers import PasswordChangeSerializer
-from users.services.password_service import (
-    PasswordService,
-    get_password_service,
-)
+from users.services.password_service import get_password_service
 from core.email_service import get_email_service
 from core.exceptions import ValidationError, AuthenticationError
 from core.decorators import rate_limit
 from core.utils import log_user_activity
-from core.audit_service import get_audit_logger
 from core.http_utils import get_client_ip
 User = get_user_model()
 logger = logging.getLogger(__name__)
