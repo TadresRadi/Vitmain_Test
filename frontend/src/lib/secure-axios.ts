@@ -39,20 +39,36 @@ class SecureAxios {
       timeout: 30000,
       withCredentials: true, // Include cookies in requests
       headers: {
-        'Content-Type': 'application/json',
+        // Don't hardcode Content-Type here — axios sets it automatically:
+        //   - "application/json" for plain objects
+        //   - "multipart/form-data; boundary=..." for FormData
+        // Hardcoding "application/json" here breaks FormData uploads because
+        // it overrides the multipart Content-Type.
         'X-Requested-With': 'XMLHttpRequest',
       },
     })
 
-    // Request interceptor - add auth token
+        // Request interceptor - add auth token
     instance.interceptors.request.use(
       async (config) => {
-        // Add CSRF token
+        // If the body is FormData, DELETE the hardcoded Content-Type header
+        // so axios can set "multipart/form-data; boundary=..." automatically.
+        // The instance default is "application/json" (set above), which would
+        // otherwise override the multipart Content-Type and break file uploads.
+        const isFormData =
+          typeof FormData !== 'undefined' && config.data instanceof FormData
+
+        if (isFormData) {
+          delete config.headers['Content-Type']
+          delete config.headers?.['content-type']
+        }
+
+        // Add CSRF token (without clobbering existing headers)
         try {
-          const headers = await csrfTokenService.addTokenToHeaders(
-            config.headers as Record<string, string>
-          )
-          config.headers = headers as AxiosRequestHeaders
+          const token = await csrfTokenService.getToken()
+          if (token) {
+            config.headers['X-CSRFToken'] = token
+          }
         } catch (error) {
           console.warn('Could not add CSRF token:', error)
         }

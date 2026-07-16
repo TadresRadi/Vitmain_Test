@@ -39,18 +39,21 @@ export default function Work() {
           api.get("/portfolio/success-story-settings/")
         ])
         setProjects(projectsRes.data)
-        // The API returns an array of success stories
         setSuccessStories(successStoryRes.data)
-        // Get the first settings object or use defaults
-        if (settingsRes.data.length > 0) {
-          const settings = settingsRes.data[0]
-          setStorySettings({
-            mode: settings.mode,
-            interval: settings.rotation_interval,
-            featured_video_id: settings.featured_video || null
-          })
-          setDataLoaded(true)
-        }
+
+        // Use the first settings row if it exists, otherwise use defaults.
+        // Always set dataLoaded=true so the story section can render even
+        // when the admin hasn't configured settings yet.
+        const settingsRow = Array.isArray(settingsRes.data) && settingsRes.data.length > 0
+          ? settingsRes.data[0]
+          : null
+
+        setStorySettings({
+          mode: settingsRow?.mode || 'auto',
+          interval: Number(settingsRow?.rotation_interval) || 24,
+          featured_video_id: settingsRow?.featured_video || null
+        })
+        setDataLoaded(true)
       } catch (error) {
         console.error("Failed to fetch data:", error)
       } finally {
@@ -112,7 +115,7 @@ export default function Work() {
           return randomIndex
         }
       })
-    }, storySettings.interval * 1000)
+    }, Math.max(5, storySettings.interval) * 1000)
 
     // Cleanup on unmount
     return () => {

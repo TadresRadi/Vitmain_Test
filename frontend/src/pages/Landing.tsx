@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/landing/HeroSection"
 import { FeaturedProjectsSection } from "@/components/landing/FeaturedProjectsSection"
 import { TeslaClientsSection } from "@/components/landing/TeslaClientsSection"
 import { BrandsCarousel } from "@/components/landing/BrandsCarousel"
+import { FeaturedSuccessStoryVideo } from "@/components/landing/FeaturedSuccessStoryVideo"
 
 export default function Landing() {
   const { t } = useTranslation()
@@ -41,17 +42,20 @@ export default function Landing() {
       <TeslaClientsSection />
       <BrandsCarousel />
 
+      {/* Featured Success Story Video */}
+      <FeaturedSuccessStoryVideo />
+
       {/* Creative Process */}
       <section className="relative py-32 px-4">
         <div className="max-w-5xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 1 }}
-            className="relative h-[600px] rounded-3xl overflow-hidden bg-black/40 border border-white/10 transition-colors duration-1000"
+            className="text-center mb-24"
           >
-            {/* TODO: Replace with a real branded asset or remove this column entirely */}
+            <h2 className="text-5xl font-cinematic font-bold mb-4 text-white transition-colors">{t("landing.processTitle")}</h2>
+            <p className="text-xl text-white/60 transition-colors">{t("landing.processSubtitle")}</p>
           </motion.div>
 
           <div className="space-y-16">

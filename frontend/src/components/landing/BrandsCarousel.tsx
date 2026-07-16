@@ -36,21 +36,25 @@ export function BrandsCarousel() {
 
         <div className="flex animate-marquee w-max">
           {visibleBrands.map((brand: any) => (
-            <div key={brand.id} className="flex items-center justify-center h-16 w-32 group cursor-pointer shrink-0">
-              {brand.logo_url && (
+            <div key={brand.id} className="flex items-center justify-center h-16 w-32 group cursor-pointer shrink-0 px-2">
+              {brand.logo_url ? (
                 <img
                   src={brand.logo_url}
                   alt={brand.name}
-                  className="max-h-12 max-w-28 object-contain opacity-40 group-hover:opacity-100 transition-opacity duration-300 filter brightness-0 invert"
+                  loading="lazy"
+                  className="h-12 w-28 object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300"
                   onError={(e) => {
+                    // If the logo fails to load, swap to the text fallback
                     const el = e.currentTarget
                     el.style.display = 'none'
-                    const fb = el.nextElementSibling as HTMLElement
+                    const fb = el.nextElementSibling as HTMLElement | null
                     if (fb) fb.style.display = 'block'
                   }}
                 />
-              )}
-              <span className={`${brand.logo_url ? "hidden" : "block"} text-white/30 font-cinematic font-bold text-xl tracking-widest group-hover:text-white transition-colors duration-300`}>
+              ) : null}
+              <span
+                className={`${brand.logo_url ? "hidden" : "block"} text-white/30 font-cinematic font-bold text-xl tracking-widest group-hover:text-white transition-colors duration-300 text-center`}
+              >
                 {brand.name}
               </span>
             </div>
