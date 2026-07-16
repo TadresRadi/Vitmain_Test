@@ -19,13 +19,16 @@ class RequestValidationMiddleware(MiddlewareMixin):
     - Validates JSON format
     """
     
-    MAX_REQUEST_SIZE = 1024 * 1024  # 1MB
+    # JSON/form requests are limited to 1MB.
+    # File uploads (multipart/form-data) get a much higher limit
+    # because images and videos are typically 2-50MB.
+    MAX_REQUEST_SIZE = 1024 * 1024  # 1MB for JSON
+    MAX_FILE_UPLOAD_SIZE = 50 * 1024 * 1024  # 50MB for multipart (images/videos)
     ALLOWED_CONTENT_TYPES = [
         'application/json',
         'application/x-www-form-urlencoded',
         'multipart/form-data',
     ]
-    
     def process_request(self, request):
         """Validate incoming request."""
         
@@ -38,16 +41,26 @@ class RequestValidationMiddleware(MiddlewareMixin):
             )
         
         # Check content length for non-GET requests
+        # Check content length for non-GET requests
         if request.method != 'GET':
             content_length = request.META.get('CONTENT_LENGTH', 0)
             try:
                 content_length = int(content_length)
-                if content_length > self.MAX_REQUEST_SIZE:
+                
+                # Use a higher size limit for multipart/form-data (file uploads)
+                content_type = request.META.get('CONTENT_TYPE', '').split(';')[0].strip()
+                if content_type == 'multipart/form-data':
+                    max_size = self.MAX_FILE_UPLOAD_SIZE
+                else:
+                    max_size = self.MAX_REQUEST_SIZE
+                
+                if content_length > max_size:
                     logger.warning(
-                        f"Request too large: {content_length} > {self.MAX_REQUEST_SIZE}"
+                        f"Request too large: {content_length} > {max_size} "
+                        f"(content_type: {content_type})"
                     )
                     return JsonResponse(
-                        {'error': 'request_too_large', 'message': 'Request body too large'},
+                        {'error': 'request_too_large', 'message': f'Request body too large. Maximum allowed: {max_size // (1024*1024)}MB'},
                         status=status.HTTP_413_PAYLOAD_TOO_LARGE
                     )
             except (ValueError, TypeError):

@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageSquare, User, Mail, Phone, Send } from "lucide-react"
-import { adminApi } from "@/lib/axios"
+import { api } from "@/lib/axios"
 import { useAdminAuthStore } from "@/store/adminAuthStore"
 
 interface Conversation {
@@ -32,7 +32,7 @@ export default function SupportSection() {
 
   const fetchConversations = async () => {
     try {
-      const response = await adminApi.get('/admin/support/chats')
+      const response = await api.get('/admin/support/chats')
       setConversations(response.data)
     } catch (err) {
       console.error("Failed to fetch conversations:", err)
@@ -47,7 +47,7 @@ export default function SupportSection() {
     if (!chatMessage.trim() || !selectedConversation) return
 
     try {
-      await adminApi.post('/admin/support/reply', {
+      await api.post('/admin/support/reply', {
         conversation_id: selectedConversation.id,
         content: chatMessage
       })

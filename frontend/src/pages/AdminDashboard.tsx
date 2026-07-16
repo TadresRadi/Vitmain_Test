@@ -21,7 +21,7 @@ import {
   Car
 } from "lucide-react"
 import { useAdminAuthStore } from "@/store/adminAuthStore"
-import { adminApi } from "@/lib/axios"
+import { api } from "@/lib/axios"
 import { motion, AnimatePresence } from "framer-motion"
 import OverviewSection from "@/components/admin/OverviewSection"
 import UsersSection from "@/components/admin/UsersSection"
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
 
   const fetchOverview = async () => {
     try {
-      const res = await adminApi.get("/admin/overview")
+      const res = await api.get("/admin/overview")
       setOverviewData(res.data)
     } catch (err: any) {
       console.error('Failed to fetch overview:', err)
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
     setSelectedUserForLogs(user)
     setLoadingLogs(true)
     try {
-      const res = await adminApi.get(`/admin/users/${user.id}/logs`)
+      const res = await api.get(`/admin/users/${user.id}/logs`)
       setUserLogs(res.data)
     } catch (err) {
       console.error("Failed to load user activity logs", err)
@@ -212,131 +212,6 @@ export default function AdminDashboard() {
         )}
 
       </main>
-
-      {/* USER TIMELINE ACTIVITY LOGS MODAL OVERLAY */}
-      <AnimatePresence>
-        {selectedUserForLogs && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
-          >
-            <motion.div 
-              initial={{ scale: 0.96, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.96, y: 15 }}
-              className="w-full max-w-2xl bg-gradient-to-b from-neutral-900 to-black border border-red-500/30 rounded-2xl overflow-hidden flex flex-col max-h-[85vh] shadow-2xl"
-            >
-              {/* Modal Header */}
-              <div className="p-5 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <ListOrdered className="w-5 h-5 text-red-500" />
-                    Activity Logs Timeline: {selectedUserForLogs.full_name || 'Anonymous User'}
-                  </h3>
-                  <p className="text-xs text-white/40 mt-1">{selectedUserForLogs.email}</p>
-                </div>
-                <Button 
-                  onClick={() => { setSelectedUserForLogs(null); setUserLogs(null); }}
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-white/60 hover:text-white hover:bg-white/10"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-
-              {/* Modal Body */}
-              <ScrollArea className="flex-1 p-6">
-                {loadingLogs ? (
-                  <div className="py-20 flex flex-col items-center justify-center gap-3 text-white/40 text-xs">
-                    <Loader2 className="w-8 h-8 animate-spin text-red-500" />
-                    <span>Accessing timeline audits...</span>
-                  </div>
-                ) : !userLogs || userLogs.length === 0 ? (
-                  <div className="py-20 text-center text-white/40 text-xs flex flex-col items-center justify-center gap-3">
-                    <Clock className="w-10 h-10 text-white/15" />
-                    <span>No event logs found for this user account.</span>
-                  </div>
-                ) : (
-                  <div className="space-y-6 relative border-l border-white/10 pl-6 ml-3">
-                    {userLogs.map((log, index) => (
-                      <div key={log.id || index} className="relative">
-                        
-                        {/* Timeline Bullet */}
-                        <div className="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-red-500 border-2 border-black flex items-center justify-center ring-4 ring-red-500/10 shadow shadow-red-500/50" />
-                        
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-3">
-                            <Badge className="bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-[10px] py-0.5 px-2">
-                              {log.action}
-                            </Badge>
-                            <span className="text-[10px] text-white/40 flex items-center gap-1 font-mono">
-                              <Clock className="w-3 h-3" />
-                              {new Date(log.created_at).toLocaleString()}
-                            </span>
-                          </div>
-                          
-                          {/* Log details */}
-                          {log.details && (
-                            <div className="bg-white/5 border border-white/5 rounded-lg p-3 text-[11px] text-white/70 overflow-x-auto leading-relaxed max-w-full">
-                              {log.details.onboarding_answers && (
-                                <div className="mb-3">
-                                  <p className="text-red-400 font-semibold mb-2">Onboarding Questions & Answers:</p>
-                                  {Object.entries(log.details.onboarding_answers).map(([question, answer], idx) => (
-                                    <div key={idx} className="mb-1.5">
-                                      <span className="text-white/50">{question}:</span>
-                                      <span className="text-white/80 ml-2">{String(answer)}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              {log.details.payment_status && (
-                                <div className="mb-3">
-                                  <p className="text-red-400 font-semibold mb-2">Payment Status:</p>
-                                  <p className={log.details.payment_status === 'completed' ? 'text-green-400' : 'text-yellow-400'}>
-                                    {log.details.payment_status === 'completed' ? 'Payment Completed' : log.details.payment_status}
-                                  </p>
-                                  {log.details.amount && (
-                                    <p className="text-white/80 mt-1">Amount: {log.details.amount} EGP</p>
-                                  )}
-                                </div>
-                              )}
-                              {log.details.error && (
-                                <div className="mb-3">
-                                  <p className="text-red-400 font-semibold mb-2">Error Details:</p>
-                                  <p className="text-red-300">{log.details.error}</p>
-                                </div>
-                              )}
-                              {!log.details.onboarding_answers && !log.details.payment_status && !log.details.error && (
-                                <pre className="font-mono">{JSON.stringify(log.details, null, 2)}</pre>
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-
-              {/* Modal Footer */}
-              <div className="p-4 border-t border-white/5 bg-white/5 flex justify-end">
-                <Button 
-                  onClick={() => { setSelectedUserForLogs(null); setUserLogs(null); }}
-                  className="bg-red-600 hover:bg-red-700 text-white px-5"
-                >
-                  Close Audits
-                </Button>
-              </div>
-
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
     </div>
   )
 }

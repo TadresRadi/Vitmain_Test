@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Edit, Trash2, Save, Loader2, FileText, Settings, Image as ImageIcon, X } from "lucide-react"
-import { adminApi } from "@/lib/axios"
+import { api } from "@/lib/axios"
 
 interface SuccessStory {
   id: number
@@ -38,7 +38,7 @@ export default function SuccessStoriesSection() {
 
   const fetchSuccessStory = async () => {
     try {
-      const response = await adminApi.get('/portfolio/success-stories/')
+      const response = await api.get('/portfolio/success-stories/all/')
       setSuccessStories(response.data)
     } catch (err) {
       console.error("Failed to fetch success stories:", err)
@@ -47,7 +47,7 @@ export default function SuccessStoriesSection() {
 
   const fetchStorySettings = async () => {
     try {
-      const response = await adminApi.get('/portfolio/success-story-settings/')
+      const response = await api.get('/portfolio/success-story-settings/')
       if (response.data.length > 0) {
         setStorySettings({
           mode: response.data[0].mode,
@@ -68,16 +68,16 @@ export default function SuccessStoriesSection() {
   const handleSaveSettings = async () => {
     setSavingSettings(true)
     try {
-      const response = await adminApi.get('/portfolio/success-story-settings/')
+      const response = await api.get('/portfolio/success-story-settings/')
       const settingsData = {
         mode: storySettings.mode,
         rotation_interval: storySettings.rotation_interval,
         featured_video_id: storySettings.featured_video_id
       }
       if (response.data.length > 0) {
-        await adminApi.put(`/portfolio/success-story-settings/${response.data[0].id}/`, settingsData)
+        await api.put(`/portfolio/success-story-settings/${response.data[0].id}/`, settingsData)
       } else {
-        await adminApi.post('/portfolio/success-story-settings/', settingsData)
+        await api.post('/portfolio/success-story-settings/', settingsData)
       }
       alert(t('adminDashboard.settingsSavedSuccess', "Settings saved successfully!"))
       fetchStorySettings()
@@ -102,9 +102,7 @@ export default function SuccessStoriesSection() {
       }
 
       if (editingSuccessStory) {
-        await adminApi.put(`/portfolio/success-stories/${editingSuccessStory.id}/`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
+        await api.put(`/portfolio/success-stories/${editingSuccessStory.id}/`, formData)
         alert(t('adminDashboard.successStoryUpdatedSuccess'))
       } else {
         if (successStories.length >= 12) {
@@ -112,9 +110,7 @@ export default function SuccessStoriesSection() {
           setSavingSuccessStory(false)
           return
         }
-        await adminApi.post('/portfolio/success-stories/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
+        await api.post('/portfolio/success-stories/', formData)
         alert(t('adminDashboard.successStoryCreatedSuccess'))
       }
       setEditingSuccessStory(null)
@@ -146,7 +142,7 @@ export default function SuccessStoriesSection() {
   const handleDeleteSuccessStory = async (id: number) => {
     if (!confirm(t('adminDashboard.confirmDeleteProject', "Are you sure you want to delete this success story?"))) return
     try {
-      await adminApi.delete(`/portfolio/success-stories/${id}/`)
+      await api.delete(`/portfolio/success-stories/${id}/`)
       alert(t('adminDashboard.projectDeletedSuccess'))
       fetchSuccessStory()
     } catch (err: any) {
@@ -428,52 +424,6 @@ export default function SuccessStoriesSection() {
           </Card>
         </div>
       </div>
-
-      {/* Video Preview Modal */}
-      {selectedVideoPreview && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-black/90 border border-white/10 rounded-2xl max-w-4xl w-full overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-lg font-bold text-white">{t('adminDashboard.videoPreview', "Video Preview")}</h3>
-              <Button
-                onClick={() => setSelectedVideoPreview(null)}
-                variant="ghost"
-                size="sm"
-                className="text-white/60 hover:text-white hover:bg-white/10"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-            <div className="p-4">
-              <video
-                src={selectedVideoPreview.video_url}
-                controls
-                autoPlay
-                className="w-full rounded-lg"
-              />
-              <div className="mt-4 flex gap-2">
-                <Button
-                  onClick={() => {
-                    handleEditSuccessStory(selectedVideoPreview)
-                    setSelectedVideoPreview(null)
-                  }}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  {t('adminDashboard.editVideo', "Edit Video")}
-                </Button>
-                <Button
-                  onClick={() => setSelectedVideoPreview(null)}
-                  variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10"
-                >
-                  {t('adminDashboard.close')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

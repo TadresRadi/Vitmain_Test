@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2, Save, Loader2, Car } from "lucide-react"
-import { adminApi } from "@/lib/axios"
+import { api } from "@/lib/axios"
 
 interface TeslaClientImage {
   id: number
@@ -28,7 +28,7 @@ export default function TeslaClientSection() {
 
   const fetchImages = async () => {
     try {
-      const res = await adminApi.get("/portfolio/tesla-client-images/all/")
+      const res = await api.get("/portfolio/tesla-client-images/all/")
       setImages(res.data)
     } catch (err: any) {
       console.error('Failed to fetch Tesla Client images:', err)
@@ -57,15 +57,12 @@ export default function TeslaClientSection() {
       }
 
       if (editingImage) {
-        await adminApi.put(`/portfolio/tesla-client-images/${editingImage.id}/`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
+        await api.put(`/portfolio/tesla-client-images/${editingImage.id}/`, formData)
         alert(t('adminDashboard.teslaClientUpdatedSuccess', 'Tesla Client image updated successfully.'))
       } else {
-        await adminApi.post('/portfolio/tesla-client-images/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
+        await api.post('/portfolio/tesla-client-images/', formData)
         alert(t('adminDashboard.teslaClientCreatedSuccess', 'Tesla Client image added successfully.'))
+      
       }
       setEditingImage(null)
       setImageForm({
@@ -96,7 +93,7 @@ export default function TeslaClientSection() {
   const handleDeleteImage = async (imageId: number) => {
     if (!confirm(t('adminDashboard.confirmDeleteTeslaClient', 'Delete this Tesla Client image?'))) return
     try {
-      await adminApi.delete(`/portfolio/tesla-client-images/${imageId}/`)
+      await api.delete(`/portfolio/tesla-client-images/${imageId}/`)
       alert(t('adminDashboard.teslaClientDeletedSuccess', 'Tesla Client image deleted successfully.'))
       fetchImages()
     } catch (err: any) {

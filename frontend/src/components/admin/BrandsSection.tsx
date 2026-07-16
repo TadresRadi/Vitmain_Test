@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2, Save, Loader2, Image as ImageIcon } from "lucide-react"
-import { adminApi } from "@/lib/axios"
+import { api } from "@/lib/axios"
 
 interface Brand {
   id: number
@@ -28,7 +28,7 @@ export default function BrandsSection() {
 
   const fetchBrands = async () => {
     try {
-      const res = await adminApi.get("/portfolio/brands/all/")
+      const res = await api.get("/portfolio/brands/all/")
       setBrands(res.data)
     } catch (err: any) {
       console.error('Failed to fetch brands:', err)
@@ -52,13 +52,13 @@ export default function BrandsSection() {
       }
 
       if (editingBrand) {
-        await adminApi.put(`/portfolio/brands/${editingBrand.id}/`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+        await api.put(`/portfolio/brands/${editingBrand.id}/`, formData, {
+          
         })
         alert(t('adminDashboard.brandUpdatedSuccess', 'Brand updated successfully!'))
       } else {
-        await adminApi.post('/portfolio/brands/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+        await api.post('/portfolio/brands/', formData, {
+          
         })
         alert(t('adminDashboard.brandCreatedSuccess', 'Brand created successfully!'))
       }
@@ -93,7 +93,7 @@ export default function BrandsSection() {
   const handleDeleteBrand = async (brandId: number) => {
     if (!confirm(t('adminDashboard.confirmDeleteBrand', 'Are you sure you want to delete this brand?'))) return
     try {
-      await adminApi.delete(`/portfolio/brands/${brandId}/`)
+      await api.delete(`/portfolio/brands/${brandId}/`)
       alert(t('adminDashboard.brandDeletedSuccess', 'Brand deleted successfully!'))
       fetchBrands()
     } catch (err: any) {

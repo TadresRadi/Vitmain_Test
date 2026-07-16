@@ -855,68 +855,6 @@ export default function Chat() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Generate New Posts Options Modal */}
-        <AnimatePresence>
-          {showNewPostsOptions && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                className="glass-dark border border-white/20 rounded-2xl p-6 max-w-md w-full"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <RefreshCw className="h-5 w-5 text-vitamin-base" />
-                    {t("chat.generateNewPosts", "Generate New Posts and Images")}
-                  </h3>
-                  <button
-                    onClick={() => setShowNewPostsOptions(false)}
-                    className="text-white/60 hover:text-white transition-colors"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <p className="text-sm text-white/60 mb-6">{t("chat.generateNewPostsDesc", "Create a fresh set of marketing content for your business.")}</p>
-
-                <div className="space-y-4">
-                  {/* Option A: Use New Business Information */}
-                  <Card className="glass-dark border border-white/20 p-4 hover:border-vitamin-base/50 transition-colors cursor-pointer" onClick={handleUseNewBusinessInfo}>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-vitamin-base/15 text-vitamin-base shrink-0">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-white mb-1">{t("chat.useNewBusinessInfo", "Use New Business Information")}</h4>
-                        <p className="text-xs text-white/60">{t("chat.useNewBusinessInfoDesc", "Provide new business details to generate completely different content.")}</p>
-                      </div>
-                    </div>
-                  </Card>
-
-                  {/* Option B: Use Existing Business Information */}
-                  <Card className="glass-dark border border-white/20 p-4 hover:border-vitamin-base/50 transition-colors cursor-pointer" onClick={handleUseExistingBusinessInfo}>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-vitamin-base/15 text-vitamin-base shrink-0">
-                        <RefreshCw className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-white mb-1">{t("chat.useExistingBusinessInfo", "Use Existing Business Information")}</h4>
-                        <p className="text-xs text-white/60">{t("chat.useExistingBusinessInfoDesc", "Regenerate content using your current business profile.")}</p>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </DashboardLayout>
   )

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Users, UserPlus, Trash2, Loader2, FileText } from "lucide-react"
-import { adminApi } from "@/lib/axios"
+import { api } from "@/lib/axios"
 
 interface User {
   id: string
@@ -27,7 +27,7 @@ export default function UsersSection({ onOpenUserLogs }: UsersSectionProps) {
 
   const fetchUsers = async () => {
     try {
-      const response = await adminApi.get('/admin/users')
+      const response = await api.get('/admin/users')
       setUsers(response.data)
     } catch (err) {
       console.error("Failed to fetch users:", err)
@@ -42,7 +42,7 @@ export default function UsersSection({ onOpenUserLogs }: UsersSectionProps) {
     e.preventDefault()
     setCreatingSupervisor(true)
     try {
-      await adminApi.post('/admin/create-supervisor', {
+      await api.post('/admin/create-supervisor', {
         email: supervisorEmail,
         password: supervisorPassword
       })
@@ -60,7 +60,7 @@ export default function UsersSection({ onOpenUserLogs }: UsersSectionProps) {
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
-      await adminApi.put(`/admin/users/${userId}/role`, { role: newRole })
+      await api.put(`/admin/users/${userId}/role`, { role: newRole })
       alert(t('adminDashboard.roleUpdatedSuccess', 'Role updated successfully!'))
       fetchUsers()
     } catch (err: any) {
@@ -76,7 +76,7 @@ export default function UsersSection({ onOpenUserLogs }: UsersSectionProps) {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm(t('adminDashboard.confirmDelete', "Are you sure you want to delete this user?"))) return
     try {
-      await adminApi.delete(`/admin/users/${userId}`)
+      await api.delete(`/admin/users/${userId}`)
       alert(t('adminDashboard.userDeletedSuccess', 'User deleted successfully!'))
       fetchUsers()
     } catch (err: any) {

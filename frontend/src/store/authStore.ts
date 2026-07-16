@@ -7,7 +7,7 @@ import {
 } from "@/services/authService";
 
 import { tokenStorage } from "@/lib/token-storage";
-import { secureAxios } from "@/lib/secure-axios";
+import { api } from '@/lib/axios'
 
 interface User {
   id: string;
@@ -203,7 +203,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
 
     try {
-      await secureAxios.getInstance().post("/auth/logout", {
+      await api.post("/auth/logout", {
         refresh_token: tokenStorage.getRefreshToken(),
       });
     } catch (error) {
@@ -255,7 +255,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null,
       });
 
-      await secureAxios.getInstance().post(
+      await api.post(
         "/auth/password/change",
         {
           old_password: oldPassword,
@@ -288,8 +288,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null,
       });
 
-      await secureAxios
-        .getInstance()
+      await api
         .post("/auth/password/reset-request", {
           email,
         });
@@ -322,7 +321,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null,
       });
 
-      await secureAxios.getInstance().post(
+      await api.post(
         "/auth/password/reset",
         {
           email,
@@ -355,8 +354,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null,
       });
 
-      const response = await secureAxios
-        .getInstance()
+      const response = await api
         .post("/auth/google/callback", {
           id_token: idToken,
         });

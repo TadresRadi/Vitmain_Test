@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2, Save, Loader2, FolderOpen } from "lucide-react"
-import { adminApi } from "@/lib/axios"
+import { api } from "@/lib/axios"
 
 interface Project {
   id: number
@@ -32,7 +32,7 @@ export default function ProjectsSection() {
 
   const fetchProjects = async () => {
     try {
-      const res = await adminApi.get("/portfolio/projects/all/")
+      const res = await api.get("/portfolio/projects/all/")
       setProjects(res.data)
     } catch (err: any) {
       console.error('Failed to fetch projects:', err)
@@ -58,13 +58,13 @@ export default function ProjectsSection() {
       }
 
       if (editingProject) {
-        await adminApi.put(`/portfolio/projects/${editingProject.id}/`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+        await api.put(`/portfolio/projects/${editingProject.id}/`, formData, {
+          
         })
         alert(t('adminDashboard.projectUpdatedSuccess'))
       } else {
-        await adminApi.post('/portfolio/projects/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+        await api.post('/portfolio/projects/', formData, {
+          
         })
         alert(t('adminDashboard.projectCreatedSuccess'))
       }
@@ -101,7 +101,7 @@ export default function ProjectsSection() {
   const handleDeleteProject = async (projectId: number) => {
     if (!confirm(t('adminDashboard.confirmDeleteProject'))) return
     try {
-      await adminApi.delete(`/portfolio/projects/${projectId}/`)
+      await api.delete(`/portfolio/projects/${projectId}/`)
       alert(t('adminDashboard.projectDeletedSuccess'))
       fetchProjects()
     } catch (err: any) {

@@ -4,36 +4,21 @@ import { motion } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
 import { useTeslaClientImages } from "@/hooks/queries/usePortfolio"
 
-const fallbackTeslaClientImages = [
-  {
-    id: "fallback-tesla-1",
-    title: "Signature Activation",
-    image_url: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&q=80&w=900",
-  },
-  {
-    id: "fallback-tesla-2",
-    title: "Launch Experience",
-    image_url: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=900",
-  },
-  {
-    id: "fallback-tesla-3",
-    title: "Premium Client Work",
-    image_url: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=900",
-  },
-]
+
 
 export function TeslaClientsSection() {
   const { t } = useTranslation()
   const { data: teslaClientImages = [] } = useTeslaClientImages()
-  const visibleImages = teslaClientImages.length > 0 ? teslaClientImages : fallbackTeslaClientImages
   const [carouselPosition, setCarouselPosition] = useState(0)
   const carouselRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (teslaClientImages.length === 0) return
+
     const scrollCarousel = () => {
       setCarouselPosition(prev => {
         const newPosition = prev - 1
-        if (newPosition <= -visibleImages.length) {
+        if (newPosition <= -teslaClientImages.length) {
           return 0
         }
         return newPosition
@@ -42,7 +27,7 @@ export function TeslaClientsSection() {
 
     const interval = setInterval(scrollCarousel, 3000)
     return () => clearInterval(interval)
-  }, [visibleImages.length])
+  }, [teslaClientImages.length])
 
   return (
     <section className="relative py-32 px-4 border-t border-white/5 bg-black/20 dark:bg-black/40 backdrop-blur-sm transition-colors duration-1000">
@@ -67,9 +52,9 @@ export function TeslaClientsSection() {
             animate={{ x: `${carouselPosition * 100}%` }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
             className="flex gap-6"
-            style={{ width: `${visibleImages.length * 100}%` }}
+            style={{ width: `${teslaClientImages.length * 100}%` }}
           >
-            {visibleImages.map((item: any, i: number) => (
+            {teslaClientImages.map((item: any, i: number) => (
               <Link
                 key={item.id}
                 to="/tesla-clients"

@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, BasePermission
@@ -23,14 +24,20 @@ class IsAdminOrSupervisor(BasePermission):
         )
 
 
+class NoPagination(PageNumberPagination):
+    """Disable pagination — portfolio endpoints return small lists as bare arrays."""
+    page_size = None
+    page_size_query_param = None
+    paginate_by_param = None
+
+
 class PublicReadAdminWriteMixin:
     public_actions = {"list", "retrieve"}
+    pagination_class = None  # All portfolio viewsets return bare arrays, not paginated wrappers
 
     def get_permissions(self):
         permission_classes = [AllowAny] if self.action in self.public_actions else [IsAdminOrSupervisor]
         return [permission() for permission in permission_classes]
-
-
 class ProjectViewSet(PublicReadAdminWriteMixin, viewsets.ModelViewSet):
     queryset = Project.objects.filter(is_active=True)
     serializer_class = ProjectSerializer

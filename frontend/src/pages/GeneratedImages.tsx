@@ -167,47 +167,6 @@ export default function GeneratedImages() {
           </div>
         )}
       </div>
-
-      {/* Bulk Edit Modal */}
-      <AnimatePresence>
-        {editingPost === 999 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-          >
-            <motion.div 
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              className="w-full max-w-lg glass-dark border border-white/20 rounded-xl p-6"
-            >
-              <h3 className="text-xl font-bold text-white mb-2">{t("campaignPortfolio.bulkModificationRequest")}</h3>
-              <p className="text-sm text-white/60 mb-6">{t("campaignPortfolio.editingSelectedPosts").replace("{{count}}", selectedPosts.length.toString())}</p>
-              
-              <Textarea 
-                placeholder="Describe the changes you want applied to all selected posts..."
-                value={modificationRequest}
-                onChange={(e) => setModificationRequest(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder-white/30 resize-none mb-6"
-                rows={5}
-              />
-              
-              <div className="flex justify-end gap-3">
-                <Button variant="ghost" onClick={() => setEditingPost(null)} className="text-white hover:bg-white/10">{t("campaignPortfolio.cancel")}</Button>
-                <Button 
-                  onClick={() => handleRequestModification('bulk')}
-                  disabled={!modificationRequest.trim() || isSubmitting}
-                  className="bg-vitamin-base hover:bg-vitamin-700 text-white"
-                >
-                  {isSubmitting ? t("campaignPortfolio.sending") : t("campaignPortfolio.submitBulkRequest")}
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </DashboardLayout>
   )
 }

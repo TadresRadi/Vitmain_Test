@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from "framer-motion"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { HeroSection } from "@/components/landing/HeroSection"
@@ -8,8 +8,7 @@ import { BrandsCarousel } from "@/components/landing/BrandsCarousel"
 
 export default function Landing() {
   const { t } = useTranslation()
-  const { scrollYProgress } = useScroll()
-  const yParallax = useTransform(scrollYProgress, [0, 1], [0, -300])
+
 
   return (
     <div className="relative">
@@ -17,10 +16,10 @@ export default function Landing() {
 
       {/* Who We Are */}
       <section className="relative py-32 px-4 border-t border-white/5 bg-black/20 dark:bg-black/40 backdrop-blur-sm transition-colors duration-1000">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+        <div className="max-w-4xl mx-auto text-center">
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
           >
@@ -35,21 +34,6 @@ export default function Landing() {
               Discover Our Agency
             </Button>
           </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1 }}
-            className="relative h-[600px] rounded-3xl overflow-hidden bg-black/40 border border-white/10 transition-colors duration-1000"
-            style={{ y: yParallax }}
-          >
-            <img 
-              src="https://images.unsplash.com/photo-1600132806370-bf17e65e942f?auto=format&fit=crop&q=80&w=1200" 
-              alt="Creative Agency" 
-              className="w-full h-full object-cover opacity-80"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-          </motion.div>
         </div>
       </section>
 
@@ -60,14 +44,14 @@ export default function Landing() {
       {/* Creative Process */}
       <section className="relative py-32 px-4">
         <div className="max-w-5xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="text-center mb-24"
+            transition={{ duration: 1 }}
+            className="relative h-[600px] rounded-3xl overflow-hidden bg-black/40 border border-white/10 transition-colors duration-1000"
           >
-            <h2 className="text-5xl font-cinematic font-bold mb-4 text-white transition-colors">{t("landing.processTitle")}</h2>
-            <p className="text-xl text-white/60 transition-colors">{t("landing.processSubtitle")}</p>
+            {/* TODO: Replace with a real branded asset or remove this column entirely */}
           </motion.div>
 
           <div className="space-y-16">

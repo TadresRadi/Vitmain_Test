@@ -198,3 +198,5 @@ def process_image_generation(user, post_gen: AIPostGeneration, base_url: str):
             user,
             "generate_marketing_images",
             {"post_generation_id": str(post_gen.id)},)
+
+    return posts_with_images, None

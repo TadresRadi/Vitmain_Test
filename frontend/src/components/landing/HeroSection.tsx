@@ -52,7 +52,6 @@ export function HeroSection() {
             loop
             playsInline
             preload="metadata"
-            poster="https://images.unsplash.com/photo-1557821552-171051530d19?q=80&w=1920&auto=format&fit=crop"
             className="absolute inset-0 w-full h-full object-cover"
             style={{ 
               willChange: 'auto',
