@@ -71,6 +71,7 @@ class SuccessStoryViewSet(PublicReadAdminWriteMixin, viewsets.ModelViewSet):
 class SuccessStorySettingsViewSet(PublicReadAdminWriteMixin, viewsets.ModelViewSet):
     queryset = SuccessStorySettings.objects.all()
     serializer_class = SuccessStorySettingsSerializer
+    pagination_class = None  # Only one settings row ever exists; return a bare array
 
     def get_queryset(self):
         # There should only be one settings object, but don't limit for detail views

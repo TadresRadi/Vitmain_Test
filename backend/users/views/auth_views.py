@@ -93,8 +93,6 @@ class RegisterView(APIView):
     @rate_limit(endpoint='auth_register', rate='3/h')
     def post(self, request):
         from users.serializers import RegisterSerializer
-        from core.utils import log_user_activity
-
         serializer = RegisterSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -226,14 +224,6 @@ class GoogleOAuthCallbackView(APIView):
                 {'error': 'Authentication failed'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    
-    @staticmethod
-    def _get_client_ip(request) -> str:
-        """Get client IP."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', 'unknown')
 
 
 class GoogleAuthConfigView(APIView):
@@ -308,11 +298,3 @@ class LogoutView(APIView):
         except Exception as e:
             logger.exception("Logout error")
             raise ExternalServiceError("Logout failed")
-
-    @staticmethod
-    def _get_client_ip(request) -> str:
-        """Get client IP."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', 'unknown')

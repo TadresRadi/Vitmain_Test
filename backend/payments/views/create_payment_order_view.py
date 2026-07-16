@@ -1,11 +1,14 @@
 import secrets
 import re
 
-from django.db import IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, transaction
+import logging
+
+logger = logging.getLogger(__name__)
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from decimal import Decimal
 from subscriptions.models import Plan
 
 from ..models.payment_order import PaymentOrder
@@ -91,11 +94,38 @@ class CreatePaymentOrderView(APIView):
                 {"error": "Could not create a payment order. Please retry."},
                 status=status.HTTP_409_CONFLICT,
             )
+        except DatabaseError as exc:
+            # Catches OperationalError (missing column/table), ProgrammingError, etc.
+            # These are not the user's fault — they indicate a migration or schema issue.
+            logger.exception(
+                "Database error creating payment order for user %s",
+                request.user.id,
+            )
+            from django.conf import settings
+            return Response(
+                {
+                    "error": "Payment service is temporarily unavailable.",
+                    "detail": str(exc) if settings.DEBUG else None,
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
-        return Response(
-            self._response_data(payment_order),
-            status=status.HTTP_201_CREATED,
-        )
+        try:
+            return Response(
+                self._response_data(payment_order),
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception:
+            # If the serializer fails for any reason, log it and return 503
+            # instead of a bare 500 with no diagnostic info.
+            logger.exception(
+                "Failed to serialize payment order %s",
+                payment_order.id,
+            )
+            return Response(
+                {"error": "Payment order created but response could not be generated."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
     @staticmethod
     def _create_reference_code():
@@ -116,8 +146,10 @@ class CreatePaymentOrderView(APIView):
         receiver_number = settings.VODAFONE_RECEIVER_NUMBER
         remaining = max(
             order.expected_amount - order.received_amount,
-            0,
+            Decimal("0.00"),
         )
+        print(type(order.expected_amount), order.expected_amount)
+        print(type(order.received_amount), order.received_amount)
 
         data = PaymentOrderSerializer(order).data
         data.update(

@@ -14,7 +14,6 @@ class GenerateImagesView(APIView):
     def post(self, request):
         post_gen_id = request.data.get("post_generation_id")
 
-        post_gen_id = request.data.get("post_generation_id")
         if not post_gen_id:
             return Response({"error": "post_generation_id is required."}, status=status.HTTP_400_BAD_REQUEST)
 

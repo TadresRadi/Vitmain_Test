@@ -18,7 +18,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 STATIC_ROOT.mkdir(parents=True, exist_ok=True)
-LOG_DIR.mkdir(exist_ok=True)
 # Load environment variables
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
@@ -79,7 +78,6 @@ if DEBUG:
 if not ALLOWED_HOSTS and not DEBUG:
     raise RuntimeError("ALLOWED_HOSTS env var is required when DEBUG=false")
 
-# Application definition
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -412,7 +410,6 @@ VODAFONE_RECEIVER_NUMBER = os.environ.get("VODAFONE_RECEIVER_NUMBER", "")
 VODAFONE_WEBHOOK_SECRET_TOKEN = os.environ.get("VODAFONE_WEBHOOK_SECRET_TOKEN", "")
 
 # Validate only outside development/testing
-# Validate only outside development/testing.
 # Detect both `manage.py test` and `pytest` (including `python -m pytest`).
 _is_test_run = (
     "test" in sys.argv
@@ -424,7 +421,6 @@ if not DEBUG and not _is_test_run:
 
     if not VODAFONE_RECEIVER_NUMBER:
         raise RuntimeError("VODAFONE_RECEIVER_NUMBER env var is required")
-# ============================================================================
 # ============================================================================
 # LOGGING CONFIGURATION
 # ============================================================================

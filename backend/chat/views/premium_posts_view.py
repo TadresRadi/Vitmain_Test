@@ -52,8 +52,6 @@ class PremiumPostsView(APIView):
         self.check_permissions(request)
 
         onboarding = _get_active_onboarding(request.user)
-
-        onboarding = _get_active_onboarding(request.user)
         if not onboarding:
             return Response(
                         {

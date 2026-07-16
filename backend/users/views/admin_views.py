@@ -90,8 +90,6 @@ class AdminAuthProfileView(APIView):
             'full_name': request.user.full_name,
         }, status=status.HTTP_200_OK)
 
-User = get_user_model()
-
 class AdminOverviewView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -162,9 +160,6 @@ class AdminAuditLogsView(APIView):
         return Response(logs_data)
 
 
-logger = logging.getLogger(__name__)
-
-User = get_user_model()
 
 
 class AdminUserListView(APIView):
@@ -239,9 +234,6 @@ class AdminUserListView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-User = get_user_model()
-
-VALID_ROLES = ['user', 'supervisor', 'super_admin']
 
 class AdminUserRoleView(APIView):
     permission_classes = [permissions.IsAuthenticated]
