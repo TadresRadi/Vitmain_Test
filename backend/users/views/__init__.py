@@ -16,6 +16,7 @@ from .admin_views import (
     AdminOverviewView,
     AdminAuthLoginView,
     AdminAuthProfileView,
+    AdminUserDetailView,
 )
 from .password_views import (
     PasswordChangeView,
@@ -38,8 +39,9 @@ __all__ = [
     "AdminOverviewView",
     "AdminAuthLoginView",
     "AdminAuthProfileView",
+    "AdminUserDetailView",
     'LogoutView',
-    
+
     'PasswordChangeView',
     'PasswordResetRequestView',
     'PasswordResetView',

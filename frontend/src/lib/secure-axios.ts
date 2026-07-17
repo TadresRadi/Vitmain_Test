@@ -3,7 +3,7 @@
  * Configured with security headers and token management
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosRequestHeaders } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { tokenStorage } from './token-storage'
 import { csrfTokenService } from './csrf'
 

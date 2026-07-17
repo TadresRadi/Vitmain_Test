@@ -4,7 +4,7 @@
  * Verifies that tokens are stored in memory + sessionStorage (NOT localStorage),
  * cleared properly, and that expiry is handled correctly.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { tokenStorage } from './token-storage'
 
 describe('TokenStorage', () => {

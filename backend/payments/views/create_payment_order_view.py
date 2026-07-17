@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from decimal import Decimal
 from subscriptions.models import Plan
 
 from ..models.payment_order import PaymentOrder
@@ -142,14 +141,16 @@ class CreatePaymentOrderView(APIView):
     @staticmethod
     def _response_data(order):
         from django.conf import settings
+        from decimal import Decimal as _Decimal
 
         receiver_number = settings.VODAFONE_RECEIVER_NUMBER
-        remaining = max(
-            order.expected_amount - order.received_amount,
-            Decimal("0.00"),
-        )
-        print(type(order.expected_amount), order.expected_amount)
-        print(type(order.received_amount), order.received_amount)
+
+        # Coerce to Decimal — freshly-created orders may have float defaults
+        # (0.0) instead of Decimal('0.00') until they're re-fetched from the DB.
+        # Decimal - float raises TypeError, so we normalize both sides.
+        expected = _Decimal(str(order.expected_amount))
+        received = _Decimal(str(order.received_amount))
+        remaining = max(expected - received, _Decimal("0.00"))
 
         data = PaymentOrderSerializer(order).data
         data.update(

@@ -182,27 +182,18 @@ if (response.data.status === "completed") {
   })
 
   window.setTimeout(() => {
-    // Handle regeneration flow after payment
+    // Handle regeneration flow after payment.
+    // Both "new_business_info" and "existing_business_info" redirect to Chat
+    // with forceRegenerate=true so Chat.tsx calls the backend with
+    // { force_regenerate: true } — which tells the backend to generate a
+    // fresh set of posts even if posts already exist.
     if (isRegenerationFlow && regenerationOption) {
       clearRegenerationOption()
-      
-      if (regenerationOption === "new_business_info") {
-        // After new business info flow, go to chat with auto-start
-        navigate("/chat", { 
-          state: { autoStartCampaign: true },
-          replace: true 
-        })
-      } else if (regenerationOption === "existing_business_info") {
-        // After existing business info flow, go to chat with auto-start
-        navigate("/chat", { 
-          state: { autoStartCampaign: true },
-          replace: true 
-        })
-      } else {
-        navigate(response.data.next_url || "/chat", {
-          replace: true,
-        })
-      }
+
+      navigate("/chat", {
+        state: { autoStartCampaign: true, forceRegenerate: true },
+        replace: true,
+      })
     } else {
       navigate(response.data.next_url || "/chat", {
         replace: true,

@@ -279,3 +279,119 @@ class AdminUserRoleView(APIView):
         except Exception as e:
             error_message = str(e) if str(e) else "Failed to update user role"
             return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+class AdminUserDetailView(APIView):
+    """Return a detailed activity profile for a single user.
+
+    Returns:
+        - user: basic info (id, email, full_name, role, date_joined)
+        - total_amount_paid: sum of received_amount on COMPLETED payment orders
+        - total_images_generated: count of GeneratedImage rows for this user
+        - total_posts_generated: count of AIPostGeneration rows * 5
+        - payments: list of all payment orders with sender numbers + status
+        - onboarding: the user's active (or most recent) onboarding answers, or null
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, user_id):
+        if request.user.role not in ['super_admin', 'supervisor']:
+            return Response(
+                {"error": "Access denied."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # --- Payment history (with sender numbers) ---
+        from payments.models import PaymentOrder
+        payment_orders = (
+            PaymentOrder.objects
+            .filter(user=user)
+            .order_by('-created_at')
+        )
+        total_paid = payment_orders.filter(
+            status=PaymentOrder.Status.COMPLETED
+        ).aggregate(total=Sum('received_amount'))['total'] or 0
+
+        payments_data = []
+        for order in payment_orders:
+            payments_data.append({
+                "id": str(order.id),
+                "reference_code": order.reference_code,
+                "plan": order.plan,
+                "expected_amount": str(order.expected_amount),
+                "received_amount": str(order.received_amount),
+                "expected_sender_number": order.expected_sender_number,
+                "status": order.status,
+                "created_at": order.created_at.isoformat(),
+                "completed_at": (
+                    order.updated_at.isoformat()
+                    if order.status == PaymentOrder.Status.COMPLETED
+                    else None
+                ),
+            })
+
+        # --- Total images generated ---
+        total_images = GeneratedImage.objects.filter(
+            post__session__user=user
+        ).count()
+
+        # --- Total posts generated ---
+        post_generations_count = user.post_generations.count()
+        total_posts = post_generations_count * 5
+
+        # --- Onboarding answers ---
+        from onboarding.models import OnboardingResponse
+        onboarding = (
+            OnboardingResponse.objects
+            .filter(user=user, is_active=True)
+            .order_by("-created_at")
+            .first()
+        )
+        if onboarding is None:
+            onboarding = (
+                OnboardingResponse.objects
+                .filter(user=user)
+                .order_by("-created_at")
+                .first()
+            )
+
+        onboarding_data = None
+        if onboarding:
+            onboarding_data = {
+                "business_name": onboarding.business_name,
+                "governorate": onboarding.governorate,
+                "business_type": onboarding.business_type,
+                "business_subtype": onboarding.business_subtype,
+                "business_type_other": onboarding.business_type_other,
+                "marketing_goals": onboarding.marketing_goals,
+                "target_audience": onboarding.target_audience,
+                "target_audience_other": onboarding.target_audience_other,
+                "tone_of_voice": onboarding.tone_of_voice,
+                "tone_of_voice_other": onboarding.tone_of_voice_other,
+                "created_at": onboarding.created_at.isoformat(),
+            }
+
+        return Response({
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "full_name": user.full_name,
+                "role": user.role,
+                "user_type": getattr(user, 'user_type', None),
+                "date_joined": user.date_joined.isoformat(),
+            },
+            "total_amount_paid": str(total_paid),
+            "total_images_generated": total_images,
+            "total_posts_generated": total_posts,
+            "post_generations_count": post_generations_count,
+            "payments": payments_data,
+            "onboarding": onboarding_data,
+        })

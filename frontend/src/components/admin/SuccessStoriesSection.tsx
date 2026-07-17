@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit, Trash2, Save, Loader2, FileText, Settings, Image as ImageIcon, X } from "lucide-react"
+import { Edit, Trash2, Save, Loader2, FileText, Settings, Image as ImageIcon } from "lucide-react"
 import { api } from "@/lib/axios"
 
 interface SuccessStory {
@@ -34,7 +34,6 @@ export default function SuccessStoriesSection() {
   const [savingSuccessStory, setSavingSuccessStory] = useState(false)
   const [storySettings, setStorySettings] = useState<StorySettings>({ mode: 'auto', rotation_interval: 24, featured_video_id: null })
   const [savingSettings, setSavingSettings] = useState(false)
-  const [selectedVideoPreview, setSelectedVideoPreview] = useState<SuccessStory | null>(null)
 
   const fetchSuccessStory = async () => {
     try {
@@ -371,7 +370,6 @@ export default function SuccessStoriesSection() {
                           {story.video_url ? (
                             <div className="flex items-center gap-2">
                               <Button
-                                onClick={() => setSelectedVideoPreview(story)}
                                 variant="outline"
                                 size="sm"
                                 className="h-8 border-white/20 text-white hover:bg-white/10"

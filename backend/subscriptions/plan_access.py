@@ -1,6 +1,3 @@
-from rest_framework import status
-from rest_framework.response import Response
-
 from subscriptions.models import Subscription
 
 CHAT_PLAN_SLUG = "basic"

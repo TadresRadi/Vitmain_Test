@@ -15,9 +15,9 @@ from users.views import (
     AdminOverviewView,
     AdminAuthLoginView,
     AdminAuthProfileView,
+    AdminUserDetailView,
     SupervisorCreateView,
 )
-
 from users.views.password_views import (
     PasswordChangeView,
     PasswordResetRequestView,
@@ -50,6 +50,7 @@ urlpatterns = [
     path('admin/users/<uuid:user_id>', AdminUserListView.as_view(), name='admin_user_detail'),
     path('admin/users/<uuid:user_id>/role', AdminUserRoleView.as_view(), name='admin_user_role'),
     path('admin/users/<uuid:user_id>/logs', AdminAuditLogsView.as_view(), name='admin_user_logs'),
+    path('admin/users/<uuid:user_id>/details', AdminUserDetailView.as_view(), name='admin_user_details'),
     path('auth/logout', LogoutView.as_view(), name='logout'),
 
     # Password Management

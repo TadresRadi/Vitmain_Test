@@ -10,7 +10,7 @@ import AnimatedBackground from "@/components/AnimatedBackground"
 
 import { useToast } from "@/hooks/use-toast"
 import { saveOnboarding, type OnboardingFormData } from "@/services/onboardingService"
-import { clearRegenerationOption, getRegenerationOption } from "@/services/regenerationFlowService"
+import { getRegenerationOption } from "@/services/regenerationFlowService"
 import type { ApiError } from "@/types/api"
 
 export default function NewOnboarding() {
@@ -202,15 +202,16 @@ const handleNext = () => {
         description: t("onboarding.new.savedDesc", "Next, choose a plan to unlock your campaign posts."),
       })
 
-      // Check if this is a regeneration flow
-      const isRegenerationFlow = getRegenerationOption() === "new_business_info"
+      // Read the regeneration option (still in localStorage — NOT cleared yet).
+      // Pass it through to Pricing as navigation state so it survives the
+      // trip through Payment → Chat.
+      const regenerationOption = getRegenerationOption()
 
-      // Go to pricing; post generation must happen only after plan selection.
-      // For regeneration flow, we want to pass state to indicate this is for regeneration
       navigate("/pricing", { 
         replace: true,
         state: { 
-          isRegenerationFlow: isRegenerationFlow 
+          isRegenerationFlow: regenerationOption !== null,
+          regenerationOption,
         }
       })
     } catch (error) {
@@ -283,9 +284,10 @@ const handleOtherSubmit = () => {
       createNew: isRegenerationFlow,
     })
 
-    if (isRegenerationFlow) {
-      clearRegenerationOption()
-    }
+    // NOTE: Do NOT clear the regeneration option here.
+    // It must survive navigation through Pricing → Payment → Chat so
+    // VodafoneCashPayment knows to redirect to Chat with forceRegenerate=true.
+    // VodafoneCashPayment will clear it after payment is confirmed.
 
     return response
   }

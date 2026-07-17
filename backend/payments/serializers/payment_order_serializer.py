@@ -29,7 +29,11 @@ class PaymentOrderSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_remaining_amount(self, obj):
-        remaining = obj.expected_amount - obj.received_amount
+        # Coerce to Decimal — freshly-created orders may have float defaults
+        # (0.0) instead of Decimal('0.00') until they're re-fetched from the DB.
+        expected = Decimal(str(obj.expected_amount))
+        received = Decimal(str(obj.received_amount))
+        remaining = expected - received
         return max(remaining, Decimal("0.00"))
 
     def get_payment_completed(self, obj):
