@@ -4,7 +4,7 @@
 # ============================================================================
 
 # Django + DRF
-Django==4.2.30
+Django==6.0.7
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 django-cors-headers==4.9.0
