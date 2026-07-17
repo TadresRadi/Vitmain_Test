@@ -56,7 +56,7 @@ jobs:
 
       # Create draft release and upload asset
       - name: Create Draft Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           prerelease: false
