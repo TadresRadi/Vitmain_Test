@@ -1,8 +1,7 @@
 # ==========================================
 # Stage 1: Build stage
 # ==========================================
-FROM python:3.11-slim AS builder
-
+FROM python:3.12-slim AS builder
 WORKDIR /app
 
 # Set environment variables
@@ -24,7 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # ==========================================
 # Stage 2: Final run stage
 # ==========================================
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -61,4 +60,4 @@ EXPOSE 8000
 USER django-user
 
 # Run Gunicorn
-CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]
+CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-"]

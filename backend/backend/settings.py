@@ -422,7 +422,7 @@ if not DEBUG and not _is_test_run:
     if not VODAFONE_RECEIVER_NUMBER:
         raise RuntimeError("VODAFONE_RECEIVER_NUMBER env var is required")
 # ============================================================================
-# LOGGING CONFIGURATION
+# CONFIGURATION
 # ============================================================================
 
 USE_JSON_LOGS = os.environ.get("USE_JSON_LOGS", "false").lower() == "true"
@@ -502,7 +502,7 @@ LOGGING = {
             "backupCount": 3,
             "formatter": "json" if USE_JSON_LOGS else "verbose",
             "filters": ["request_id"],
-        },
+        }, 
     },
     "loggers": {
         "django": {
