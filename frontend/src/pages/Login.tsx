@@ -1,34 +1,25 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
-import { useAuthStore } from "@/store/authStore"
-import { useToast } from "@/hooks/use-toast"
-import { Sparkles, Loader2 } from "lucide-react"
-import { useTranslation } from "react-i18next"
-import api from "@/lib/axios"
-import type { UsageResponse } from "@/types/api"
-import GoogleAuthButton from "@/components/GoogleAuthButton"
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useAuthStore } from '@/store/authStore'
+import { useToast } from '@/hooks/use-toast'
+import { Sparkles, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import api from '@/lib/axios'
+import type { UsageResponse } from '@/types/api'
+import GoogleAuthButton from '@/components/GoogleAuthButton'
 
 // NEW
-import {
-  sanitizeInput,
-  isValidEmail,
-} from "@/lib/security"
+import { sanitizeInput, isValidEmail } from '@/lib/security'
 
 export default function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [localError, setLocalError] = useState("")
+  const [localError, setLocalError] = useState('')
 
   const { login, error } = useAuthStore()
 
@@ -40,20 +31,20 @@ export default function Login() {
     e.preventDefault()
 
     setLoading(true)
-    setLocalError("")
+    setLocalError('')
 
     // Email validation
     const sanitizedEmail = sanitizeInput(email, 254)
 
     if (!isValidEmail(sanitizedEmail)) {
-      setLocalError(t("login.invalidEmail") || "Invalid email")
+      setLocalError(t('login.invalidEmail') || 'Invalid email')
       setLoading(false)
       return
     }
 
     // Password validation
     if (!password.trim()) {
-      setLocalError(t("login.passwordRequired") || "Password is required")
+      setLocalError(t('login.passwordRequired') || 'Password is required')
       setLoading(false)
       return
     }
@@ -62,29 +53,29 @@ export default function Login() {
       const response = await login(sanitizedEmail, password)
 
       toast({
-        title: t("login.welcomeBack"),
-        description: t("login.loginSuccess"),
+        title: t('login.welcomeBack'),
+        description: t('login.loginSuccess'),
       })
 
-      const usageRes = await api.get<UsageResponse>("/users/usage")
+      const usageRes = await api.get<UsageResponse>('/users/usage')
 
-      if (usageRes.data.plan_slug === "pro") {
-        navigate("/support", { replace: true })
+      if (usageRes.data.plan_slug === 'pro') {
+        navigate('/support', { replace: true })
       } else if (!response.user.onboarding_completed) {
-        navigate("/new-onboarding")
+        navigate('/new-onboarding')
       } else if (usageRes.data.has_access) {
-        navigate("/chat", { replace: true })
+        navigate('/chat', { replace: true })
       } else {
-        navigate("/pricing", { replace: true })
+        navigate('/pricing', { replace: true })
       }
     } catch (err: any) {
       toast({
-        title: t("login.loginFailed"),
+        title: t('login.loginFailed'),
         description:
           err.response?.data?.detail ||
           err.response?.data?.message ||
-          t("login.invalidCredentials"),
-        variant: "destructive",
+          t('login.invalidCredentials'),
+        variant: 'destructive',
       })
     } finally {
       setLoading(false)
@@ -92,14 +83,14 @@ export default function Login() {
   }
 
   const handleGoogleSuccess = async () => {
-    const usageRes = await api.get<UsageResponse>("/users/usage")
+    const usageRes = await api.get<UsageResponse>('/users/usage')
 
-    if (usageRes.data.plan_slug === "pro") {
-      navigate("/support", { replace: true })
+    if (usageRes.data.plan_slug === 'pro') {
+      navigate('/support', { replace: true })
     } else if (usageRes.data.has_access) {
-      navigate("/chat", { replace: true })
+      navigate('/chat', { replace: true })
     } else {
-      navigate("/pricing", { replace: true })
+      navigate('/pricing', { replace: true })
     }
   }
 
@@ -120,41 +111,32 @@ export default function Login() {
 
         <Card>
           <CardHeader className="text-center">
-            <CardTitle>{t("login.title")}</CardTitle>
-            <CardDescription>
-              {t("login.description")}
-            </CardDescription>
+            <CardTitle>{t('login.title')}</CardTitle>
+            <CardDescription>{t('login.description')}</CardDescription>
           </CardHeader>
 
           <CardContent>
             <div className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4">
-
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {t("login.email")}
-                  </label>
+                  <label className="text-sm font-medium">{t('login.email')}</label>
 
                   <Input
                     type="email"
-                    placeholder={t("login.emailPlaceholder")}
+                    placeholder={t('login.emailPlaceholder')}
                     value={email}
                     disabled={loading}
-                    onChange={(e) =>
-                      setEmail(sanitizeInput(e.target.value, 254))
-                    }
+                    onChange={(e) => setEmail(sanitizeInput(e.target.value, 254))}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {t("login.password")}
-                  </label>
+                  <label className="text-sm font-medium">{t('login.password')}</label>
 
                   <Input
                     type="password"
-                    placeholder={t("login.passwordPlaceholder")}
+                    placeholder={t('login.passwordPlaceholder')}
                     value={password}
                     disabled={loading}
                     onChange={(e) => setPassword(e.target.value)}
@@ -168,17 +150,9 @@ export default function Login() {
                   </div>
                 )}
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loading}
-                >
-                  {loading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {loading
-                    ? t("login.loading") || "Signing in..."
-                    : t("login.signIn")}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loading ? t('login.loading') || 'Signing in...' : t('login.signIn')}
                 </Button>
               </form>
 
@@ -189,24 +163,18 @@ export default function Login() {
 
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    {t("login.orContinueWith")}
+                    {t('login.orContinueWith')}
                   </span>
                 </div>
               </div>
 
-              <GoogleAuthButton
-                mode="login"
-                onSuccess={handleGoogleSuccess}
-              />
+              <GoogleAuthButton mode="login" onSuccess={handleGoogleSuccess} />
             </div>
 
             <p className="mt-4 text-center text-sm text-muted-foreground">
-              {t("login.noAccount")}{" "}
-              <Link
-                to="/register"
-                className="text-primary hover:underline"
-              >
-                {t("login.signUp")}
+              {t('login.noAccount')}{' '}
+              <Link to="/register" className="text-primary hover:underline">
+                {t('login.signUp')}
               </Link>
             </p>
           </CardContent>

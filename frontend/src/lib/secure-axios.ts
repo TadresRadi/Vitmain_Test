@@ -48,15 +48,14 @@ class SecureAxios {
       },
     })
 
-        // Request interceptor - add auth token
+    // Request interceptor - add auth token
     instance.interceptors.request.use(
       async (config) => {
         // If the body is FormData, DELETE the hardcoded Content-Type header
         // so axios can set "multipart/form-data; boundary=..." automatically.
         // The instance default is "application/json" (set above), which would
         // otherwise override the multipart Content-Type and break file uploads.
-        const isFormData =
-          typeof FormData !== 'undefined' && config.data instanceof FormData
+        const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData
 
         if (isFormData) {
           delete config.headers['Content-Type']
@@ -107,10 +106,7 @@ class SecureAxios {
 
             if (response.data.access) {
               // Update token
-              tokenStorage.setTokens(
-                response.data.access,
-                refreshToken
-              )
+              tokenStorage.setTokens(response.data.access, refreshToken)
 
               // Retry original request
               originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`
@@ -148,33 +144,21 @@ class SecureAxios {
   /**
    * Make POST request
    */
-  async post<T>(
-    url: string,
-    data?: Record<string, any>,
-    config?: AxiosRequestConfig
-  ) {
+  async post<T>(url: string, data?: Record<string, any>, config?: AxiosRequestConfig) {
     return this.axiosInstance.post<T>(url, data, config)
   }
 
   /**
    * Make PUT request
    */
-  async put<T>(
-    url: string,
-    data?: Record<string, any>,
-    config?: AxiosRequestConfig
-  ) {
+  async put<T>(url: string, data?: Record<string, any>, config?: AxiosRequestConfig) {
     return this.axiosInstance.put<T>(url, data, config)
   }
 
   /**
    * Make PATCH request
    */
-  async patch<T>(
-    url: string,
-    data?: Record<string, any>,
-    config?: AxiosRequestConfig
-  ) {
+  async patch<T>(url: string, data?: Record<string, any>, config?: AxiosRequestConfig) {
     return this.axiosInstance.patch<T>(url, data, config)
   }
 

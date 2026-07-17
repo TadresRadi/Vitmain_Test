@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
-import { useTranslation } from "react-i18next"
-import { useToast } from "@/hooks/use-toast"
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useToast } from '@/hooks/use-toast'
 import {
   completePostReview,
   generateImages as generateCampaignImages,
@@ -12,21 +12,16 @@ import {
   regenerateSelectedPosts,
   shouldReviewPosts,
   submitFeedback as submitChatFeedback,
-} from "@/services/chatService"
-import { getOnboarding } from "@/services/onboardingService"
-import { setRegenerationOption } from "@/services/regenerationFlowService"
-import type {
-  AIPostGeneration,
-  ApiError,
-  FeedbackPayload,
-  PostWithImage,
-} from "@/types/api"
+} from '@/services/chatService'
+import { getOnboarding } from '@/services/onboardingService'
+import { setRegenerationOption } from '@/services/regenerationFlowService'
+import type { AIPostGeneration, ApiError, FeedbackPayload, PostWithImage } from '@/types/api'
 
 const emptyFeedback: FeedbackPayload = {
   overallSatisfaction: 0,
   postsSatisfaction: 0,
   imagesSatisfaction: 0,
-  suggestions: "",
+  suggestions: '',
 }
 
 export function useChatController() {
@@ -61,10 +56,13 @@ export function useChatController() {
         const onboarding = await getOnboarding()
         if (!onboarding) {
           toast({
-            title: t("common.onboardingRequired", "Onboarding Required"),
-            description: t("chat.completeOnboardingFirst", "Please complete your onboarding profile to open the marketing chat."),
+            title: t('common.onboardingRequired', 'Onboarding Required'),
+            description: t(
+              'chat.completeOnboardingFirst',
+              'Please complete your onboarding profile to open the marketing chat.'
+            ),
           })
-          navigate("/new-onboarding")
+          navigate('/new-onboarding')
           return
         }
 
@@ -85,24 +83,27 @@ export function useChatController() {
             setShowPostReview(true)
           }
 
-          if (gen.images_status === "processing") {
+          if (gen.images_status === 'processing') {
             setGeneratingImages(true)
           }
 
-          if (gen.images_status === "completed" && gen.has_images) {
+          if (gen.images_status === 'completed' && gen.has_images) {
             try {
               setPostsWithImages(mapLatestSessionImages(await getImagesHistory()))
             } catch (e) {
-              console.error("Failed to reload images", e)
+              console.error('Failed to reload images', e)
             }
           }
         }
       } catch (err) {
         console.error(err)
         toast({
-          title: t("common.error", "Error"),
-          description: t("chat.failedToLoad", "Failed to load chat data. Please refresh and try again."),
-          variant: "destructive",
+          title: t('common.error', 'Error'),
+          description: t(
+            'chat.failedToLoad',
+            'Failed to load chat data. Please refresh and try again.'
+          ),
+          variant: 'destructive',
         })
       } finally {
         setLoading(false)
@@ -113,7 +114,7 @@ export function useChatController() {
   }, [navigate, toast, t, location.state])
 
   useEffect(() => {
-    if (!postGen || postGen.images_status !== "processing") {
+    if (!postGen || postGen.images_status !== 'processing') {
       return
     }
 
@@ -124,28 +125,31 @@ export function useChatController() {
           const gen = data.post_generation
           setPostGen(gen)
 
-          if (gen.images_status === "completed" && gen.has_images) {
+          if (gen.images_status === 'completed' && gen.has_images) {
             setGeneratingImages(false)
             try {
               setPostsWithImages(mapLatestSessionImages(await getImagesHistory()))
             } catch (e) {
-              console.error("Failed to reload images", e)
+              console.error('Failed to reload images', e)
             }
             clearInterval(pollInterval)
           }
 
-          if (gen.images_status === "failed") {
+          if (gen.images_status === 'failed') {
             setGeneratingImages(false)
             clearInterval(pollInterval)
             toast({
-              title: t("common.error", "Error"),
-              description: t("chat.imageGenerationFailed", "Image generation failed. Please try again."),
-              variant: "destructive",
+              title: t('common.error', 'Error'),
+              description: t(
+                'chat.imageGenerationFailed',
+                'Image generation failed. Please try again.'
+              ),
+              variant: 'destructive',
             })
           }
         }
       } catch (err) {
-        console.error("Failed to poll generation status", err)
+        console.error('Failed to poll generation status', err)
       }
     }, 3000)
 
@@ -162,8 +166,11 @@ export function useChatController() {
           setPostGen(data.post_generation)
           setPostsWithImages(null)
           toast({
-            title: t("chat.generationSuccess", "Campaign Formulated"),
-            description: t("chat.generationSuccessDesc", "5 marketing posts have been tailored to your business profile!"),
+            title: t('chat.generationSuccess', 'Campaign Formulated'),
+            description: t(
+              'chat.generationSuccessDesc',
+              '5 marketing posts have been tailored to your business profile!'
+            ),
           })
           setShowPostReview(true)
         }
@@ -171,15 +178,17 @@ export function useChatController() {
         const error = err as ApiError
         console.error(err)
         toast({
-          title: t("common.error", "Error"),
-          description: error.response?.data?.error || t("chat.failedToGenerate", "Failed to generate posts. Please try again."),
-          variant: "destructive",
+          title: t('common.error', 'Error'),
+          description:
+            error.response?.data?.error ||
+            t('chat.failedToGenerate', 'Failed to generate posts. Please try again.'),
+          variant: 'destructive',
         })
       } finally {
         setGeneratingPosts(false)
       }
     },
-    [toast, t],
+    [toast, t]
   )
 
   useEffect(() => {
@@ -212,7 +221,7 @@ export function useChatController() {
             return
           }
         } catch (err) {
-          console.error("Failed to check existing posts:", err)
+          console.error('Failed to check existing posts:', err)
         }
       }
 
@@ -233,27 +242,37 @@ export function useChatController() {
       setPostsWithImages(data.posts_with_images)
 
       toast({
-        title: t("chat.imagesReady", "Visual Assets Prepared"),
-        description: t("chat.imagesReadyDesc", "Engaging visual designs have been attached to all your campaign posts!"),
+        title: t('chat.imagesReady', 'Visual Assets Prepared'),
+        description: t(
+          'chat.imagesReadyDesc',
+          'Engaging visual designs have been attached to all your campaign posts!'
+        ),
       })
     } catch (err) {
       const error = err as ApiError
       console.error(err)
       if (error.response?.status === 409) {
         toast({
-          title: t("common.error", "Generation in Progress"),
-          description: error.response?.data?.error || t("chat.generationInProgress", "Image generation is already in progress. Please wait for it to complete."),
-          variant: "destructive",
+          title: t('common.error', 'Generation in Progress'),
+          description:
+            error.response?.data?.error ||
+            t(
+              'chat.generationInProgress',
+              'Image generation is already in progress. Please wait for it to complete.'
+            ),
+          variant: 'destructive',
         })
         return
       }
       toast({
-        title: t("common.error", "Error"),
-        description: error.response?.data?.error || t("chat.failedToGenerateImages", "Failed to generate matching campaign visuals."),
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description:
+          error.response?.data?.error ||
+          t('chat.failedToGenerateImages', 'Failed to generate matching campaign visuals.'),
+        variant: 'destructive',
       })
     } finally {
-      if (postGen.images_status !== "processing") {
+      if (postGen.images_status !== 'processing') {
         setGeneratingImages(false)
       }
     }
@@ -262,9 +281,9 @@ export function useChatController() {
   const handleRegenerateSelectedPosts = useCallback(async () => {
     if (selectedPosts.length === 0) {
       toast({
-        title: t("common.error", "Error"),
-        description: t("postReview.noSelection", "Please select at least one post to regenerate."),
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description: t('postReview.noSelection', 'Please select at least one post to regenerate.'),
+        variant: 'destructive',
       })
       return
     }
@@ -273,14 +292,16 @@ export function useChatController() {
     try {
       const data = await regenerateSelectedPosts(selectedPosts)
       if (data.posts) {
-        setPostGen(data.post_generation ?? {
-          ...postGen,
-          posts: data.posts,
-          posts_review_complete: true,
-        })
+        setPostGen(
+          data.post_generation ?? {
+            ...postGen,
+            posts: data.posts,
+            posts_review_complete: true,
+          }
+        )
         toast({
-          title: t("postReview.regenerationSuccess", "Posts regenerated successfully!"),
-          description: "",
+          title: t('postReview.regenerationSuccess', 'Posts regenerated successfully!'),
+          description: '',
         })
         setShowPostReview(false)
         setShowPostSelection(false)
@@ -290,9 +311,11 @@ export function useChatController() {
       const error = err as ApiError
       console.error(err)
       toast({
-        title: t("common.error", "Error"),
-        description: error.response?.data?.error || t("postReview.regenerationError", "Failed to regenerate posts. Please try again."),
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description:
+          error.response?.data?.error ||
+          t('postReview.regenerationError', 'Failed to regenerate posts. Please try again.'),
+        variant: 'destructive',
       })
     } finally {
       setRegeneratingPosts(false)
@@ -311,18 +334,18 @@ export function useChatController() {
       const error = err as ApiError
       console.error(err)
       toast({
-        title: t("common.error", "Error"),
-        description: error.response?.data?.error || t("chat.failedToLoad", "Failed to update workflow. Please try again."),
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description:
+          error.response?.data?.error ||
+          t('chat.failedToLoad', 'Failed to update workflow. Please try again.'),
+        variant: 'destructive',
       })
     }
   }, [toast, t])
 
   const togglePostSelection = useCallback((index: number) => {
     setSelectedPosts((prev) =>
-      prev.includes(index)
-        ? prev.filter((i) => i !== index)
-        : [...prev, index],
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     )
   }, [])
 
@@ -343,23 +366,26 @@ export function useChatController() {
     } catch (err) {
       console.error(err)
       toast({
-        title: t("common.error", "Error"),
-        description: t("chat.failedToSubmitFeedback", "Failed to submit feedback. Please try again."),
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description: t(
+          'chat.failedToSubmitFeedback',
+          'Failed to submit feedback. Please try again.'
+        ),
+        variant: 'destructive',
       })
     }
   }, [feedbackData, toast, t])
 
   const handleUseNewBusinessInfo = useCallback(() => {
     setShowNewPostsOptions(false)
-    setRegenerationOption("new_business_info")
-    navigate("/new-onboarding")
+    setRegenerationOption('new_business_info')
+    navigate('/new-onboarding')
   }, [navigate])
 
   const handleUseExistingBusinessInfo = useCallback(() => {
     setShowNewPostsOptions(false)
-    setRegenerationOption("existing_business_info")
-    navigate("/pricing")
+    setRegenerationOption('existing_business_info')
+    navigate('/pricing')
   }, [navigate])
 
   return {

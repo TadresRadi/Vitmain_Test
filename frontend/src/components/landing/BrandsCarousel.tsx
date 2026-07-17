@@ -1,14 +1,14 @@
-import { useTranslation } from "react-i18next"
-import { motion } from "framer-motion"
-import { useBrands } from "@/hooks/queries/usePortfolio"
+import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
+import { useBrands } from '@/hooks/queries/usePortfolio'
 
 const fallbackBrands = [
-  { id: "fallback-brand-1", name: "VITMAIN", logo_url: null },
-  { id: "fallback-brand-2", name: "NOVA", logo_url: null },
-  { id: "fallback-brand-3", name: "AXIS", logo_url: null },
-  { id: "fallback-brand-4", name: "ORBIT", logo_url: null },
-  { id: "fallback-brand-5", name: "PULSE", logo_url: null },
-  { id: "fallback-brand-6", name: "LUMEN", logo_url: null },
+  { id: 'fallback-brand-1', name: 'VITMAIN', logo_url: null },
+  { id: 'fallback-brand-2', name: 'NOVA', logo_url: null },
+  { id: 'fallback-brand-3', name: 'AXIS', logo_url: null },
+  { id: 'fallback-brand-4', name: 'ORBIT', logo_url: null },
+  { id: 'fallback-brand-5', name: 'PULSE', logo_url: null },
+  { id: 'fallback-brand-6', name: 'LUMEN', logo_url: null },
 ]
 
 export function BrandsCarousel() {
@@ -25,8 +25,10 @@ export function BrandsCarousel() {
           viewport={{ once: true }}
           className="mb-16"
         >
-          <h2 className="text-4xl font-cinematic font-bold mb-4 text-white transition-colors">{t("landing.clientsTitle")}</h2>
-          <p className="text-lg text-white/60 transition-colors">{t("landing.clientsSubtitle")}</p>
+          <h2 className="text-4xl font-cinematic font-bold mb-4 text-white transition-colors">
+            {t('landing.clientsTitle')}
+          </h2>
+          <p className="text-lg text-white/60 transition-colors">{t('landing.clientsSubtitle')}</p>
         </motion.div>
       </div>
 
@@ -36,7 +38,10 @@ export function BrandsCarousel() {
 
         <div className="flex animate-marquee w-max">
           {visibleBrands.map((brand: any) => (
-            <div key={brand.id} className="flex items-center justify-center h-16 w-32 group cursor-pointer shrink-0 px-2">
+            <div
+              key={brand.id}
+              className="flex items-center justify-center h-16 w-32 group cursor-pointer shrink-0 px-2"
+            >
               {brand.logo_url ? (
                 <img
                   src={brand.logo_url}
@@ -53,7 +58,7 @@ export function BrandsCarousel() {
                 />
               ) : null}
               <span
-                className={`${brand.logo_url ? "hidden" : "block"} text-white/30 font-cinematic font-bold text-xl tracking-widest group-hover:text-white transition-colors duration-300 text-center`}
+                className={`${brand.logo_url ? 'hidden' : 'block'} text-white/30 font-cinematic font-bold text-xl tracking-widest group-hover:text-white transition-colors duration-300 text-center`}
               >
                 {brand.name}
               </span>

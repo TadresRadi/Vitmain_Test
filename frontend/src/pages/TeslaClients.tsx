@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { useTranslation } from "react-i18next"
-import api from "@/lib/axios"
-import Navbar from "@/components/Navbar"
-import Footer from "@/components/Footer"
-import AnimatedBackground from "@/components/AnimatedBackground"
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import api from '@/lib/axios'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
+import AnimatedBackground from '@/components/AnimatedBackground'
 
 export default function TeslaClients() {
   const { t } = useTranslation()
@@ -14,10 +14,10 @@ export default function TeslaClients() {
   useEffect(() => {
     const fetchTeslaClientImages = async () => {
       try {
-        const response = await api.get("/portfolio/tesla-client-images/")
+        const response = await api.get('/portfolio/tesla-client-images/')
         setTeslaClientImages(response.data)
       } catch (error) {
-        console.error("Failed to fetch Tesla Client images:", error)
+        console.error('Failed to fetch Tesla Client images:', error)
       } finally {
         setLoading(false)
       }
@@ -29,7 +29,7 @@ export default function TeslaClients() {
     <div className="min-h-screen relative text-white bg-black/40 dark:bg-black/60 transition-colors duration-1000">
       <AnimatedBackground />
       <Navbar />
-      
+
       <main className="relative z-10 pt-24 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -40,10 +40,10 @@ export default function TeslaClients() {
             className="text-center mb-16"
           >
             <h1 className="text-5xl md:text-7xl font-cinematic font-bold mb-4 text-white transition-colors">
-              {t("landing.teslaClientTitle", "TESLA CLIENT")}
+              {t('landing.teslaClientTitle', 'TESLA CLIENT')}
             </h1>
             <p className="text-xl text-white/60 transition-colors">
-              {t("landing.teslaClientSubtitle", "Trusted by industry leaders")}
+              {t('landing.teslaClientSubtitle', 'Trusted by industry leaders')}
             </p>
           </motion.div>
 
@@ -70,7 +70,7 @@ export default function TeslaClients() {
                 >
                   <img
                     src={item.image_url}
-                    alt={item.title || t("landing.teslaClientTitle", "TESLA CLIENT")}
+                    alt={item.title || t('landing.teslaClientTitle', 'TESLA CLIENT')}
                     className="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500" />
@@ -85,7 +85,7 @@ export default function TeslaClients() {
           )}
         </div>
       </main>
-      
+
       <Footer />
     </div>
   )

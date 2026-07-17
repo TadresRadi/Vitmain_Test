@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { useTranslation } from "react-i18next"
-import api from "@/lib/axios"
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import api from '@/lib/axios'
 
 interface FeaturedStory {
   id: number
@@ -34,14 +34,15 @@ export function FeaturedSuccessStoryVideo() {
     const fetchFeatured = async () => {
       try {
         const [storiesRes, settingsRes] = await Promise.all([
-          api.get("/portfolio/success-stories/"),
-          api.get("/portfolio/success-story-settings/"),
+          api.get('/portfolio/success-stories/'),
+          api.get('/portfolio/success-story-settings/'),
         ])
 
         const stories: FeaturedStory[] = storiesRes.data || []
-        const settingsRow = Array.isArray(settingsRes.data) && settingsRes.data.length > 0
-          ? settingsRes.data[0]
-          : null
+        const settingsRow =
+          Array.isArray(settingsRes.data) && settingsRes.data.length > 0
+            ? settingsRes.data[0]
+            : null
         const settings: StorySettings = {
           mode: settingsRow?.mode || 'auto',
           rotation_interval: Number(settingsRow?.rotation_interval) || 24,
@@ -50,7 +51,7 @@ export function FeaturedSuccessStoryVideo() {
 
         // Manual mode: find the featured story by ID
         if (settings.mode === 'manual' && settings.featured_video) {
-          const featured = stories.find(s => s.id === settings.featured_video)
+          const featured = stories.find((s) => s.id === settings.featured_video)
           if (featured && featured.video_url) {
             setStory(featured)
             return
@@ -58,12 +59,12 @@ export function FeaturedSuccessStoryVideo() {
         }
 
         // Auto mode or no featured video: pick the first active story with a video
-        const firstWithVideo = stories.find(s => s.is_active && s.video_url)
+        const firstWithVideo = stories.find((s) => s.is_active && s.video_url)
         if (firstWithVideo) {
           setStory(firstWithVideo)
         }
       } catch (error) {
-        console.error("Failed to fetch featured success story:", error)
+        console.error('Failed to fetch featured success story:', error)
       } finally {
         setLoading(false)
       }
@@ -87,7 +88,7 @@ export function FeaturedSuccessStoryVideo() {
           className="text-center mb-12"
         >
           <h2 className="text-5xl font-cinematic font-bold mb-4 text-white transition-colors">
-            {t("work.successStoryTitle", "Success Stories")}
+            {t('work.successStoryTitle', 'Success Stories')}
           </h2>
         </motion.div>
 

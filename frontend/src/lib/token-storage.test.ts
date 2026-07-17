@@ -27,9 +27,7 @@ describe('TokenStorage', () => {
   })
 
   it('throws if access token is empty', () => {
-    expect(() => tokenStorage.setTokens('', 'refresh456')).toThrow(
-      'Access token is required'
-    )
+    expect(() => tokenStorage.setTokens('', 'refresh456')).toThrow('Access token is required')
   })
 
   it('clears all tokens', () => {

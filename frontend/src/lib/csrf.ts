@@ -57,9 +57,7 @@ export class CSRFTokenService {
    * Add CSRF token to request headers
    * @param headers Request headers object
    */
-  async addTokenToHeaders(
-    headers: Record<string, string>
-  ): Promise<Record<string, string>> {
+  async addTokenToHeaders(headers: Record<string, string>): Promise<Record<string, string>> {
     try {
       const token = await this.getToken()
       if (token) {

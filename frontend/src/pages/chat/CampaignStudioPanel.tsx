@@ -1,19 +1,11 @@
-import { motion } from "framer-motion"
-import type { ReactNode } from "react"
-import {
-  FileText,
-  Image as ImageIcon,
-  Loader2,
-  RefreshCw,
-  Sparkles,
-  Star,
-  X,
-} from "lucide-react"
-import { useTranslation } from "react-i18next"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import type { AIPostGeneration, PostWithImage } from "@/types/api"
+import { motion } from 'framer-motion'
+import type { ReactNode } from 'react'
+import { FileText, Image as ImageIcon, Loader2, RefreshCw, Sparkles, Star, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import type { AIPostGeneration, PostWithImage } from '@/types/api'
 
 interface CampaignStudioPanelProps {
   loading: boolean
@@ -65,10 +57,10 @@ export function CampaignStudioPanel({
           <div>
             <h2 className="font-bold text-white flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-vitamin-base" />
-              {t("chat.campaignStudio", "Campaign Studio")}
+              {t('chat.campaignStudio', 'Campaign Studio')}
             </h2>
             <p className="text-xs text-white/50">
-              {t("chat.studioDesc", "Review and attach visual media assets")}
+              {t('chat.studioDesc', 'Review and attach visual media assets')}
             </p>
           </div>
         </div>
@@ -92,14 +84,16 @@ export function CampaignStudioPanel({
                 />
               )}
 
-              {postGen.posts_review_complete && !postGen.has_images && postGen.images_status !== "processing" && (
-                <GenerateImagesPrompt
-                  generatingImages={generatingImages}
-                  onGenerateImages={onGenerateImages}
-                />
-              )}
+              {postGen.posts_review_complete &&
+                !postGen.has_images &&
+                postGen.images_status !== 'processing' && (
+                  <GenerateImagesPrompt
+                    generatingImages={generatingImages}
+                    onGenerateImages={onGenerateImages}
+                  />
+                )}
 
-              {postGen.images_status === "processing" && <ImageGenerationStatusPanel />}
+              {postGen.images_status === 'processing' && <ImageGenerationStatusPanel />}
 
               {showPostSelection && (
                 <PostSelectionPanel
@@ -132,9 +126,7 @@ function LoadingState() {
   return (
     <div className="h-full flex flex-col items-center justify-center text-white/40 gap-2">
       <Loader2 className="h-6 w-6 animate-spin text-vitamin-base" />
-      <p className="text-xs">
-        {t("chat.connectingStudio", "Syncing Campaign Studio...")}
-      </p>
+      <p className="text-xs">{t('chat.connectingStudio', 'Syncing Campaign Studio...')}</p>
     </div>
   )
 }
@@ -155,10 +147,13 @@ function EmptyCampaignState({
       </div>
       <div className="space-y-2">
         <h3 className="text-lg font-bold text-white">
-          {t("chat.formulatePrompt", "Formulate Premium Campaigns")}
+          {t('chat.formulatePrompt', 'Formulate Premium Campaigns')}
         </h3>
         <p className="text-xs text-white/60 leading-relaxed max-w-sm">
-          {t("chat.formulatePromptDesc", "Leverage Gemini Pro to construct exactly 5 comprehensive marketing posts translated into your profile language.")}
+          {t(
+            'chat.formulatePromptDesc',
+            'Leverage Gemini Pro to construct exactly 5 comprehensive marketing posts translated into your profile language.'
+          )}
         </p>
       </div>
       <Button
@@ -169,12 +164,12 @@ function EmptyCampaignState({
         {generatingPosts ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            {t("chat.formulating", "Formulating Campaign...")}
+            {t('chat.formulating', 'Formulating Campaign...')}
           </>
         ) : (
           <>
             <Sparkles className="h-4 w-4" />
-            {t("chat.generatePosts", "Formulate 5 Campaign Posts")}
+            {t('chat.generatePosts', 'Formulate 5 Campaign Posts')}
           </>
         )}
       </Button>
@@ -212,7 +207,7 @@ function PostList({
                     className="w-full h-full object-cover brightness-95 hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute top-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] text-vitamin-400 font-bold border border-vitamin-500/20 uppercase tracking-wider">
-                    {t("chat.visualMock", "Visual Asset Mock")}
+                    {t('chat.visualMock', 'Visual Asset Mock')}
                   </div>
                 </div>
               )}
@@ -253,8 +248,8 @@ function PostReviewPrompt({
     >
       <PanelTitle
         icon={<FileText className="w-5 h-5" />}
-        title={t("postReview.title", "Review Your Posts")}
-        description={t("postReview.message", "Do you want to modify any of these posts?")}
+        title={t('postReview.title', 'Review Your Posts')}
+        description={t('postReview.message', 'Do you want to modify any of these posts?')}
       />
 
       <div className="flex gap-3">
@@ -262,14 +257,14 @@ function PostReviewPrompt({
           onClick={onPostReviewYes}
           className="flex-1 bg-vitamin-base hover:bg-vitamin-700 text-white font-medium h-10 rounded-lg"
         >
-          {t("postReview.yes", "Yes")}
+          {t('postReview.yes', 'Yes')}
         </Button>
         <Button
           onClick={onPostReviewNo}
           variant="outline"
           className="flex-1 border-white/20 text-black dark:text-white hover:bg-vitamin-base/10 dark:hover:bg-white/10 hover:text-black dark:hover:text-white h-10 rounded-lg"
         >
-          {t("postReview.no", "No")}
+          {t('postReview.no', 'No')}
         </Button>
       </div>
     </motion.div>
@@ -293,8 +288,11 @@ function GenerateImagesPrompt({
     >
       <PanelTitle
         icon={<ImageIcon className="w-5 h-5" />}
-        title={t("postReview.generateImagesTitle", "Generate Images")}
-        description={t("postReview.generateImagesDesc", "Your posts are ready. Generate matching visuals for all 5 campaign posts.")}
+        title={t('postReview.generateImagesTitle', 'Generate Images')}
+        description={t(
+          'postReview.generateImagesDesc',
+          'Your posts are ready. Generate matching visuals for all 5 campaign posts.'
+        )}
       />
 
       <Button
@@ -305,12 +303,12 @@ function GenerateImagesPrompt({
         {generatingImages ? (
           <>
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            {t("chat.attachingVisuals", "Attaching Visuals...")}
+            {t('chat.attachingVisuals', 'Attaching Visuals...')}
           </>
         ) : (
           <>
             <Sparkles className="h-3.5 w-3.5 text-white" />
-            {t("postReview.generateImages", "Generate Images")}
+            {t('postReview.generateImages', 'Generate Images')}
           </>
         )}
       </Button>
@@ -329,8 +327,11 @@ function ImageGenerationStatusPanel() {
     >
       <PanelTitle
         icon={<Loader2 className="w-5 h-5 animate-spin" />}
-        title={t("chat.generatingImages", "Generating Images")}
-        description={t("chat.generatingImagesDesc", "Your visual assets are being generated. This may take a moment.")}
+        title={t('chat.generatingImages', 'Generating Images')}
+        description={t(
+          'chat.generatingImagesDesc',
+          'Your visual assets are being generated. This may take a moment.'
+        )}
       />
     </motion.div>
   )
@@ -359,8 +360,11 @@ function PostSelectionPanel({
     >
       <PanelTitle
         icon={<FileText className="w-5 h-5" />}
-        title={t("postReview.title", "Review Your Posts")}
-        description={t("postReview.selectPosts", "Select the post numbers you would like to modify.")}
+        title={t('postReview.title', 'Review Your Posts')}
+        description={t(
+          'postReview.selectPosts',
+          'Select the post numbers you would like to modify.'
+        )}
       />
 
       <div className="grid grid-cols-5 gap-2">
@@ -370,8 +374,8 @@ function PostSelectionPanel({
             onClick={() => onTogglePostSelection(i)}
             className={`p-3 rounded-lg border-2 transition-all ${
               selectedPosts.includes(i)
-                ? "bg-vitamin-base border-vitamin-base text-white"
-                : "bg-white/5 border-white/20 text-white/60 hover:border-white/40"
+                ? 'bg-vitamin-base border-vitamin-base text-white'
+                : 'bg-white/5 border-white/20 text-white/60 hover:border-white/40'
             }`}
           >
             {`Post ${i + 1}`}
@@ -388,10 +392,10 @@ function PostSelectionPanel({
           {regeneratingPosts ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              {t("postReview.regenerating", "Regenerating...")}
+              {t('postReview.regenerating', 'Regenerating...')}
             </>
           ) : (
-            t("postReview.done", "Done")
+            t('postReview.done', 'Done')
           )}
         </Button>
         <Button
@@ -431,7 +435,7 @@ function BottomActions({
             className="w-full border-white/20 text-black dark:text-white hover:bg-white/10 h-10 rounded-lg flex items-center justify-center gap-2"
           >
             <Star className="h-4 w-4" />
-            {t("chat.feedbackSurvey", "Feedback Survey")}
+            {t('chat.feedbackSurvey', 'Feedback Survey')}
           </Button>
 
           <Button
@@ -440,7 +444,7 @@ function BottomActions({
             className="w-full border-vitamin-base/30 text-vitamin-base hover:bg-vitamin-base/10 h-10 rounded-lg flex items-center justify-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
-            {t("chat.generateNewPosts", "Generate New Posts and Images")}
+            {t('chat.generateNewPosts', 'Generate New Posts and Images')}
           </Button>
         </motion.div>
       )}
@@ -459,9 +463,7 @@ function PanelTitle({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="p-2 rounded-lg bg-vitamin-base/15 text-vitamin-base shrink-0">
-        {icon}
-      </div>
+      <div className="p-2 rounded-lg bg-vitamin-base/15 text-vitamin-base shrink-0">{icon}</div>
       <div>
         <h4 className="text-sm font-bold text-white">{title}</h4>
         <p className="text-xs text-white/60 mt-1">{description}</p>

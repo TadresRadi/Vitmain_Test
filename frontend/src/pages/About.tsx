@@ -1,20 +1,25 @@
-import { motion } from "framer-motion"
-import { useTranslation } from "react-i18next"
-import { Users, Award, Target, Zap } from "lucide-react"
+import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import { Users, Award, Target, Zap } from 'lucide-react'
 
-const valueIcons = [<Zap className="w-8 h-8" />, <Target className="w-8 h-8" />, <Users className="w-8 h-8" />, <Award className="w-8 h-8" />]
+const valueIcons = [
+  <Zap className="w-8 h-8" />,
+  <Target className="w-8 h-8" />,
+  <Users className="w-8 h-8" />,
+  <Award className="w-8 h-8" />,
+]
 
 export default function About() {
   const { t } = useTranslation()
 
   const stats = [
-    { value: "750+", label: t("about.statsClients") },
-    { value: "2000+", label: t("about.statsProjects") },
-    { value: "7+", label: t("about.statsAwards") },
-    { value: "8", label: t("about.statsYears") }
+    { value: '750+', label: t('about.statsClients') },
+    { value: '2000+', label: t('about.statsProjects') },
+    { value: '7+', label: t('about.statsAwards') },
+    { value: '8', label: t('about.statsYears') },
   ]
 
-  const values = (t("about.values", { returnObjects: true }) as { title: string; desc: string }[])
+  const values = t('about.values', { returnObjects: true }) as { title: string; desc: string }[]
 
   return (
     <div className="relative z-10 pt-32 pb-20 px-4 min-h-screen">
@@ -25,11 +30,10 @@ export default function About() {
           className="text-center mb-24"
         >
           <h1 className="text-5xl md:text-7xl font-cinematic font-bold text-white mb-6">
-            {t("about.title")} <span className="text-vitamin-base">{t("about.titleHighlight")}</span>
+            {t('about.title')}{' '}
+            <span className="text-vitamin-base">{t('about.titleHighlight')}</span>
           </h1>
-          <p className="text-xl text-white/70 max-w-3xl mx-auto">
-            {t("about.heroDesc")}
-          </p>
+          <p className="text-xl text-white/70 max-w-3xl mx-auto">{t('about.heroDesc')}</p>
         </motion.div>
 
         {/* Stats */}
@@ -43,8 +47,12 @@ export default function About() {
               transition={{ delay: i * 0.1 }}
               className="text-center"
             >
-              <div className="text-4xl md:text-5xl font-bold text-vitamin-base mb-2">{stat.value}</div>
-              <div className="text-white/60 font-medium tracking-wide uppercase text-sm">{stat.label}</div>
+              <div className="text-4xl md:text-5xl font-bold text-vitamin-base mb-2">
+                {stat.value}
+              </div>
+              <div className="text-white/60 font-medium tracking-wide uppercase text-sm">
+                {stat.label}
+              </div>
             </motion.div>
           ))}
         </div>
@@ -56,9 +64,11 @@ export default function About() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl font-cinematic font-bold text-white mb-6">{t("about.storyTitle")}</h2>
-            <p className="text-white/70 text-lg leading-relaxed mb-6">{t("about.storyP1")}</p>
-            <p className="text-white/70 text-lg leading-relaxed">{t("about.storyP2")}</p>
+            <h2 className="text-4xl font-cinematic font-bold text-white mb-6">
+              {t('about.storyTitle')}
+            </h2>
+            <p className="text-white/70 text-lg leading-relaxed mb-6">{t('about.storyP1')}</p>
+            <p className="text-white/70 text-lg leading-relaxed">{t('about.storyP2')}</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -76,7 +86,9 @@ export default function About() {
 
         {/* Values */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-cinematic font-bold text-white mb-12">{t("about.valuesTitle")}</h2>
+          <h2 className="text-4xl font-cinematic font-bold text-white mb-12">
+            {t('about.valuesTitle')}
+          </h2>
           <div className="grid md:grid-cols-4 gap-8">
             {values.map((value, i) => (
               <motion.div

@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Save, Loader2, Star } from "lucide-react"
-import { api } from "@/lib/axios"
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Edit, Trash2, Save, Loader2, Star } from 'lucide-react'
+import { api } from '@/lib/axios'
 
 interface FeaturedProject {
   id: number
@@ -26,13 +26,13 @@ export default function FeaturedProjectsSection() {
     category: '',
     image: null as File | null,
     order: 0,
-    is_active: true
+    is_active: true,
   })
   const [savingFeaturedProject, setSavingFeaturedProject] = useState(false)
 
   const fetchFeaturedProjects = async () => {
     try {
-      const res = await api.get("/portfolio/featured-projects/all/")
+      const res = await api.get('/portfolio/featured-projects/all/')
       setFeaturedProjects(res.data)
     } catch (err: any) {
       console.error('Failed to fetch featured projects:', err)
@@ -58,14 +58,10 @@ export default function FeaturedProjectsSection() {
       }
 
       if (editingFeaturedProject) {
-        await api.put(`/portfolio/featured-projects/${editingFeaturedProject.id}/`, formData, {
-          
-        })
+        await api.put(`/portfolio/featured-projects/${editingFeaturedProject.id}/`, formData, {})
         alert(t('adminDashboard.projectUpdatedSuccess'))
       } else {
-        await api.post('/portfolio/featured-projects/', formData, {
-          
-        })
+        await api.post('/portfolio/featured-projects/', formData, {})
         alert(t('adminDashboard.projectCreatedSuccess'))
       }
       setEditingFeaturedProject(null)
@@ -75,11 +71,11 @@ export default function FeaturedProjectsSection() {
         category: '',
         image: null,
         order: 0,
-        is_active: true
+        is_active: true,
       })
       fetchFeaturedProjects()
     } catch (err: any) {
-      console.error("Failed to save featured project", err)
+      console.error('Failed to save featured project', err)
       alert(err.response?.data?.detail || t('adminDashboard.failedSaveProject'))
     } finally {
       setSavingFeaturedProject(false)
@@ -94,7 +90,7 @@ export default function FeaturedProjectsSection() {
       category: project.category,
       image: null,
       order: project.order,
-      is_active: project.is_active
+      is_active: project.is_active,
     })
   }
 
@@ -105,7 +101,7 @@ export default function FeaturedProjectsSection() {
       alert(t('adminDashboard.projectDeletedSuccess'))
       fetchFeaturedProjects()
     } catch (err: any) {
-      console.error("Failed to delete featured project", err)
+      console.error('Failed to delete featured project', err)
       let errorMessage = t('adminDashboard.failedDeleteProject', 'Failed to delete project')
       if (err.response?.data?.error) {
         errorMessage = err.response.data.error
@@ -124,55 +120,71 @@ export default function FeaturedProjectsSection() {
       category: '',
       image: null,
       order: 0,
-      is_active: true
+      is_active: true,
     })
   }
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
         {/* Featured Project Form */}
         <div className="lg:col-span-1">
           <Card className="bg-black/45 border-red-500/20 backdrop-blur-md sticky top-[170px]">
             <CardHeader className="border-b border-white/5 pb-4">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-red-500" />
-                {editingFeaturedProject ? t('adminDashboard.editFeaturedProject') : t('adminDashboard.addNewFeaturedProject')}
+                {editingFeaturedProject
+                  ? t('adminDashboard.editFeaturedProject')
+                  : t('adminDashboard.addNewFeaturedProject')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleSaveFeaturedProject} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.title')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.title')}
+                  </label>
                   <input
                     type="text"
                     required
                     value={featuredProjectForm.title}
-                    onChange={(e) => setFeaturedProjectForm({ ...featuredProjectForm, title: e.target.value })}
+                    onChange={(e) =>
+                      setFeaturedProjectForm({ ...featuredProjectForm, title: e.target.value })
+                    }
                     placeholder="Project title"
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.category')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.category')}
+                  </label>
                   <input
                     type="text"
                     required
                     value={featuredProjectForm.category}
-                    onChange={(e) => setFeaturedProjectForm({ ...featuredProjectForm, category: e.target.value })}
+                    onChange={(e) =>
+                      setFeaturedProjectForm({ ...featuredProjectForm, category: e.target.value })
+                    }
                     placeholder="e.g. Web Design, Branding"
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.description')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.description')}
+                  </label>
                   <textarea
                     required
                     value={featuredProjectForm.description}
-                    onChange={(e) => setFeaturedProjectForm({ ...featuredProjectForm, description: e.target.value })}
+                    onChange={(e) =>
+                      setFeaturedProjectForm({
+                        ...featuredProjectForm,
+                        description: e.target.value,
+                      })
+                    }
                     placeholder="Project description"
                     rows={3}
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none resize-none"
@@ -180,7 +192,9 @@ export default function FeaturedProjectsSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.image')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.image')}
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
@@ -198,12 +212,19 @@ export default function FeaturedProjectsSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.order')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.order')}
+                  </label>
                   <input
                     type="number"
                     required
                     value={featuredProjectForm.order}
-                    onChange={(e) => setFeaturedProjectForm({ ...featuredProjectForm, order: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setFeaturedProjectForm({
+                        ...featuredProjectForm,
+                        order: parseInt(e.target.value) || 0,
+                      })
+                    }
                     placeholder="0"
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none"
                   />
@@ -214,10 +235,17 @@ export default function FeaturedProjectsSection() {
                     type="checkbox"
                     id="featured_is_active"
                     checked={featuredProjectForm.is_active}
-                    onChange={(e) => setFeaturedProjectForm({ ...featuredProjectForm, is_active: e.target.checked })}
+                    onChange={(e) =>
+                      setFeaturedProjectForm({
+                        ...featuredProjectForm,
+                        is_active: e.target.checked,
+                      })
+                    }
                     className="w-4 h-4 bg-black/40 border border-white/10 rounded focus:border-red-500 focus:outline-none"
                   />
-                  <label htmlFor="featured_is_active" className="text-xs text-white/60">{t('adminDashboard.active')}</label>
+                  <label htmlFor="featured_is_active" className="text-xs text-white/60">
+                    {t('adminDashboard.active')}
+                  </label>
                 </div>
 
                 <div className="flex gap-2">
@@ -234,7 +262,9 @@ export default function FeaturedProjectsSection() {
                     ) : (
                       <>
                         <Save className="w-4 h-4 mr-2" />
-                        {editingFeaturedProject ? t('adminDashboard.update') : t('adminDashboard.create')}
+                        {editingFeaturedProject
+                          ? t('adminDashboard.update')
+                          : t('adminDashboard.create')}
                       </>
                     )}
                   </Button>
@@ -282,16 +312,29 @@ export default function FeaturedProjectsSection() {
                   </thead>
                   <tbody>
                     {featuredProjects.map((project) => (
-                      <tr key={project.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr
+                        key={project.id}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      >
                         <td className="p-4">
                           <div className="font-bold text-white">{project.title}</div>
-                          <div className="text-xs text-white/40 mt-1 truncate max-w-[200px]">{project.description}</div>
+                          <div className="text-xs text-white/40 mt-1 truncate max-w-[200px]">
+                            {project.description}
+                          </div>
                         </td>
                         <td className="p-4 text-white/60">{project.category}</td>
                         <td className="p-4 text-white/60">{project.order}</td>
                         <td className="p-4">
-                          <Badge className={project.is_active ? 'bg-green-500/20 border-green-500/30 text-green-400' : 'bg-red-500/20 border-red-500/30 text-red-400'}>
-                            {project.is_active ? t('adminDashboard.active') : t('adminDashboard.inactive')}
+                          <Badge
+                            className={
+                              project.is_active
+                                ? 'bg-green-500/20 border-green-500/30 text-green-400'
+                                : 'bg-red-500/20 border-red-500/30 text-red-400'
+                            }
+                          >
+                            {project.is_active
+                              ? t('adminDashboard.active')
+                              : t('adminDashboard.inactive')}
                           </Badge>
                         </td>
                         <td className="p-4 text-right flex items-center justify-end gap-2">
@@ -318,7 +361,10 @@ export default function FeaturedProjectsSection() {
                     {featuredProjects.length === 0 && (
                       <tr>
                         <td colSpan={5} className="p-12 text-center text-white/40">
-                          {t('adminDashboard.noFeaturedProjects', "No featured projects created yet")}
+                          {t(
+                            'adminDashboard.noFeaturedProjects',
+                            'No featured projects created yet'
+                          )}
                         </td>
                       </tr>
                     )}
@@ -328,7 +374,6 @@ export default function FeaturedProjectsSection() {
             </CardContent>
           </Card>
         </div>
-
       </div>
     </div>
   )

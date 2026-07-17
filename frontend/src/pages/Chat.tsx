@@ -1,9 +1,9 @@
-import DashboardLayout from "@/components/DashboardLayout"
-import { CampaignStudioPanel } from "@/pages/chat/CampaignStudioPanel"
-import { ChatPageHeader } from "@/pages/chat/ChatPageHeader"
-import { FeedbackSurveyModal } from "@/pages/chat/FeedbackSurveyModal"
-import { NewPostsOptionsModal } from "@/pages/chat/NewPostsOptionsModal"
-import { useChatController } from "@/pages/chat/useChatController"
+import DashboardLayout from '@/components/DashboardLayout'
+import { CampaignStudioPanel } from '@/pages/chat/CampaignStudioPanel'
+import { ChatPageHeader } from '@/pages/chat/ChatPageHeader'
+import { FeedbackSurveyModal } from '@/pages/chat/FeedbackSurveyModal'
+import { NewPostsOptionsModal } from '@/pages/chat/NewPostsOptionsModal'
+import { useChatController } from '@/pages/chat/useChatController'
 
 export default function Chat() {
   const chat = useChatController()

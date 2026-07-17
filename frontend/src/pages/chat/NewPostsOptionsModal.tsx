@@ -1,8 +1,8 @@
-import { AnimatePresence, motion } from "framer-motion"
-import type { ReactNode } from "react"
-import { FileText, RefreshCw, X } from "lucide-react"
-import { useTranslation } from "react-i18next"
-import { Card } from "@/components/ui/card"
+import { AnimatePresence, motion } from 'framer-motion'
+import type { ReactNode } from 'react'
+import { FileText, RefreshCw, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Card } from '@/components/ui/card'
 
 interface NewPostsOptionsModalProps {
   open: boolean
@@ -37,7 +37,7 @@ export function NewPostsOptionsModal({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <RefreshCw className="h-5 w-5 text-vitamin-base" />
-                {t("chat.generateNewPosts", "Generate New Posts and Images")}
+                {t('chat.generateNewPosts', 'Generate New Posts and Images')}
               </h3>
               <button
                 onClick={onClose}
@@ -48,21 +48,30 @@ export function NewPostsOptionsModal({
             </div>
 
             <p className="text-sm text-white/60 mb-6">
-              {t("chat.generateNewPostsDesc", "Create a fresh set of marketing content for your business.")}
+              {t(
+                'chat.generateNewPostsDesc',
+                'Create a fresh set of marketing content for your business.'
+              )}
             </p>
 
             <div className="space-y-4">
               <OptionCard
                 icon={<FileText className="h-5 w-5" />}
-                title={t("chat.useNewBusinessInfo", "Use New Business Information")}
-                description={t("chat.useNewBusinessInfoDesc", "Provide new business details to generate completely different content.")}
+                title={t('chat.useNewBusinessInfo', 'Use New Business Information')}
+                description={t(
+                  'chat.useNewBusinessInfoDesc',
+                  'Provide new business details to generate completely different content.'
+                )}
                 onClick={onUseNewBusinessInfo}
               />
 
               <OptionCard
                 icon={<RefreshCw className="h-5 w-5" />}
-                title={t("chat.useExistingBusinessInfo", "Use Existing Business Information")}
-                description={t("chat.useExistingBusinessInfoDesc", "Regenerate content using your current business profile.")}
+                title={t('chat.useExistingBusinessInfo', 'Use Existing Business Information')}
+                description={t(
+                  'chat.useExistingBusinessInfoDesc',
+                  'Regenerate content using your current business profile.'
+                )}
                 onClick={onUseExistingBusinessInfo}
               />
             </div>
@@ -90,9 +99,7 @@ function OptionCard({
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
-        <div className="p-2 rounded-lg bg-vitamin-base/15 text-vitamin-base shrink-0">
-          {icon}
-        </div>
+        <div className="p-2 rounded-lg bg-vitamin-base/15 text-vitamin-base shrink-0">{icon}</div>
         <div>
           <h4 className="text-sm font-bold text-white mb-1">{title}</h4>
           <p className="text-xs text-white/60">{description}</p>

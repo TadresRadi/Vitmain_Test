@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from "react"
-import { useTranslation } from "react-i18next"
-import DashboardLayout from "@/components/DashboardLayout"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Send, Loader2, MessageSquare, Shield } from "lucide-react"
-import api from "@/lib/axios"
-import { useToast } from "@/hooks/use-toast"
-import { motion } from "framer-motion"
+import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import DashboardLayout from '@/components/DashboardLayout'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { Send, Loader2, MessageSquare, Shield } from 'lucide-react'
+import api from '@/lib/axios'
+import { useToast } from '@/hooks/use-toast'
+import { motion } from 'framer-motion'
 
 interface SupportMessage {
   id: number
@@ -29,30 +29,34 @@ export default function Support() {
   const { t } = useTranslation()
   const { toast } = useToast()
   const [chat, setChat] = useState<SupportChat | null>(null)
-  const [newMessage, setNewMessage] = useState("")
+  const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // User details form state
   const [userDetailsSubmitted, setUserDetailsSubmitted] = useState(
-  () => sessionStorage.getItem("support_details_submitted") === "true"
-)
+    () => sessionStorage.getItem('support_details_submitted') === 'true'
+  )
   const [userDetails, setUserDetails] = useState({
-    fullName: "",
-    businessName: "",
-    phoneNumber: ""
+    fullName: '',
+    businessName: '',
+    phoneNumber: '',
   })
   const [submittingDetails, setSubmittingDetails] = useState(false)
 
   // Handle user details submission
   const handleUserDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!userDetails.fullName.trim() || !userDetails.businessName.trim() || !userDetails.phoneNumber.trim()) {
+    if (
+      !userDetails.fullName.trim() ||
+      !userDetails.businessName.trim() ||
+      !userDetails.phoneNumber.trim()
+    ) {
       toast({
-        title: t("common.error", "Error"),
-        description: "Please fill in all fields.",
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description: 'Please fill in all fields.',
+        variant: 'destructive',
       })
       return
     }
@@ -61,21 +65,24 @@ export default function Support() {
     try {
       // Submit user details as the first message to create a support conversation
       const detailsMessage = `New Support Request\n\nFull Name: ${userDetails.fullName}\nBusiness Name: ${userDetails.businessName}\nPhone Number: ${userDetails.phoneNumber}`
-      await api.post("/support/chat", { content: detailsMessage })
+      await api.post('/support/chat', { content: detailsMessage })
       setUserDetailsSubmitted(true)
-      sessionStorage.setItem("support_details_submitted", "true")
+      sessionStorage.setItem('support_details_submitted', 'true')
       toast({
-        title: t("support.detailsSubmitted", "Details Submitted Successfully"),
-        description: t("support.detailsSubmittedDesc", "Thank you! You can now use the support chat."),
+        title: t('support.detailsSubmitted', 'Details Submitted Successfully'),
+        description: t(
+          'support.detailsSubmittedDesc',
+          'Thank you! You can now use the support chat.'
+        ),
       })
       // Now fetch the chat
       fetchChat()
     } catch (err) {
-      console.error("Failed to submit user details:", err)
+      console.error('Failed to submit user details:', err)
       toast({
-        title: t("common.error", "Error"),
-        description: "Failed to submit details. Please try again.",
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description: 'Failed to submit details. Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setSubmittingDetails(false)
@@ -85,14 +92,14 @@ export default function Support() {
   // Fetch support chat on mount
   const fetchChat = async () => {
     try {
-      const response = await api.get("/support/chat")
+      const response = await api.get('/support/chat')
       setChat(response.data)
     } catch (err) {
-      console.error("Failed to fetch support chat:", err)
+      console.error('Failed to fetch support chat:', err)
       toast({
-        title: t("common.error", "Error"),
-        description: t("support.loadError", "Could not load support ticket. Please try again."),
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description: t('support.loadError', 'Could not load support ticket. Please try again.'),
+        variant: 'destructive',
       })
     } finally {
       setLoading(false)
@@ -111,7 +118,7 @@ export default function Support() {
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chat?.messages])
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -120,21 +127,21 @@ export default function Support() {
 
     setSending(true)
     try {
-      const response = await api.post("/support/chat", { content: newMessage })
+      const response = await api.post('/support/chat', { content: newMessage })
       // Append the new message locally immediately
       if (chat) {
         setChat({
           ...chat,
-          messages: [...chat.messages, response.data]
+          messages: [...chat.messages, response.data],
         })
       }
-      setNewMessage("")
+      setNewMessage('')
     } catch (err) {
-      console.error("Failed to send message:", err)
+      console.error('Failed to send message:', err)
       toast({
-        title: t("common.error", "Error"),
-        description: t("support.sendError", "Could not send message. Please try again."),
-        variant: "destructive",
+        title: t('common.error', 'Error'),
+        description: t('support.sendError', 'Could not send message. Please try again.'),
+        variant: 'destructive',
       })
     } finally {
       setSending(false)
@@ -144,7 +151,6 @@ export default function Support() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto h-[calc(100vh-12rem)] flex flex-col relative z-10">
-        
         {/* Support Header */}
         <Card className="glass-dark border-white/20 p-4 mb-4 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-3">
@@ -178,39 +184,58 @@ export default function Support() {
                 <div className="w-16 h-16 rounded-full bg-vitamin-base/20 border border-vitamin-base/30 flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="h-8 w-8 text-vitamin-base" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{t("support.userDetailsRequired", "User Details Required")}</h3>
-                <p className="text-sm text-white/60">{t("support.userDetailsRequiredDesc", "Please provide your contact information to ensure proper communication and full support follow-up.")}</p>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  {t('support.userDetailsRequired', 'User Details Required')}
+                </h3>
+                <p className="text-sm text-white/60">
+                  {t(
+                    'support.userDetailsRequiredDesc',
+                    'Please provide your contact information to ensure proper communication and full support follow-up.'
+                  )}
+                </p>
               </div>
 
               <form onSubmit={handleUserDetailsSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">{t("support.fullName", "Full Name")}</label>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    {t('support.fullName', 'Full Name')}
+                  </label>
                   <Input
                     value={userDetails.fullName}
-                    onChange={(e) => setUserDetails(prev => ({ ...prev, fullName: e.target.value }))}
-                    placeholder={t("support.fullName", "Full Name")}
+                    onChange={(e) =>
+                      setUserDetails((prev) => ({ ...prev, fullName: e.target.value }))
+                    }
+                    placeholder={t('support.fullName', 'Full Name')}
                     required
                     className="bg-slate-950 border border-white/20 text-white placeholder-white/40 focus:border-vitamin-base focus:ring-1 focus:ring-vitamin-base rounded-xl h-12"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">{t("support.businessName", "Business Name")}</label>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    {t('support.businessName', 'Business Name')}
+                  </label>
                   <Input
                     value={userDetails.businessName}
-                    onChange={(e) => setUserDetails(prev => ({ ...prev, businessName: e.target.value }))}
-                    placeholder={t("support.businessName", "Business Name")}
+                    onChange={(e) =>
+                      setUserDetails((prev) => ({ ...prev, businessName: e.target.value }))
+                    }
+                    placeholder={t('support.businessName', 'Business Name')}
                     required
                     className="bg-slate-950 border border-white/20 text-white placeholder-white/40 focus:border-vitamin-base focus:ring-1 focus:ring-vitamin-base rounded-xl h-12"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">{t("support.phoneNumber", "Phone Number")}</label>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    {t('support.phoneNumber', 'Phone Number')}
+                  </label>
                   <Input
                     value={userDetails.phoneNumber}
-                    onChange={(e) => setUserDetails(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                    placeholder={t("support.phoneNumber", "Phone Number")}
+                    onChange={(e) =>
+                      setUserDetails((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                    }
+                    placeholder={t('support.phoneNumber', 'Phone Number')}
                     required
                     className="bg-slate-950 border border-white/20 text-white placeholder-white/40 focus:border-vitamin-base focus:ring-1 focus:ring-vitamin-base rounded-xl h-12"
                   />
@@ -224,10 +249,10 @@ export default function Support() {
                   {submittingDetails ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                      {t("common.loading", "Loading...")}
+                      {t('common.loading', 'Loading...')}
                     </>
                   ) : (
-                    t("support.submitDetails", "Submit Details")
+                    t('support.submitDetails', 'Submit Details')
                   )}
                 </Button>
               </form>
@@ -244,25 +269,31 @@ export default function Support() {
                 </div>
               ) : chat && chat.messages.length > 0 ? (
                 chat.messages.map((message) => {
-                  const isAdmin = message.sender_role === "super_admin" || message.sender_role === "supervisor"
+                  const isAdmin =
+                    message.sender_role === 'super_admin' || message.sender_role === 'supervisor'
                   return (
                     <motion.div
                       key={message.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`flex flex-col max-w-[80%] ${isAdmin ? "self-start" : "self-end items-end"}`}
+                      className={`flex flex-col max-w-[80%] ${isAdmin ? 'self-start' : 'self-end items-end'}`}
                     >
                       <div className="flex items-center gap-1.5 mb-1 px-1 text-white/50 text-[10px] font-semibold">
                         {isAdmin && <Shield className="h-3 w-3 text-vitamin-base shrink-0" />}
-                        <span>{isAdmin ? message.sender_name || "Support Advisor" : "You"}</span>
+                        <span>{isAdmin ? message.sender_name || 'Support Advisor' : 'You'}</span>
                         <span>•</span>
-                        <span>{new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>
+                          {new Date(message.created_at).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
                       </div>
                       <div
                         className={`rounded-2xl px-4 py-2.5 text-sm font-medium shadow-md leading-relaxed whitespace-pre-wrap ${
                           isAdmin
-                            ? "bg-slate-900 border border-white/10 text-white/95 rounded-tl-none"
-                            : "bg-gradient-to-r from-vitamin-base to-purple-600 text-white rounded-tr-none shadow-vitamin-base/10"
+                            ? 'bg-slate-900 border border-white/10 text-white/95 rounded-tl-none'
+                            : 'bg-gradient-to-r from-vitamin-base to-purple-600 text-white rounded-tr-none shadow-vitamin-base/10'
                         }`}
                       >
                         {message.content}
@@ -296,12 +327,15 @@ export default function Support() {
                 disabled={sending || !newMessage.trim()}
                 className="bg-gradient-to-r from-vitamin-base to-purple-600 hover:from-vitamin-700 hover:to-purple-700 text-white rounded-xl px-6 h-12 flex items-center justify-center transition-all duration-300"
               >
-                {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                {sending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Send className="h-5 w-5" />
+                )}
               </Button>
             </form>
           </>
         )}
-
       </div>
     </DashboardLayout>
   )

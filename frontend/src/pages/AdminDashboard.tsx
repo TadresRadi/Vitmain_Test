@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Users,
   BarChart3,
@@ -15,19 +15,19 @@ import {
   Star,
   Image as ImageIcon,
   MessageSquare,
-  Car
-} from "lucide-react"
-import { useAdminAuthStore } from "@/store/adminAuthStore"
-import { api } from "@/lib/axios"
-import { motion, AnimatePresence } from "framer-motion"
-import OverviewSection from "@/components/admin/OverviewSection"
-import UsersSection from "@/components/admin/UsersSection"
-import ProjectsSection from "@/components/admin/ProjectsSection"
-import FeaturedProjectsSection from "@/components/admin/FeaturedProjectsSection"
-import BrandsSection from "@/components/admin/BrandsSection"
-import TeslaClientSection from "@/components/admin/TeslaClientSection"
-import SuccessStoriesSection from "@/components/admin/SuccessStoriesSection"
-import SupportSection from "@/components/admin/SupportSection"
+  Car,
+} from 'lucide-react'
+import { useAdminAuthStore } from '@/store/adminAuthStore'
+import { api } from '@/lib/axios'
+import { motion, AnimatePresence } from 'framer-motion'
+import OverviewSection from '@/components/admin/OverviewSection'
+import UsersSection from '@/components/admin/UsersSection'
+import ProjectsSection from '@/components/admin/ProjectsSection'
+import FeaturedProjectsSection from '@/components/admin/FeaturedProjectsSection'
+import BrandsSection from '@/components/admin/BrandsSection'
+import TeslaClientSection from '@/components/admin/TeslaClientSection'
+import SuccessStoriesSection from '@/components/admin/SuccessStoriesSection'
+import SupportSection from '@/components/admin/SupportSection'
 
 export default function AdminDashboard() {
   const { t, i18n } = useTranslation()
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   const [overviewData, setOverviewData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-    // User detail modal state
+  // User detail modal state
   const [selectedUserForLogs, setSelectedUserForLogs] = useState<any | null>(null)
   const [userDetail, setUserDetail] = useState<any | null>(null)
   const [loadingLogs, setLoadingLogs] = useState(false)
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
 
   const fetchOverview = async () => {
     try {
-      const res = await api.get("/admin/overview")
+      const res = await api.get('/admin/overview')
       setOverviewData(res.data)
     } catch (err: any) {
       console.error('Failed to fetch overview:', err)
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
       const res = await api.get(`/admin/users/${user.id}/details`)
       setUserDetail(res.data)
     } catch (err) {
-      console.error("Failed to load user details", err)
+      console.error('Failed to load user details', err)
       alert(t('adminDashboard.failedLoadLogs', 'Failed to load user details.'))
       setSelectedUserForLogs(null)
     } finally {
@@ -90,25 +90,61 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="animate-spin h-8 w-8 border-4 border-red-600 border-t-transparent rounded-full" />
-        <span className="ml-3 text-white">{t('adminDashboard.loading', "Accessing Secure Core...")}</span>
+        <span className="ml-3 text-white">
+          {t('adminDashboard.loading', 'Accessing Secure Core...')}
+        </span>
       </div>
     )
   }
 
   const tabs = [
-    { id: 'overview', label: t('adminDashboard.overview', "Overview"), icon: BarChart3, roles: ['super_admin'] },
-    { id: 'users', label: t('adminDashboard.users', "Users"), icon: Users, roles: ['super_admin'] },
-    { id: 'projects', label: t('adminDashboard.projects', "Projects"), icon: FolderOpen, roles: ['super_admin', 'supervisor'] },
-    { id: 'featuredProjects', label: t('adminDashboard.featuredProjects', "Featured Projects"), icon: Star, roles: ['super_admin', 'supervisor'] },
-    { id: 'brands', label: t('adminDashboard.brands', "Brands"), icon: ImageIcon, roles: ['super_admin', 'supervisor'] },
-    { id: 'teslaClient', label: t('adminDashboard.teslaClient', "Tesla Client"), icon: Car, roles: ['super_admin', 'supervisor'] },
-    { id: 'successStory', label: t('adminDashboard.successStory', "Success Story"), icon: FileText, roles: ['super_admin', 'supervisor'] },
-    { id: 'support', label: t('adminDashboard.supportChat', "Support Hub"), icon: MessageSquare, roles: ['super_admin', 'supervisor'] },
-  ].filter(tab => tab.roles.includes(adminUser?.role || ''))
+    {
+      id: 'overview',
+      label: t('adminDashboard.overview', 'Overview'),
+      icon: BarChart3,
+      roles: ['super_admin'],
+    },
+    { id: 'users', label: t('adminDashboard.users', 'Users'), icon: Users, roles: ['super_admin'] },
+    {
+      id: 'projects',
+      label: t('adminDashboard.projects', 'Projects'),
+      icon: FolderOpen,
+      roles: ['super_admin', 'supervisor'],
+    },
+    {
+      id: 'featuredProjects',
+      label: t('adminDashboard.featuredProjects', 'Featured Projects'),
+      icon: Star,
+      roles: ['super_admin', 'supervisor'],
+    },
+    {
+      id: 'brands',
+      label: t('adminDashboard.brands', 'Brands'),
+      icon: ImageIcon,
+      roles: ['super_admin', 'supervisor'],
+    },
+    {
+      id: 'teslaClient',
+      label: t('adminDashboard.teslaClient', 'Tesla Client'),
+      icon: Car,
+      roles: ['super_admin', 'supervisor'],
+    },
+    {
+      id: 'successStory',
+      label: t('adminDashboard.successStory', 'Success Story'),
+      icon: FileText,
+      roles: ['super_admin', 'supervisor'],
+    },
+    {
+      id: 'support',
+      label: t('adminDashboard.supportChat', 'Support Hub'),
+      icon: MessageSquare,
+      roles: ['super_admin', 'supervisor'],
+    },
+  ].filter((tab) => tab.roles.includes(adminUser?.role || ''))
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-950/20 via-black to-red-950/30 text-white font-sans pb-16">
-      
       {/* Top Header */}
       <header className="border-b border-red-500/20 bg-black/45 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -116,19 +152,21 @@ export default function AdminDashboard() {
             <Shield className="w-8 h-8 text-red-500 animate-pulse" />
             <div>
               <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                {t('adminDashboard.title', "Vitamin AI Command Console")}
+                {t('adminDashboard.title', 'Vitamin AI Command Console')}
                 <Badge className="bg-red-500/20 border border-red-500/30 text-red-500 text-[10px] uppercase font-bold px-2 py-0.5">
                   {adminUser?.role}
                 </Badge>
               </h1>
-              <p className="text-xs text-white/50">{t('adminDashboard.subtitle', "SaaS platform control & auditing interface")}</p>
+              <p className="text-xs text-white/50">
+                {t('adminDashboard.subtitle', 'SaaS platform control & auditing interface')}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Button
               onClick={() => {
-                const currentLang = i18n.language;
-                i18n.changeLanguage(currentLang === 'en' ? 'ar' : 'en');
+                const currentLang = i18n.language
+                i18n.changeLanguage(currentLang === 'en' ? 'ar' : 'en')
               }}
               variant="outline"
               className="border-red-500/30 text-red-400 hover:bg-red-500/10"
@@ -136,9 +174,13 @@ export default function AdminDashboard() {
               <Languages className="w-4 h-4 mr-2" />
               {t('common.language', 'Language')}
             </Button>
-            <Button onClick={handleLogout} variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10">
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+            >
               <LogOut className="w-4 h-4 mr-2" />
-              {t('adminDashboard.logout', "Terminate Session")}
+              {t('adminDashboard.logout', 'Terminate Session')}
             </Button>
           </div>
         </div>
@@ -168,7 +210,6 @@ export default function AdminDashboard() {
 
       {/* Workspace Pages */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && adminUser?.role === 'super_admin' && (
           <OverviewSection data={overviewData} />
@@ -180,35 +221,22 @@ export default function AdminDashboard() {
         )}
 
         {/* PROJECTS TAB */}
-        {activeTab === 'projects' && (
-          <ProjectsSection />
-        )}
+        {activeTab === 'projects' && <ProjectsSection />}
 
         {/* FEATURED PROJECTS TAB */}
-        {activeTab === 'featuredProjects' && (
-          <FeaturedProjectsSection />
-        )}
+        {activeTab === 'featuredProjects' && <FeaturedProjectsSection />}
 
         {/* BRANDS TAB */}
-        {activeTab === 'brands' && (
-          <BrandsSection />
-        )}
+        {activeTab === 'brands' && <BrandsSection />}
 
         {/* TESLA CLIENT TAB */}
-        {activeTab === 'teslaClient' && (
-          <TeslaClientSection />
-        )}
+        {activeTab === 'teslaClient' && <TeslaClientSection />}
 
         {/* SUCCESS STORY TAB */}
-        {activeTab === 'successStory' && (
-          <SuccessStoriesSection />
-        )}
+        {activeTab === 'successStory' && <SuccessStoriesSection />}
 
-                {/* SUPPORT HUB TAB (AVAILABLE TO BOTH ADMIN AND SUPERVISOR) */}
-        {activeTab === 'support' && (
-          <SupportSection />
-        )}
-
+        {/* SUPPORT HUB TAB (AVAILABLE TO BOTH ADMIN AND SUPERVISOR) */}
+        {activeTab === 'support' && <SupportSection />}
       </main>
 
       {/* User Detail Modal */}
@@ -236,7 +264,9 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
                     <span className="text-red-400 font-bold text-lg">
-                      {(selectedUserForLogs.full_name || selectedUserForLogs.email || '?')[0].toUpperCase()}
+                      {(selectedUserForLogs.full_name ||
+                        selectedUserForLogs.email ||
+                        '?')[0].toUpperCase()}
                     </span>
                   </div>
                   <div>
@@ -320,10 +350,10 @@ export default function AdminDashboard() {
                                       payment.status === 'completed'
                                         ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                                         : payment.status === 'pending'
-                                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                                        : payment.status === 'partial'
-                                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                          ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                                          : payment.status === 'partial'
+                                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
                                     }`}
                                   >
                                     {payment.status}
@@ -419,7 +449,10 @@ export default function AdminDashboard() {
                     ) : (
                       <div className="bg-black/40 border border-white/10 rounded-xl p-6 text-center">
                         <p className="text-sm text-white/40">
-                          {t('adminDashboard.noOnboarding', 'No onboarding questionnaire completed yet.')}
+                          {t(
+                            'adminDashboard.noOnboarding',
+                            'No onboarding questionnaire completed yet.'
+                          )}
                         </p>
                       </div>
                     )}
@@ -435,18 +468,22 @@ export default function AdminDashboard() {
 }
 
 // Helper component for onboarding rows
-function OnboardingRow({ label, value, other }: { label: string; value: string | null | undefined; other?: string | null | undefined }) {
+function OnboardingRow({
+  label,
+  value,
+  other,
+}: {
+  label: string
+  value: string | null | undefined
+  other?: string | null | undefined
+}) {
   const displayValue = value || (other ? null : '—')
   return (
     <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-      <div className="text-xs text-white/50 uppercase tracking-wider sm:w-48 shrink-0">
-        {label}
-      </div>
+      <div className="text-xs text-white/50 uppercase tracking-wider sm:w-48 shrink-0">{label}</div>
       <div className="text-sm text-white flex-1">
         {displayValue}
-        {other && (
-          <span className="text-white/40 ml-2">({other})</span>
-        )}
+        {other && <span className="text-white/40 ml-2">({other})</span>}
       </div>
     </div>
   )

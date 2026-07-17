@@ -1,36 +1,36 @@
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Clock, 
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
   Send,
   Check,
   MessageCircle,
   Facebook,
   Instagram,
-  Youtube
-} from "lucide-react"
-import { useNavigate, useSearchParams } from "react-router-dom"
-import { useTranslation } from "react-i18next"
+  Youtube,
+} from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export default function Contact() {
   const { t } = useTranslation()
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    company: "",
-    message: "",
-    preferredContact: "email"
+    name: '',
+    email: '',
+    company: '',
+    message: '',
+    preferredContact: 'email',
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const selectedPlan = searchParams.get("plan")
+  const selectedPlan = searchParams.get('plan')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,25 +39,27 @@ export default function Contact() {
     setTimeout(() => {
       setIsSubmitted(false)
       setFormData({
-        name: "",
-        email: "",
-        company: "",
-        message: "",
-        preferredContact: "email"
+        name: '',
+        email: '',
+        company: '',
+        message: '',
+        preferredContact: 'email',
       })
     }, 3000)
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }))
   }
 
   const handleWhatsAppContact = () => {
     // In a real app, this would open WhatsApp with pre-filled message
-    window.open('https://wa.me/201234567890?text=Hi! I\'m interested in the Premium Plan', '_blank')
+    window.open("https://wa.me/201234567890?text=Hi! I'm interested in the Premium Plan", '_blank')
   }
 
   return (
@@ -70,10 +72,8 @@ export default function Contact() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-5xl font-bold text-white mb-6">{t("contact.title")}</h1>
-            <p className="text-xl text-white/80 max-w-2xl mx-auto">
-              {t("contact.subtitle")}
-            </p>
+            <h1 className="text-5xl font-bold text-white mb-6">{t('contact.title')}</h1>
+            <p className="text-xl text-white/80 max-w-2xl mx-auto">{t('contact.subtitle')}</p>
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -94,7 +94,7 @@ export default function Contact() {
                     <div className="w-20 h-20 bg-vitamin-base rounded-full flex items-center justify-center mx-auto mb-6">
                       <Check className="h-10 w-10 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-4">{t("contact.success")}</h3>
+                    <h3 className="text-2xl font-bold text-white mb-4">{t('contact.success')}</h3>
                     <p className="text-white/70 mb-6">
                       Thank you for reaching out. Our team will get back to you within 24 hours.
                     </p>
@@ -119,7 +119,7 @@ export default function Contact() {
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-white/80 text-sm font-medium mb-2">
-                          {t("contact.name")} *
+                          {t('contact.name')} *
                         </label>
                         <Input
                           name="name"
@@ -132,7 +132,7 @@ export default function Contact() {
                       </div>
                       <div>
                         <label className="block text-white/80 text-sm font-medium mb-2">
-                          {t("contact.email")} *
+                          {t('contact.email')} *
                         </label>
                         <Input
                           name="email"
@@ -148,7 +148,7 @@ export default function Contact() {
 
                     <div>
                       <label className="block text-white/80 text-sm font-medium mb-2">
-                        {t("contact.company")}
+                        {t('contact.company')}
                       </label>
                       <Input
                         name="company"
@@ -161,7 +161,7 @@ export default function Contact() {
 
                     <div>
                       <label className="block text-white/80 text-sm font-medium mb-2">
-                        {t("contact.preferredContact")} *
+                        {t('contact.preferredContact')} *
                       </label>
                       <select
                         name="preferredContact"
@@ -169,16 +169,24 @@ export default function Contact() {
                         onChange={handleInputChange}
                         className="w-full bg-white/10 border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-vitamin-base"
                       >
-                        <option value="email" className="bg-gray-800">Email</option>
-                        <option value="whatsapp" className="bg-gray-800">WhatsApp</option>
-                        <option value="phone" className="bg-gray-800">Phone Call</option>
-                        <option value="scheduled" className="bg-gray-800">Scheduled Call</option>
+                        <option value="email" className="bg-gray-800">
+                          Email
+                        </option>
+                        <option value="whatsapp" className="bg-gray-800">
+                          WhatsApp
+                        </option>
+                        <option value="phone" className="bg-gray-800">
+                          Phone Call
+                        </option>
+                        <option value="scheduled" className="bg-gray-800">
+                          Scheduled Call
+                        </option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-white/80 text-sm font-medium mb-2">
-                        {t("contact.message")} *
+                        {t('contact.message')} *
                       </label>
                       <textarea
                         name="message"
@@ -186,9 +194,10 @@ export default function Contact() {
                         onChange={handleInputChange}
                         required
                         rows={6}
-                        placeholder={selectedPlan === 'premium' 
-                          ? "Tell us about your business goals and how we can help you achieve them..."
-                          : "How can we help you create amazing advertising campaigns?"
+                        placeholder={
+                          selectedPlan === 'premium'
+                            ? 'Tell us about your business goals and how we can help you achieve them...'
+                            : 'How can we help you create amazing advertising campaigns?'
                         }
                         className="w-full bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-lg px-4 py-3 focus:outline-none focus:border-vitamin-base resize-none"
                       />
@@ -199,7 +208,7 @@ export default function Contact() {
                       className="w-full bg-vitamin-base hover:bg-vitamin-700 text-white py-4 text-lg"
                     >
                       <Send className="mr-2 h-5 w-5" />
-                      {t("contact.send")}
+                      {t('contact.send')}
                     </Button>
                   </form>
                 )}
@@ -215,7 +224,7 @@ export default function Contact() {
             >
               {/* Quick Contact */}
               <Card className="glass-dark border border-white/20 p-6">
-                <h3 className="text-xl font-bold text-white mb-4">{t("contact.quickContact")}</h3>
+                <h3 className="text-xl font-bold text-white mb-4">{t('contact.quickContact')}</h3>
                 <div className="space-y-4">
                   <button
                     onClick={handleWhatsAppContact}
@@ -243,7 +252,7 @@ export default function Contact() {
 
               {/* Office Information */}
               <Card className="glass-dark border border-white/20 p-6">
-                <h3 className="text-xl font-bold text-white mb-4">{t("contact.officeInfo")}</h3>
+                <h3 className="text-xl font-bold text-white mb-4">{t('contact.officeInfo')}</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-white/80">
                     <MapPin className="h-5 w-5 text-vitamin-base" />
@@ -256,7 +265,7 @@ export default function Contact() {
                   <div className="flex items-center gap-3 text-white/80">
                     <Clock className="h-5 w-5 text-vitamin-base" />
                     <div>
-                      <div className="font-medium text-white">{t("contact.businessHours")}</div>
+                      <div className="font-medium text-white">{t('contact.businessHours')}</div>
                       <div className="text-sm">Mon - Fri: 9:00 AM - 6:00 PM</div>
                       <div className="text-sm">Sat: 10:00 AM - 2:00 PM</div>
                     </div>
@@ -265,7 +274,7 @@ export default function Contact() {
                   <div className="flex items-center gap-3 text-white/80">
                     <Phone className="h-5 w-5 text-vitamin-base" />
                     <div>
-                      <div className="font-medium text-white">{t("contact.phone")}</div>
+                      <div className="font-medium text-white">{t('contact.phone')}</div>
                       <div className="text-sm">+20 2 1234 5678</div>
                     </div>
                   </div>
@@ -274,7 +283,7 @@ export default function Contact() {
 
               {/* Social Media */}
               <Card className="glass-dark border border-white/20 p-6 min-h-[220px] flex flex-col justify-center">
-                <h3 className="text-xl font-bold text-white mb-4">{t("contact.followUs")}</h3>
+                <h3 className="text-xl font-bold text-white mb-4">{t('contact.followUs')}</h3>
                 <div className="flex gap-4">
                   <a
                     href="https://facebook.com/vitaminai"

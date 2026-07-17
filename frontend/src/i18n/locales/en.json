@@ -119,15 +119,8 @@
     "popular": "Popular",
     "perMonth": "EGP/mo",
     "subscribe": "Subscribe",
-    "basicFeatures": [
-      "Up to 10 images",
-      "Chat access"
-    ],
-    "proFeatures": [
-      "Up to 20 images",
-      "Faster generation",
-      "Premium UI badge"
-    ],
+    "basicFeatures": ["Up to 10 images", "Chat access"],
+    "proFeatures": ["Up to 20 images", "Faster generation", "Premium UI badge"],
     "footer": {
       "copyright": "© 2024 Vitmain. All rights reserved."
     }
@@ -211,14 +204,38 @@
     "postsSelected": "{{count}} post(s) selected for modification",
     "modificationSent": "Modification request sent! Our team will review your changes.",
     "questions": [
-      { "question": "Tell us about your business. What do you do?", "placeholder": "e.g., We sell premium fitness equipment..." },
-      { "question": "Who is your target audience?", "placeholder": "e.g., Health-conscious adults aged 25-45..." },
-      { "question": "What are your main business goals?", "placeholder": "e.g., Increase online sales by 30%, build brand awareness..." },
-      { "question": "Describe your brand style and personality.", "placeholder": "e.g., Modern, minimalist, energetic, trustworthy..." },
-      { "question": "Who are your main competitors?", "placeholder": "e.g., Nike, Adidas, Lululemon..." },
-      { "question": "What's your current marketing direction?", "placeholder": "e.g., Social media focus, email campaigns, content marketing..." },
-      { "question": "What's your monthly marketing budget?", "placeholder": "e.g., 5000 EGP, 10000 EGP, 50000+ EGP..." },
-      { "question": "What's your timeline for seeing results?", "placeholder": "e.g., 3 months, 6 months, 1 year..." }
+      {
+        "question": "Tell us about your business. What do you do?",
+        "placeholder": "e.g., We sell premium fitness equipment..."
+      },
+      {
+        "question": "Who is your target audience?",
+        "placeholder": "e.g., Health-conscious adults aged 25-45..."
+      },
+      {
+        "question": "What are your main business goals?",
+        "placeholder": "e.g., Increase online sales by 30%, build brand awareness..."
+      },
+      {
+        "question": "Describe your brand style and personality.",
+        "placeholder": "e.g., Modern, minimalist, energetic, trustworthy..."
+      },
+      {
+        "question": "Who are your main competitors?",
+        "placeholder": "e.g., Nike, Adidas, Lululemon..."
+      },
+      {
+        "question": "What's your current marketing direction?",
+        "placeholder": "e.g., Social media focus, email campaigns, content marketing..."
+      },
+      {
+        "question": "What's your monthly marketing budget?",
+        "placeholder": "e.g., 5000 EGP, 10000 EGP, 50000+ EGP..."
+      },
+      {
+        "question": "What's your timeline for seeing results?",
+        "placeholder": "e.g., 3 months, 6 months, 1 year..."
+      }
     ]
   },
   "pricing": {
@@ -614,15 +631,15 @@
   "onboardingChat": {
     "wouldYouLikeToContinue": "Would you like to continue?",
     "choosePlanPrompt": "Choose your plan to get started with premium advertising",
-      "perfect": "Perfect!",
-      "gatheredInfo": "We've gathered all the information we need to create your premium advertising campaigns.",
-      "generatingPosts": "Generating your marketing posts...",
-      "generatingPostsDesc": "We are using your answers to create 10 tailored posts.",
-      "postsReady": "Here are your 10 generated marketing posts:",
-      "continueToStudio": "Continue to Campaign Studio",
-      "aiFallbackTitle": "Posts ready (preview mode)",
-      "aiFallbackDesc": "Generation is unavailable. Placeholder posts were created. Configure GEMINI_API_KEY on the server for full copy.",
-      "saveFailed": "Could not save onboarding or generate posts. Please try again.",
+    "perfect": "Perfect!",
+    "gatheredInfo": "We've gathered all the information we need to create your premium advertising campaigns.",
+    "generatingPosts": "Generating your marketing posts...",
+    "generatingPostsDesc": "We are using your answers to create 10 tailored posts.",
+    "postsReady": "Here are your 10 generated marketing posts:",
+    "continueToStudio": "Continue to Campaign Studio",
+    "aiFallbackTitle": "Posts ready (preview mode)",
+    "aiFallbackDesc": "Generation is unavailable. Placeholder posts were created. Configure GEMINI_API_KEY on the server for full copy.",
+    "saveFailed": "Could not save onboarding or generate posts. Please try again.",
     "profileSummary": "Your Profile Summary:",
     "continueToPricing": "Continue to Pricing",
     "questionOf": "Question {{current}} of {{total}}",
@@ -789,9 +806,15 @@
     "storyP2": "We believe every brand has a unique story that deserves to be told, and we specialize in creating stunning visuals and unforgettable experiences that resonate with audiences and achieve tangible results.",
     "valuesTitle": "Core Values",
     "values": [
-      { "title": "Innovation", "desc": "Pushing boundaries with cutting-edge design and technology." },
+      {
+        "title": "Innovation",
+        "desc": "Pushing boundaries with cutting-edge design and technology."
+      },
       { "title": "Precision", "desc": "Meticulous attention to detail in every pixel." },
-      { "title": "Collaboration", "desc": "Working closely with clients to bring their vision to life." },
+      {
+        "title": "Collaboration",
+        "desc": "Working closely with clients to bring their vision to life."
+      },
       { "title": "Excellence", "desc": "Delivering world-class digital experiences that inspire." }
     ]
   },

@@ -99,7 +99,7 @@ export function validatePasswordStrength(password: string): {
   }
 
   // Special character check
-    if (/[!@#$%^&*()_+\-=[\]{};:'",.<>?/]/.test(password)) {
+  if (/[!@#$%^&*()_+\-=[\]{};:'",.<>?/]/.test(password)) {
     score += 20
   } else {
     errors.push('At least one special character (!@#$%^&*)')

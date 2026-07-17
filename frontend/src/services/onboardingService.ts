@@ -1,27 +1,27 @@
-import api from "@/lib/axios";
-import type { OnboardingResponse, SaveOnboardingResponse } from "@/types/api";
+import api from '@/lib/axios'
+import type { OnboardingResponse, SaveOnboardingResponse } from '@/types/api'
 
 export interface OnboardingFormData {
-  businessName: string;
-  governorate: string;
-  businessType: string;
-  businessSubtype: string;
-  businessTypeOther: string;
-  marketingGoals: string[];
-  targetAudience: string;
-  targetAudienceOther: string;
-  toneOfVoice: string;
-  toneOfVoiceOther: string;
+  businessName: string
+  governorate: string
+  businessType: string
+  businessSubtype: string
+  businessTypeOther: string
+  marketingGoals: string[]
+  targetAudience: string
+  targetAudienceOther: string
+  toneOfVoice: string
+  toneOfVoiceOther: string
 }
 
 export interface SaveOnboardingPayload {
-  data: OnboardingFormData;
-  createNew: boolean;
+  data: OnboardingFormData
+  createNew: boolean
 }
 
 export async function getOnboarding(): Promise<OnboardingResponse> {
-  const response = await api.get<OnboardingResponse>("/onboarding/");
-  return response.data;
+  const response = await api.get<OnboardingResponse>('/onboarding/')
+  return response.data
 }
 
 export async function saveOnboarding({
@@ -40,8 +40,8 @@ export async function saveOnboarding({
     tone_of_voice: data.toneOfVoice,
     tone_of_voice_other: data.toneOfVoiceOther || null,
     create_new: createNew,
-  };
+  }
 
-  const response = await api.post<SaveOnboardingResponse>("/onboarding/", payload);
-  return response.data;
+  const response = await api.post<SaveOnboardingResponse>('/onboarding/', payload)
+  return response.data
 }

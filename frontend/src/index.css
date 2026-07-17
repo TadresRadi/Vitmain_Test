@@ -58,18 +58,14 @@
   body {
     @apply bg-background text-foreground;
   }
-  html[dir="rtl"] body {
+  html[dir='rtl'] body {
     font-family: 'Cairo', system-ui, sans-serif !important;
   }
 }
 
 @layer utilities {
   .gradient-overlay {
-    background: radial-gradient(
-      ellipse at top,
-      rgba(192, 13, 19, 0.3) 0%,
-      transparent 50%
-    );
+    background: radial-gradient(ellipse at top, rgba(192, 13, 19, 0.3) 0%, transparent 50%);
   }
 
   .glass-effect {
@@ -85,12 +81,7 @@
   }
 
   .text-gradient {
-    background: linear-gradient(
-      135deg,
-      #c00d13 0%,
-      #dc2626 50%,
-      #ef4444 100%
-    );
+    background: linear-gradient(135deg, #c00d13 0%, #dc2626 50%, #ef4444 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -135,11 +126,7 @@
   }
 
   .dark .gradient-overlay {
-    background: radial-gradient(
-      ellipse at top,
-      rgba(139, 0, 0, 0.4) 0%,
-      transparent 50%
-    );
+    background: radial-gradient(ellipse at top, rgba(139, 0, 0, 0.4) 0%, transparent 50%);
   }
 
   /* Marquee scrolling animation */
@@ -154,6 +141,10 @@
 }
 
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
 }

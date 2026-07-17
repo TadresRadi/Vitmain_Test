@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Save, Loader2, Image as ImageIcon } from "lucide-react"
-import { api } from "@/lib/axios"
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Edit, Trash2, Save, Loader2, Image as ImageIcon } from 'lucide-react'
+import { api } from '@/lib/axios'
 
 interface Brand {
   id: number
@@ -22,13 +22,13 @@ export default function BrandsSection() {
     name: '',
     logo: null as File | null,
     order: 0,
-    is_active: true
+    is_active: true,
   })
   const [savingBrand, setSavingBrand] = useState(false)
 
   const fetchBrands = async () => {
     try {
-      const res = await api.get("/portfolio/brands/all/")
+      const res = await api.get('/portfolio/brands/all/')
       setBrands(res.data)
     } catch (err: any) {
       console.error('Failed to fetch brands:', err)
@@ -52,14 +52,10 @@ export default function BrandsSection() {
       }
 
       if (editingBrand) {
-        await api.put(`/portfolio/brands/${editingBrand.id}/`, formData, {
-          
-        })
+        await api.put(`/portfolio/brands/${editingBrand.id}/`, formData, {})
         alert(t('adminDashboard.brandUpdatedSuccess', 'Brand updated successfully!'))
       } else {
-        await api.post('/portfolio/brands/', formData, {
-          
-        })
+        await api.post('/portfolio/brands/', formData, {})
         alert(t('adminDashboard.brandCreatedSuccess', 'Brand created successfully!'))
       }
       setEditingBrand(null)
@@ -67,14 +63,18 @@ export default function BrandsSection() {
         name: '',
         logo: null,
         order: 0,
-        is_active: true
+        is_active: true,
       })
       fetchBrands()
     } catch (err: any) {
-      console.error("Failed to save brand", err)
-      console.error("Error response:", err.response?.data)
-      console.error("Error status:", err.response?.status)
-      alert(err.response?.data?.detail || err.response?.data?.error || t('adminDashboard.failedSaveBrand', 'Failed to save brand'))
+      console.error('Failed to save brand', err)
+      console.error('Error response:', err.response?.data)
+      console.error('Error status:', err.response?.status)
+      alert(
+        err.response?.data?.detail ||
+          err.response?.data?.error ||
+          t('adminDashboard.failedSaveBrand', 'Failed to save brand')
+      )
     } finally {
       setSavingBrand(false)
     }
@@ -86,18 +86,23 @@ export default function BrandsSection() {
       name: brand.name,
       logo: null,
       order: brand.order,
-      is_active: brand.is_active
+      is_active: brand.is_active,
     })
   }
 
   const handleDeleteBrand = async (brandId: number) => {
-    if (!confirm(t('adminDashboard.confirmDeleteBrand', 'Are you sure you want to delete this brand?'))) return
+    if (
+      !confirm(
+        t('adminDashboard.confirmDeleteBrand', 'Are you sure you want to delete this brand?')
+      )
+    )
+      return
     try {
       await api.delete(`/portfolio/brands/${brandId}/`)
       alert(t('adminDashboard.brandDeletedSuccess', 'Brand deleted successfully!'))
       fetchBrands()
     } catch (err: any) {
-      console.error("Failed to delete brand", err)
+      console.error('Failed to delete brand', err)
       let errorMessage = t('adminDashboard.failedDeleteBrand', 'Failed to delete brand')
       if (err.response?.data?.error) {
         errorMessage = err.response.data.error
@@ -114,27 +119,30 @@ export default function BrandsSection() {
       name: '',
       logo: null,
       order: 0,
-      is_active: true
+      is_active: true,
     })
   }
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
         {/* Brand Form */}
         <div className="lg:col-span-1">
           <Card className="bg-black/45 border-red-500/20 backdrop-blur-md sticky top-[170px]">
             <CardHeader className="border-b border-white/5 pb-4">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-red-500" />
-                {editingBrand ? t('adminDashboard.editBrand', 'Edit Brand') : t('adminDashboard.addNewBrand', 'Add New Brand')}
+                {editingBrand
+                  ? t('adminDashboard.editBrand', 'Edit Brand')
+                  : t('adminDashboard.addNewBrand', 'Add New Brand')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleSaveBrand} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.name', 'Name')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.name', 'Name')}
+                  </label>
                   <input
                     type="text"
                     required
@@ -146,7 +154,9 @@ export default function BrandsSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.logo', 'Logo')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.logo', 'Logo')}
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
@@ -164,12 +174,16 @@ export default function BrandsSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.order')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.order')}
+                  </label>
                   <input
                     type="number"
                     required
                     value={brandForm.order}
-                    onChange={(e) => setBrandForm({ ...brandForm, order: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setBrandForm({ ...brandForm, order: parseInt(e.target.value) || 0 })
+                    }
                     placeholder="0"
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none"
                   />
@@ -183,7 +197,9 @@ export default function BrandsSection() {
                     onChange={(e) => setBrandForm({ ...brandForm, is_active: e.target.checked })}
                     className="w-4 h-4 bg-black/40 border border-white/10 rounded focus:border-red-500 focus:outline-none"
                   />
-                  <label htmlFor="brand_is_active" className="text-xs text-white/60">{t('adminDashboard.active')}</label>
+                  <label htmlFor="brand_is_active" className="text-xs text-white/60">
+                    {t('adminDashboard.active')}
+                  </label>
                 </div>
 
                 <div className="flex gap-2">
@@ -245,19 +261,34 @@ export default function BrandsSection() {
                   </thead>
                   <tbody>
                     {brands.map((brand) => (
-                      <tr key={brand.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr
+                        key={brand.id}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      >
                         <td className="p-4">
                           <div className="font-bold text-white">{brand.name}</div>
                         </td>
                         <td className="p-4">
                           {brand.logo_url && (
-                            <img src={brand.logo_url} alt={brand.name} className="w-12 h-12 object-contain rounded" />
+                            <img
+                              src={brand.logo_url}
+                              alt={brand.name}
+                              className="w-12 h-12 object-contain rounded"
+                            />
                           )}
                         </td>
                         <td className="p-4 text-white/60">{brand.order}</td>
                         <td className="p-4">
-                          <Badge className={brand.is_active ? 'bg-green-500/20 border-green-500/30 text-green-400' : 'bg-red-500/20 border-red-500/30 text-red-400'}>
-                            {brand.is_active ? t('adminDashboard.active') : t('adminDashboard.inactive')}
+                          <Badge
+                            className={
+                              brand.is_active
+                                ? 'bg-green-500/20 border-green-500/30 text-green-400'
+                                : 'bg-red-500/20 border-red-500/30 text-red-400'
+                            }
+                          >
+                            {brand.is_active
+                              ? t('adminDashboard.active')
+                              : t('adminDashboard.inactive')}
                           </Badge>
                         </td>
                         <td className="p-4 text-right flex items-center justify-end gap-2">
@@ -294,7 +325,6 @@ export default function BrandsSection() {
             </CardContent>
           </Card>
         </div>
-
       </div>
     </div>
   )

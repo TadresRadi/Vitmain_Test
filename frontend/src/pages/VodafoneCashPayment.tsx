@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react"
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Copy, Check, Loader2 } from "lucide-react"
-import AnimatedBackground from "@/components/AnimatedBackground"
-import { useToast } from "@/hooks/use-toast"
-import { useTranslation } from "react-i18next"
-import api from "@/lib/axios"
-import { getRegenerationOption, clearRegenerationOption } from "@/services/regenerationFlowService"
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { Copy, Check, Loader2 } from 'lucide-react'
+import AnimatedBackground from '@/components/AnimatedBackground'
+import { useToast } from '@/hooks/use-toast'
+import { useTranslation } from 'react-i18next'
+import api from '@/lib/axios'
+import { getRegenerationOption, clearRegenerationOption } from '@/services/regenerationFlowService'
 
 export default function VodafoneCashPayment() {
   const navigate = useNavigate()
@@ -18,92 +18,89 @@ export default function VodafoneCashPayment() {
   const { toast } = useToast()
   const { t } = useTranslation()
 
-  const planName = searchParams.get("plan_name") || "Professional Plan"
-  const planSlug = searchParams.get("plan") || "basic"
+  const planName = searchParams.get('plan_name') || 'Professional Plan'
+  const planSlug = searchParams.get('plan') || 'basic'
 
   // Check if this is a regeneration flow
-  const isRegenerationFlow = (location.state as { isRegenerationFlow?: boolean })?.isRegenerationFlow || false
-  const regenerationOption = (location.state as { regenerationOption?: string })?.regenerationOption || getRegenerationOption()
+  const isRegenerationFlow =
+    (location.state as { isRegenerationFlow?: boolean })?.isRegenerationFlow || false
+  const regenerationOption =
+    (location.state as { regenerationOption?: string })?.regenerationOption ||
+    getRegenerationOption()
 
-  const [amount, setAmount] = useState(
-    parseFloat(searchParams.get("amount") || "200")
-  )
-  const [phoneNumber, setPhoneNumber] = useState("")
+  const [amount, setAmount] = useState(parseFloat(searchParams.get('amount') || '200'))
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [copied, setCopied] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "waiting" | "completed" | "failed">("idle")
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'waiting' | 'completed' | 'failed'>(
+    'idle'
+  )
   const [partialPayment, setPartialPayment] = useState<{
     received: number
     remaining: number
   } | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
-  const [receiverNumber, setReceiverNumber] = useState("01094064044")
+  const [receiverNumber, setReceiverNumber] = useState('01094064044')
   const [checkingPayment, setCheckingPayment] = useState(true)
 
   // تحقق من وجود طلب دفع سابق مرة واحدة فقط عند تحميل الصفحة
-useEffect(() => {
-  const savedOrderId = localStorage.getItem("payment_order_id")
-  const savedPlan = localStorage.getItem("payment_plan")
+  useEffect(() => {
+    const savedOrderId = localStorage.getItem('payment_order_id')
+    const savedPlan = localStorage.getItem('payment_plan')
 
-  if (!savedOrderId || savedPlan !== planSlug) {
-    if (savedOrderId && savedPlan !== planSlug) {
-      localStorage.removeItem("payment_order_id")
-      localStorage.removeItem("payment_plan")
-    }
-
-    setCheckingPayment(false)
-    return
-  }
-
-  const restoreOrder = async () => {
-    try {
-      const response = await api.get(
-        `/payments/order-status/${savedOrderId}/`
-      )
-
-      setOrderId(savedOrderId)
-      setAmount(Number(response.data.remaining_amount))
-
-      if (response.data.status === "completed") {
-        localStorage.removeItem("payment_order_id")
-        localStorage.removeItem("payment_plan")
-
-        navigate(response.data.next_url || "/chat", {
-          replace: true,
-        })
-        return
+    if (!savedOrderId || savedPlan !== planSlug) {
+      if (savedOrderId && savedPlan !== planSlug) {
+        localStorage.removeItem('payment_order_id')
+        localStorage.removeItem('payment_plan')
       }
 
-      if (
-        response.data.status === "pending" ||
-        response.data.status === "partial"
-      ) {
-        setPaymentStatus("waiting")
-
-        if (response.data.status === "partial") {
-          setPartialPayment({
-            received: Number(response.data.received_amount),
-            remaining: Number(response.data.remaining_amount),
-          })
-        }
-      } else {
-        localStorage.removeItem("payment_order_id")
-        localStorage.removeItem("payment_plan")
-      }
-    } catch {
-      localStorage.removeItem("payment_order_id")
-      localStorage.removeItem("payment_plan")
-    } finally {
       setCheckingPayment(false)
+      return
     }
-  }
 
-  void restoreOrder()
-}, [navigate, planSlug])
+    const restoreOrder = async () => {
+      try {
+        const response = await api.get(`/payments/order-status/${savedOrderId}/`)
 
+        setOrderId(savedOrderId)
+        setAmount(Number(response.data.remaining_amount))
+
+        if (response.data.status === 'completed') {
+          localStorage.removeItem('payment_order_id')
+          localStorage.removeItem('payment_plan')
+
+          navigate(response.data.next_url || '/chat', {
+            replace: true,
+          })
+          return
+        }
+
+        if (response.data.status === 'pending' || response.data.status === 'partial') {
+          setPaymentStatus('waiting')
+
+          if (response.data.status === 'partial') {
+            setPartialPayment({
+              received: Number(response.data.received_amount),
+              remaining: Number(response.data.remaining_amount),
+            })
+          }
+        } else {
+          localStorage.removeItem('payment_order_id')
+          localStorage.removeItem('payment_plan')
+        }
+      } catch {
+        localStorage.removeItem('payment_order_id')
+        localStorage.removeItem('payment_plan')
+      } finally {
+        setCheckingPayment(false)
+      }
+    }
+
+    void restoreOrder()
+  }, [navigate, planSlug])
 
   const validatePhoneNumber = (phone: string): boolean => {
-    const cleanPhone = phone.replace(/\s+/g, "")
+    const cleanPhone = phone.replace(/\s+/g, '')
     return /^(010|011|012|015)\d{8}$/.test(cleanPhone)
   }
 
@@ -111,7 +108,7 @@ useEffect(() => {
     navigator.clipboard.writeText(receiverNumber)
     setCopied(true)
     toast({
-      title: t("vodafoneCashPayment.copiedToClipboard"),
+      title: t('vodafoneCashPayment.copiedToClipboard'),
       description: receiverNumber,
     })
     setTimeout(() => setCopied(false), 2000)
@@ -122,9 +119,10 @@ useEffect(() => {
 
     if (!validatePhoneNumber(phoneNumber)) {
       toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid Egyptian mobile number (010, 011, 012, or 015 followed by 8 digits).",
-        variant: "destructive",
+        title: 'Invalid Phone Number',
+        description:
+          'Please enter a valid Egyptian mobile number (010, 011, 012, or 015 followed by 8 digits).',
+        variant: 'destructive',
       })
       return
     }
@@ -132,7 +130,7 @@ useEffect(() => {
     setIsSubmitting(true)
 
     try {
-      const response = await api.post("/payments/create-order/", {
+      const response = await api.post('/payments/create-order/', {
         expected_sender_number: phoneNumber,
         plan: planSlug,
       })
@@ -140,21 +138,22 @@ useEffect(() => {
       setOrderId(response.data.id)
       setAmount(response.data.amount)
       setReceiverNumber(response.data.receiver_number)
-      setPaymentStatus("waiting")
+      setPaymentStatus('waiting')
 
-      localStorage.setItem("payment_order_id", response.data.id)
-      localStorage.setItem("payment_plan", planSlug)
+      localStorage.setItem('payment_order_id', response.data.id)
+      localStorage.setItem('payment_plan', planSlug)
 
       toast({
-        title: "Payment Order Created",
+        title: 'Payment Order Created',
         description: `Reference code: ${response.data.reference_code}`,
       })
     } catch (error: any) {
-      console.error("Failed to create payment order:", error)
+      console.error('Failed to create payment order:', error)
       toast({
-        title: "Error",
-        description: error.response?.data?.error || "Failed to create payment order. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description:
+          error.response?.data?.error || 'Failed to create payment order. Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsSubmitting(false)
@@ -162,64 +161,62 @@ useEffect(() => {
   }
 
   useEffect(() => {
-    if (paymentStatus !== "waiting" || !orderId) return
+    if (paymentStatus !== 'waiting' || !orderId) return
 
     const pollInterval = setInterval(async () => {
       try {
         const response = await api.get(`/payments/order-status/${orderId}/`)
 
-if (response.data.status === "completed") {
-  clearInterval(pollInterval)
-  setPaymentStatus("completed")
+        if (response.data.status === 'completed') {
+          clearInterval(pollInterval)
+          setPaymentStatus('completed')
 
-  localStorage.removeItem("payment_order_id")
-  localStorage.removeItem("payment_plan")
+          localStorage.removeItem('payment_order_id')
+          localStorage.removeItem('payment_plan')
 
-  toast({
-    title: "Payment Verified!",
-    description:
-      "Your subscription has been activated successfully.",
-  })
+          toast({
+            title: 'Payment Verified!',
+            description: 'Your subscription has been activated successfully.',
+          })
 
-  window.setTimeout(() => {
-    // Handle regeneration flow after payment.
-    // Both "new_business_info" and "existing_business_info" redirect to Chat
-    // with forceRegenerate=true so Chat.tsx calls the backend with
-    // { force_regenerate: true } — which tells the backend to generate a
-    // fresh set of posts even if posts already exist.
-    if (isRegenerationFlow && regenerationOption) {
-      clearRegenerationOption()
+          window.setTimeout(() => {
+            // Handle regeneration flow after payment.
+            // Both "new_business_info" and "existing_business_info" redirect to Chat
+            // with forceRegenerate=true so Chat.tsx calls the backend with
+            // { force_regenerate: true } — which tells the backend to generate a
+            // fresh set of posts even if posts already exist.
+            if (isRegenerationFlow && regenerationOption) {
+              clearRegenerationOption()
 
-      navigate("/chat", {
-        state: { autoStartCampaign: true, forceRegenerate: true },
-        replace: true,
-      })
-    } else {
-      navigate(response.data.next_url || "/chat", {
-        replace: true,
-      })
-    }
-  }, 1500)
-} else if (response.data.status === "partial") {
-
-          setPaymentStatus("waiting")
+              navigate('/chat', {
+                state: { autoStartCampaign: true, forceRegenerate: true },
+                replace: true,
+              })
+            } else {
+              navigate(response.data.next_url || '/chat', {
+                replace: true,
+              })
+            }
+          }, 1500)
+        } else if (response.data.status === 'partial') {
+          setPaymentStatus('waiting')
           setPartialPayment({
             received: Number(response.data.received_amount),
             remaining:
               Number(response.data.expected_amount) - Number(response.data.received_amount),
           })
-        } else if (response.data.status === "failed") {
-          setPaymentStatus("failed")
+        } else if (response.data.status === 'failed') {
+          setPaymentStatus('failed')
           clearInterval(pollInterval)
 
           toast({
-            title: "Payment Failed",
-            description: "The payment could not be verified. Please try again.",
-            variant: "destructive",
+            title: 'Payment Failed',
+            description: 'The payment could not be verified. Please try again.',
+            variant: 'destructive',
           })
         }
       } catch (error) {
-        console.error("Failed to check payment status:", error)
+        console.error('Failed to check payment status:', error)
       }
     }, 3000)
 
@@ -234,7 +231,7 @@ if (response.data.status === "completed") {
     )
   }
 
-  if (paymentStatus === "idle") {
+  if (paymentStatus === 'idle') {
     return (
       <div className="min-h-screen relative overflow-hidden">
         <AnimatedBackground />
@@ -253,21 +250,25 @@ if (response.data.status === "completed") {
               >
                 <div className="text-center mb-8">
                   <h1 className="text-4xl font-bold text-white mb-4">
-                    {t("vodafoneCashPayment.title")}
+                    {t('vodafoneCashPayment.title')}
                   </h1>
                   <p className="text-white/70 text-lg">
-                    {t("vodafoneCashPayment.completeSubscription", { planName })}
+                    {t('vodafoneCashPayment.completeSubscription', { planName })}
                   </p>
                 </div>
 
                 <div className="bg-vitamin-base/10 border border-vitamin-base/30 rounded-lg p-6 mb-8">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-white/70 text-lg">{t("vodafoneCashPayment.amountToPay")}</span>
+                    <span className="text-white/70 text-lg">
+                      {t('vodafoneCashPayment.amountToPay')}
+                    </span>
                     <span className="text-4xl font-bold text-vitamin-base">{amount} EGP</span>
                   </div>
 
                   <div className="border-t border-white/10 pt-4 mt-4">
-                    <p className="text-white/60 text-sm mb-2">{t("vodafoneCashPayment.transferToNumber")}</p>
+                    <p className="text-white/60 text-sm mb-2">
+                      {t('vodafoneCashPayment.transferToNumber')}
+                    </p>
                     <div className="flex items-center gap-3">
                       <span className="text-2xl font-bold text-white">{receiverNumber}</span>
                       <Button
@@ -280,12 +281,12 @@ if (response.data.status === "completed") {
                         {copied ? (
                           <>
                             <Check className="h-4 w-4 mr-1" />
-                            <span className="text-xs">{t("vodafoneCashPayment.copied")}</span>
+                            <span className="text-xs">{t('vodafoneCashPayment.copied')}</span>
                           </>
                         ) : (
                           <>
                             <Copy className="h-4 w-4 mr-1" />
-                            <span className="text-xs">{t("vodafoneCashPayment.copy")}</span>
+                            <span className="text-xs">{t('vodafoneCashPayment.copy')}</span>
                           </>
                         )}
                       </Button>
@@ -293,25 +294,25 @@ if (response.data.status === "completed") {
                   </div>
 
                   <p className="text-white/60 text-sm mt-4">
-                    {t("vodafoneCashPayment.transferInstructions", { amount })}
+                    {t('vodafoneCashPayment.transferInstructions', { amount })}
                   </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
                     <label className="block text-white mb-2 text-lg font-medium">
-                      {t("vodafoneCashPayment.mobileNumberLabel")}
+                      {t('vodafoneCashPayment.mobileNumberLabel')}
                     </label>
                     <Input
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder={t("vodafoneCashPayment.mobileNumberPlaceholder")}
+                      placeholder={t('vodafoneCashPayment.mobileNumberPlaceholder')}
                       className="bg-white/10 border-white/20 text-white placeholder-white/50 text-lg px-6 py-4 h-auto min-h-[60px]"
                       disabled={isSubmitting}
                     />
                     <p className="text-white/50 text-sm mt-2">
-                      {t("vodafoneCashPayment.mobileNumberHint")}
+                      {t('vodafoneCashPayment.mobileNumberHint')}
                     </p>
                   </div>
 
@@ -323,7 +324,7 @@ if (response.data.status === "completed") {
                     {isSubmitting ? (
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     ) : (
-                      t("vodafoneCashPayment.transferredButton")
+                      t('vodafoneCashPayment.transferredButton')
                     )}
                   </Button>
                 </form>
@@ -331,10 +332,10 @@ if (response.data.status === "completed") {
                 <div className="mt-8 text-center">
                   <button
                     type="button"
-                    onClick={() => navigate("/pricing")}
+                    onClick={() => navigate('/pricing')}
                     className="text-white/60 hover:text-white transition-colors"
                   >
-                    {t("vodafoneCashPayment.cancelButton")}
+                    {t('vodafoneCashPayment.cancelButton')}
                   </button>
                 </div>
               </motion.div>
@@ -345,7 +346,7 @@ if (response.data.status === "completed") {
     )
   }
 
-  if (paymentStatus === "waiting") {
+  if (paymentStatus === 'waiting') {
     return (
       <div className="min-h-screen relative overflow-hidden">
         <AnimatedBackground />
@@ -359,10 +360,10 @@ if (response.data.status === "completed") {
             <Card className="glass-dark border border-white/20 p-8 text-center">
               <Loader2 className="h-16 w-16 text-vitamin-base animate-spin mx-auto mb-6" />
               <h2 className="text-3xl font-bold text-white mb-4">
-                {t("vodafoneCashPayment.waitingTitle")}
+                {t('vodafoneCashPayment.waitingTitle')}
               </h2>
               <p className="text-white/70 text-lg mb-6">
-                {t("vodafoneCashPayment.waitingInstructions", { amount, receiverNumber })}
+                {t('vodafoneCashPayment.waitingInstructions', { amount, receiverNumber })}
               </p>
 
               {partialPayment && (
@@ -376,9 +377,7 @@ if (response.data.status === "completed") {
                 </div>
               )}
 
-              <p className="text-white/50 text-sm">
-                {t("vodafoneCashPayment.autoRedirect")}
-              </p>
+              <p className="text-white/50 text-sm">{t('vodafoneCashPayment.autoRedirect')}</p>
             </Card>
           </motion.div>
         </div>
@@ -386,7 +385,7 @@ if (response.data.status === "completed") {
     )
   }
 
-  if (paymentStatus === "completed") {
+  if (paymentStatus === 'completed') {
     return (
       <div className="min-h-screen relative overflow-hidden">
         <AnimatedBackground />
@@ -400,10 +399,10 @@ if (response.data.status === "completed") {
             <Card className="glass-dark border border-white/20 p-8 text-center">
               <Check className="h-16 w-16 text-green-500 mx-auto mb-6" />
               <h2 className="text-3xl font-bold text-white mb-4">
-                {t("vodafoneCashPayment.verifiedTitle")}
+                {t('vodafoneCashPayment.verifiedTitle')}
               </h2>
               <p className="text-white/70 text-lg mb-6">
-                {t("vodafoneCashPayment.verifiedInstructions")}
+                {t('vodafoneCashPayment.verifiedInstructions')}
               </p>
               <Loader2 className="h-8 w-8 text-vitamin-base animate-spin mx-auto" />
             </Card>
@@ -413,7 +412,7 @@ if (response.data.status === "completed") {
     )
   }
 
-  if (paymentStatus === "failed") {
+  if (paymentStatus === 'failed') {
     return (
       <div className="min-h-screen relative overflow-hidden">
         <AnimatedBackground />
@@ -427,26 +426,26 @@ if (response.data.status === "completed") {
             <Card className="glass-dark border border-white/20 p-8 text-center">
               <Loader2 className="h-16 w-16 text-red-500 mx-auto mb-6" />
               <h2 className="text-3xl font-bold text-white mb-4">
-                {t("vodafoneCashPayment.failedTitle")}
+                {t('vodafoneCashPayment.failedTitle')}
               </h2>
               <p className="text-white/70 text-lg mb-6">
-                {t("vodafoneCashPayment.failedInstructions")}
+                {t('vodafoneCashPayment.failedInstructions')}
               </p>
               <Button
                 onClick={() => {
-                  setPaymentStatus("idle")
+                  setPaymentStatus('idle')
                   setOrderId(null)
                 }}
                 className="bg-vitamin-base hover:bg-vitamin-700 text-white"
               >
-                {t("vodafoneCashPayment.tryAgain")}
+                {t('vodafoneCashPayment.tryAgain')}
               </Button>
               <div className="mt-4">
                 <button
-                  onClick={() => navigate("/pricing")}
+                  onClick={() => navigate('/pricing')}
                   className="text-white/60 hover:text-white transition-colors"
                 >
-                  {t("vodafoneCashPayment.returnToPricing")}
+                  {t('vodafoneCashPayment.returnToPricing')}
                 </button>
               </div>
             </Card>

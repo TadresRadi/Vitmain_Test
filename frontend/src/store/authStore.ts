@@ -1,37 +1,37 @@
-import { create } from "zustand";
-import type { ApiError, LoginResponse } from "@/types/api";
+import { create } from 'zustand'
+import type { ApiError, LoginResponse } from '@/types/api'
 import {
   getProfile,
   login as loginRequest,
   register as registerRequest,
-} from "@/services/authService";
+} from '@/services/authService'
 
-import { tokenStorage } from "@/lib/token-storage";
+import { tokenStorage } from '@/lib/token-storage'
 import { api } from '@/lib/axios'
 
 interface User {
-  id: string;
-  email: string;
-  full_name: string | null;
-  phone_number?: string | null;
-  dob?: string | null;
-  user_type?: string;
-  role: string;
-  is_active?: boolean;
-  language?: string;
-  onboarding_completed?: boolean;
-  auth_provider?: string;
-  profile_picture?: string;
+  id: string
+  email: string
+  full_name: string | null
+  phone_number?: string | null
+  dob?: string | null
+  user_type?: string
+  role: string
+  is_active?: boolean
+  language?: string
+  onboarding_completed?: boolean
+  auth_provider?: string
+  profile_picture?: string
 }
 
 interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  onboarding_completed: boolean | null;
+  user: User | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  error: string | null
+  onboarding_completed: boolean | null
 
-  login: (email: string, password: string) => Promise<LoginResponse>;
+  login: (email: string, password: string) => Promise<LoginResponse>
 
   register: (
     email: string,
@@ -41,36 +41,25 @@ interface AuthState {
     phone_number: string,
     dob: string,
     user_type: string
-  ) => Promise<void>;
+  ) => Promise<void>
 
-  logout: () => Promise<void>;
+  logout: () => Promise<void>
 
-  fetchProfile: () => Promise<void>;
+  fetchProfile: () => Promise<void>
 
-  setUser: (user: User) => void;
+  setUser: (user: User) => void
 
-  setTokens: (
-    accessToken: string,
-    refreshToken: string,
-    expiresIn?: number
-  ) => void;
+  setTokens: (accessToken: string, refreshToken: string, expiresIn?: number) => void
 
-  clearError: () => void;
+  clearError: () => void
 
-  changePassword: (
-    oldPassword: string,
-    newPassword: string
-  ) => Promise<boolean>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<boolean>
 
-  resetPassword: (email: string) => Promise<boolean>;
+  resetPassword: (email: string) => Promise<boolean>
 
-  completePasswordReset: (
-    email: string,
-    token: string,
-    newPassword: string
-  ) => Promise<boolean>;
+  completePasswordReset: (email: string, token: string, newPassword: string) => Promise<boolean>
 
-  loginWithGoogle: (idToken: string) => Promise<boolean>;
+  loginWithGoogle: (idToken: string) => Promise<boolean>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -82,16 +71,16 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setTokens: (accessToken, refreshToken, expiresIn) => {
     try {
-      tokenStorage.setTokens(accessToken, refreshToken, expiresIn);
+      tokenStorage.setTokens(accessToken, refreshToken, expiresIn)
 
       set({
         isAuthenticated: true,
         error: null,
-      });
+      })
     } catch {
       set({
-        error: "Failed to save authentication",
-      });
+        error: 'Failed to save authentication',
+      })
     }
   },
 
@@ -100,7 +89,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       user,
       isAuthenticated: true,
       onboarding_completed: user.onboarding_completed ?? false,
-    });
+    })
   },
 
   login: async (email, password) => {
@@ -108,54 +97,41 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         isLoading: true,
         error: null,
-      });
+      })
 
-      const data = await loginRequest(email, password);
+      const data = await loginRequest(email, password)
 
-      tokenStorage.setTokens(
-        data.access_token,
-        data.refresh_token
-      );
+      tokenStorage.setTokens(data.access_token, data.refresh_token)
 
       set({
         user: data.user,
         isAuthenticated: true,
         onboarding_completed: data.user.onboarding_completed,
         isLoading: false,
-      });
+      })
 
-      return data;
+      return data
     } catch (err) {
-      const error = err as ApiError;
+      const error = err as ApiError
 
       const message =
-        error.response?.data?.detail ||
-        error.response?.data?.message ||
-        "Login failed";
+        error.response?.data?.detail || error.response?.data?.message || 'Login failed'
 
       set({
         error: message,
         isLoading: false,
-      });
+      })
 
-      throw error;
+      throw error
     }
   },
 
-  register: async (
-    email,
-    password,
-    password_confirm,
-    full_name,
-    phone_number,
-    dob,
-    user_type
-  ) => {
+  register: async (email, password, password_confirm, full_name, phone_number, dob, user_type) => {
     try {
       set({
         isLoading: true,
         error: null,
-      });
+      })
 
       await registerRequest({
         email,
@@ -165,51 +141,46 @@ export const useAuthStore = create<AuthState>((set) => ({
         phone_number,
         dob,
         user_type,
-      });
+      })
 
-      const loginRes = await loginRequest(email, password);
+      const loginRes = await loginRequest(email, password)
 
-      tokenStorage.setTokens(
-        loginRes.access_token,
-        loginRes.refresh_token
-      );
+      tokenStorage.setTokens(loginRes.access_token, loginRes.refresh_token)
 
       set({
         user: loginRes.user,
         isAuthenticated: true,
         onboarding_completed: loginRes.user.onboarding_completed,
         isLoading: false,
-      });
+      })
     } catch (err) {
-      const error = err as ApiError;
+      const error = err as ApiError
 
       const message =
-        error.response?.data?.detail ||
-        error.response?.data?.message ||
-        "Registration failed";
+        error.response?.data?.detail || error.response?.data?.message || 'Registration failed'
 
       set({
         error: message,
         isLoading: false,
-      });
+      })
 
-      throw error;
+      throw error
     }
   },
 
   logout: async () => {
     set({
       isLoading: true,
-    });
+    })
 
     try {
-      await api.post("/auth/logout", {
+      await api.post('/auth/logout', {
         refresh_token: tokenStorage.getRefreshToken(),
-      });
+      })
     } catch (error) {
-      console.warn(error);
+      console.warn(error)
     } finally {
-      tokenStorage.clear();
+      tokenStorage.clear()
 
       set({
         user: null,
@@ -217,34 +188,32 @@ export const useAuthStore = create<AuthState>((set) => ({
         onboarding_completed: null,
         error: null,
         isLoading: false,
-      });
+      })
     }
   },
 
   fetchProfile: async () => {
     try {
-      const profile = await getProfile();
+      const profile = await getProfile()
 
       set({
         user: profile,
         onboarding_completed: profile.onboarding_completed ?? false,
-      });
+      })
     } catch (err) {
-      const error = err as ApiError;
+      const error = err as ApiError
 
-      tokenStorage.clear();
+      tokenStorage.clear()
 
       const message =
-        error.response?.data?.detail ||
-        error.response?.data?.message ||
-        "Failed to fetch profile";
+        error.response?.data?.detail || error.response?.data?.message || 'Failed to fetch profile'
 
       set({
         error: message,
         user: null,
         isAuthenticated: false,
         onboarding_completed: null,
-      });
+      })
     }
   },
 
@@ -253,31 +222,26 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         isLoading: true,
         error: null,
-      });
+      })
 
-      await api.post(
-        "/auth/password/change",
-        {
-          old_password: oldPassword,
-          new_password: newPassword,
-          confirm_password: newPassword,
-        }
-      );
+      await api.post('/auth/password/change', {
+        old_password: oldPassword,
+        new_password: newPassword,
+        confirm_password: newPassword,
+      })
 
       set({
         isLoading: false,
-      });
+      })
 
-      return true;
+      return true
     } catch (err: any) {
       set({
         isLoading: false,
-        error:
-          err.response?.data?.message ||
-          "Failed to change password",
-      });
+        error: err.response?.data?.message || 'Failed to change password',
+      })
 
-      return false;
+      return false
     }
   },
 
@@ -286,64 +250,52 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         isLoading: true,
         error: null,
-      });
+      })
 
-      await api
-        .post("/auth/password/reset-request", {
-          email,
-        });
+      await api.post('/auth/password/reset-request', {
+        email,
+      })
 
       set({
         isLoading: false,
-      });
+      })
 
-      return true;
+      return true
     } catch (err: any) {
       set({
         isLoading: false,
-        error:
-          err.response?.data?.message ||
-          "Failed to send reset email",
-      });
+        error: err.response?.data?.message || 'Failed to send reset email',
+      })
 
-      return false;
+      return false
     }
   },
 
-  completePasswordReset: async (
-    email,
-    token,
-    newPassword
-  ) => {
+  completePasswordReset: async (email, token, newPassword) => {
     try {
       set({
         isLoading: true,
         error: null,
-      });
+      })
 
-      await api.post(
-        "/auth/password/reset",
-        {
-          email,
-          token,
-          new_password: newPassword,
-        }
-      );
+      await api.post('/auth/password/reset', {
+        email,
+        token,
+        new_password: newPassword,
+      })
 
       set({
         isLoading: false,
-      });
+      })
 
-      return true;
+      return true
     } catch (err: any) {
       set({
         isLoading: false,
-        error:
-          err.response?.data?.message ||
-          "Failed to reset password",
-      });
+        error: err.response?.data?.message || 'Failed to reset password',
+      })
 
-      return false;
+      return false
     }
   },
 
@@ -352,47 +304,37 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         isLoading: true,
         error: null,
-      });
+      })
 
-      const response = await api
-        .post("/auth/google/callback", {
-          id_token: idToken,
-        });
+      const response = await api.post('/auth/google/callback', {
+        id_token: idToken,
+      })
 
-      const {
-        access_token,
-        refresh_token,
-        user,
-      } = response.data;
+      const { access_token, refresh_token, user } = response.data
 
-      tokenStorage.setTokens(
-        access_token,
-        refresh_token
-      );
+      tokenStorage.setTokens(access_token, refresh_token)
 
       set({
         user,
         isAuthenticated: true,
         onboarding_completed: user.onboarding_completed,
         isLoading: false,
-      });
+      })
 
-      return true;
+      return true
     } catch (err: any) {
       set({
         isLoading: false,
-        error:
-          err.response?.data?.message ||
-          "Google login failed",
-      });
+        error: err.response?.data?.message || 'Google login failed',
+      })
 
-      return false;
+      return false
     }
   },
 
   clearError: () => {
     set({
       error: null,
-    });
+    })
   },
-}));
+}))

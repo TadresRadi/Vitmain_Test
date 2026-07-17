@@ -1,9 +1,9 @@
-import type { Dispatch, SetStateAction } from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import { Star, X } from "lucide-react"
-import { useTranslation } from "react-i18next"
-import { Button } from "@/components/ui/button"
-import type { FeedbackPayload } from "@/types/api"
+import type { Dispatch, SetStateAction } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Star, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import type { FeedbackPayload } from '@/types/api'
 
 interface FeedbackSurveyModalProps {
   open: boolean
@@ -44,7 +44,7 @@ export function FeedbackSurveyModal({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Star className="h-5 w-5 text-vitamin-base" />
-                {t("chat.feedbackSurvey", "Feedback Survey")}
+                {t('chat.feedbackSurvey', 'Feedback Survey')}
               </h3>
               <button
                 onClick={onClose}
@@ -59,11 +59,17 @@ export function FeedbackSurveyModal({
             ) : (
               <div className="space-y-6">
                 <p className="text-sm text-white/60">
-                  {t("chat.feedbackSurveyDesc", "Help us improve our service by sharing your experience.")}
+                  {t(
+                    'chat.feedbackSurveyDesc',
+                    'Help us improve our service by sharing your experience.'
+                  )}
                 </p>
 
                 <RatingField
-                  label={t("chat.overallSatisfaction", "Rate your overall satisfaction with the service from 1 to 10.")}
+                  label={t(
+                    'chat.overallSatisfaction',
+                    'Rate your overall satisfaction with the service from 1 to 10.'
+                  )}
                   value={feedbackData.overallSatisfaction}
                   onChange={(rating) =>
                     setFeedbackData((prev) => ({ ...prev, overallSatisfaction: rating }))
@@ -71,7 +77,10 @@ export function FeedbackSurveyModal({
                 />
 
                 <RatingField
-                  label={t("chat.postsSatisfaction", "Rate your satisfaction with the generated posts from 1 to 10.")}
+                  label={t(
+                    'chat.postsSatisfaction',
+                    'Rate your satisfaction with the generated posts from 1 to 10.'
+                  )}
                   value={feedbackData.postsSatisfaction}
                   onChange={(rating) =>
                     setFeedbackData((prev) => ({ ...prev, postsSatisfaction: rating }))
@@ -79,7 +88,10 @@ export function FeedbackSurveyModal({
                 />
 
                 <RatingField
-                  label={t("chat.imagesSatisfaction", "Rate your satisfaction with the generated images and image quality from 1 to 10.")}
+                  label={t(
+                    'chat.imagesSatisfaction',
+                    'Rate your satisfaction with the generated images and image quality from 1 to 10.'
+                  )}
                   value={feedbackData.imagesSatisfaction}
                   onChange={(rating) =>
                     setFeedbackData((prev) => ({ ...prev, imagesSatisfaction: rating }))
@@ -88,7 +100,10 @@ export function FeedbackSurveyModal({
 
                 <div>
                   <label className="block text-sm font-medium text-white mb-3">
-                    {t("chat.suggestions", "Do you have any suggestions, improvements, or features you would like to see added to the website?")}
+                    {t(
+                      'chat.suggestions',
+                      'Do you have any suggestions, improvements, or features you would like to see added to the website?'
+                    )}
                   </label>
                   <textarea
                     value={feedbackData.suggestions}
@@ -97,7 +112,7 @@ export function FeedbackSurveyModal({
                     }
                     rows={4}
                     className="w-full bg-white/10 border border-white/20 text-white placeholder-white/40 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-vitamin-base resize-none"
-                    placeholder={t("chat.suggestionsPlaceholder", "Share your thoughts...")}
+                    placeholder={t('chat.suggestionsPlaceholder', 'Share your thoughts...')}
                   />
                 </div>
 
@@ -110,7 +125,7 @@ export function FeedbackSurveyModal({
                   }
                   className="w-full bg-vitamin-base hover:bg-vitamin-700 text-white font-medium h-11 rounded-xl"
                 >
-                  {t("chat.submitFeedback", "Submit Feedback")}
+                  {t('chat.submitFeedback', 'Submit Feedback')}
                 </Button>
               </div>
             )}
@@ -130,10 +145,13 @@ function SubmittedFeedback() {
         <Star className="h-8 w-8 text-green-400" />
       </div>
       <h4 className="text-lg font-bold text-white mb-2">
-        {t("chat.feedbackSubmitted", "Thank you for your feedback!")}
+        {t('chat.feedbackSubmitted', 'Thank you for your feedback!')}
       </h4>
       <p className="text-sm text-white/60">
-        {t("chat.feedbackSubmittedDesc", "Your responses have been recorded. We appreciate your input.")}
+        {t(
+          'chat.feedbackSubmittedDesc',
+          'Your responses have been recorded. We appreciate your input.'
+        )}
       </p>
     </div>
   )
@@ -158,8 +176,8 @@ function RatingField({
             onClick={() => onChange(rating)}
             className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
               value === rating
-                ? "bg-vitamin-base text-white"
-                : "bg-white/10 text-white/60 hover:bg-white/20"
+                ? 'bg-vitamin-base text-white'
+                : 'bg-white/10 text-white/60 hover:bg-white/20'
             }`}
           >
             {rating}

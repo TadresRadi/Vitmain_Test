@@ -19,8 +19,9 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
 
   useEffect(() => {
     console.log('Fetching Google config from:', '/auth/google/config')
-    api.get('/auth/google/config')
-      .then(res => {
+    api
+      .get('/auth/google/config')
+      .then((res) => {
         console.log('Google config response:', res.data)
         if (res.data.enabled && res.data.google_client_id) {
           console.log('Setting Google Client ID:', res.data.google_client_id)
@@ -29,7 +30,7 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
           console.warn('Google config disabled or missing client ID')
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to fetch Google config:', err)
       })
   }, [])
@@ -46,10 +47,7 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
 
       // Handle as logged-in user
       const { setTokens, setUser } = useAuthStore.getState()
-      setTokens(
-        response.data.access_token,
-        response.data.refresh_token
-      )
+      setTokens(response.data.access_token, response.data.refresh_token)
       setUser(response.data.user)
 
       toast({
@@ -64,7 +62,8 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
       console.error('Google auth error:', error)
       toast({
         title: t('common.error'),
-        description: error.response?.data?.error || error.response?.data?.detail || t('auth.googleError'),
+        description:
+          error.response?.data?.error || error.response?.data?.detail || t('auth.googleError'),
         variant: 'destructive',
       })
     } finally {
@@ -105,4 +104,3 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
     </GoogleOAuthProvider>
   )
 }
-

@@ -36,16 +36,12 @@ class TokenStorage {
    * Store tokens
    * - Access token in memory (cleared on refresh)
    * - Refresh token in httpOnly cookie (set by server)
-   * 
+   *
    * @param accessToken JWT access token
    * @param refreshToken JWT refresh token
    * @param expiresIn Token expiry in seconds
    */
-  setTokens(
-    accessToken: string,
-    refreshToken: string,
-    expiresIn?: number
-  ): void {
+  setTokens(accessToken: string, refreshToken: string, expiresIn?: number): void {
     if (!accessToken) {
       throw new Error('Access token is required')
     }
@@ -62,10 +58,7 @@ class TokenStorage {
 
     // Store in sessionStorage as backup (cleared on tab close)
     try {
-      sessionStorage.setItem(
-        this.ACCESS_TOKEN_MEMORY_KEY,
-        JSON.stringify(this.tokens)
-      )
+      sessionStorage.setItem(this.ACCESS_TOKEN_MEMORY_KEY, JSON.stringify(this.tokens))
     } catch (error) {
       console.warn('Could not store tokens in sessionStorage:', error)
     }

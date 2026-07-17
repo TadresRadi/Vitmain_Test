@@ -1,33 +1,33 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom"
-import { lazy, Suspense, useEffect, useState } from "react"
-import { useAuthStore } from "@/store/authStore"
-import Navbar from "@/components/Navbar"
-import { Toaster } from "@/components/ui/toaster"
-import AdminProtectedRoute from "@/components/AdminProtectedRoute"
-import { LoadingSpinner } from "@/components/LoadingSpinner"
-import AnimatedBackground from "@/components/AnimatedBackground"
-import Footer from "@/components/Footer"
-import type { UsageResponse } from "@/types/api"
-import api from "@/lib/axios"
-import { getPremiumPosts } from "@/services/chatService"
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { useAuthStore } from '@/store/authStore'
+import Navbar from '@/components/Navbar'
+import { Toaster } from '@/components/ui/toaster'
+import AdminProtectedRoute from '@/components/AdminProtectedRoute'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
+import AnimatedBackground from '@/components/AnimatedBackground'
+import Footer from '@/components/Footer'
+import type { UsageResponse } from '@/types/api'
+import api from '@/lib/axios'
+import { getPremiumPosts } from '@/services/chatService'
 
-const Landing = lazy(() => import("@/pages/Landing"))
-const About = lazy(() => import("@/pages/About"))
-const Work = lazy(() => import("@/pages/Work"))
-const Login = lazy(() => import("@/pages/Login"))
-const Register = lazy(() => import("@/pages/Register"))
-const Pricing = lazy(() => import("@/pages/Pricing"))
-const Dashboard = lazy(() => import("@/pages/Dashboard"))
-const Support = lazy(() => import("@/pages/Support"))
-const Subscription = lazy(() => import("@/pages/Subscription"))
-const Contact = lazy(() => import("@/pages/Contact"))
-const Chat = lazy(() => import("@/pages/Chat"))
-const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"))
-const AdminLogin = lazy(() => import("@/pages/AdminLogin"))
-const NewOnboarding = lazy(() => import("@/pages/NewOnboarding"))
-const TeslaClients = lazy(() => import("@/pages/TeslaClients"))
-const VodafoneCashPayment = lazy(() => import("@/pages/VodafoneCashPayment"))
-const GeneratedImages = lazy(() => import("@/pages/GeneratedImages"))
+const Landing = lazy(() => import('@/pages/Landing'))
+const About = lazy(() => import('@/pages/About'))
+const Work = lazy(() => import('@/pages/Work'))
+const Login = lazy(() => import('@/pages/Login'))
+const Register = lazy(() => import('@/pages/Register'))
+const Pricing = lazy(() => import('@/pages/Pricing'))
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const Support = lazy(() => import('@/pages/Support'))
+const Subscription = lazy(() => import('@/pages/Subscription'))
+const Contact = lazy(() => import('@/pages/Contact'))
+const Chat = lazy(() => import('@/pages/Chat'))
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'))
+const AdminLogin = lazy(() => import('@/pages/AdminLogin'))
+const NewOnboarding = lazy(() => import('@/pages/NewOnboarding'))
+const TeslaClients = lazy(() => import('@/pages/TeslaClients'))
+const VodafoneCashPayment = lazy(() => import('@/pages/VodafoneCashPayment'))
+const GeneratedImages = lazy(() => import('@/pages/GeneratedImages'))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -46,13 +46,11 @@ function ChatRoute({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) return
 
     Promise.all([
-      api.get<UsageResponse>("/users/usage"),
+      api.get<UsageResponse>('/users/usage'),
       getPremiumPosts().catch(() => ({ post_generation: null })),
     ])
       .then(([usageRes, postsData]) => {
-        const hasPosts = Boolean(
-          postsData.post_generation?.posts?.length
-        )
+        const hasPosts = Boolean(postsData.post_generation?.posts?.length)
         setAccessState({ usage: usageRes.data, hasPosts })
       })
       .catch(() =>
@@ -65,7 +63,7 @@ function ChatRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) return <Navigate to="/login" />
   if (accessState === null) return <LoadingSpinner />
-  if (accessState.usage.plan_slug === "pro") return <Navigate to="/support" replace />
+  if (accessState.usage.plan_slug === 'pro') return <Navigate to="/support" replace />
   if (!accessState.usage.has_access && !accessState.hasPosts) {
     return <Navigate to="/pricing" replace />
   }

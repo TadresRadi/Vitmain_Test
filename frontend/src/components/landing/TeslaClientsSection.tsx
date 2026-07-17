@@ -1,10 +1,8 @@
-import { Link } from "react-router-dom"
-import { useTranslation } from "react-i18next"
-import { motion } from "framer-motion"
-import { useEffect, useState, useRef } from "react"
-import { useTeslaClientImages } from "@/hooks/queries/usePortfolio"
-
-
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
+import { useEffect, useState, useRef } from 'react'
+import { useTeslaClientImages } from '@/hooks/queries/usePortfolio'
 
 export function TeslaClientsSection() {
   const { t } = useTranslation()
@@ -16,7 +14,7 @@ export function TeslaClientsSection() {
     if (teslaClientImages.length === 0) return
 
     const scrollCarousel = () => {
-      setCarouselPosition(prev => {
+      setCarouselPosition((prev) => {
         const newPosition = prev - 1
         if (newPosition <= -teslaClientImages.length) {
           return 0
@@ -39,10 +37,10 @@ export function TeslaClientsSection() {
           className="text-center mb-20"
         >
           <h2 className="text-5xl font-cinematic font-bold mb-4 text-white transition-colors">
-            {t("landing.teslaClientTitle", "TESLA CLIENT")}
+            {t('landing.teslaClientTitle', 'TESLA CLIENT')}
           </h2>
           <p className="text-xl text-white/60 transition-colors">
-            {t("landing.teslaClientSubtitle", "Trusted by industry leaders")}
+            {t('landing.teslaClientSubtitle', 'Trusted by industry leaders')}
           </p>
         </motion.div>
 
@@ -50,7 +48,7 @@ export function TeslaClientsSection() {
           <motion.div
             ref={carouselRef}
             animate={{ x: `${carouselPosition * 100}%` }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
+            transition={{ duration: 0.8, ease: 'easeInOut' }}
             className="flex gap-6"
             style={{ width: `${teslaClientImages.length * 100}%` }}
           >
@@ -69,7 +67,7 @@ export function TeslaClientsSection() {
                 >
                   <img
                     src={item.image_url}
-                    alt={item.title || t("landing.teslaClientTitle", "TESLA CLIENT")}
+                    alt={item.title || t('landing.teslaClientTitle', 'TESLA CLIENT')}
                     className="w-full aspect-[4/3] object-cover transition-all duration-700 group-hover:scale-110 blur-sm group-hover:blur-[2px]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500" />

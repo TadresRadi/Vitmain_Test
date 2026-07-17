@@ -1,5 +1,5 @@
-import { Sparkles } from "lucide-react"
-import { useTranslation } from "react-i18next"
+import { Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function ChatPageHeader() {
   const { t } = useTranslation()
@@ -11,10 +11,10 @@ export function ChatPageHeader() {
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-vitamin-base animate-pulse" />
-              {t("chat.title", "Vitamin AI Premium Marketing Strategist")}
+              {t('chat.title', 'Vitamin AI Premium Marketing Strategist')}
             </h1>
             <p className="text-xs text-white/50">
-              {t("chat.activeAssistance", "Formulate high-conversion copy campaigns")}
+              {t('chat.activeAssistance', 'Formulate high-conversion copy campaigns')}
             </p>
           </div>
         </div>

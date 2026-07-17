@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Save, Loader2, FolderOpen } from "lucide-react"
-import { api } from "@/lib/axios"
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Edit, Trash2, Save, Loader2, FolderOpen } from 'lucide-react'
+import { api } from '@/lib/axios'
 
 interface Project {
   id: number
@@ -26,13 +26,13 @@ export default function ProjectsSection() {
     category: '',
     image: null as File | null,
     order: 0,
-    is_active: true
+    is_active: true,
   })
   const [savingProject, setSavingProject] = useState(false)
 
   const fetchProjects = async () => {
     try {
-      const res = await api.get("/portfolio/projects/all/")
+      const res = await api.get('/portfolio/projects/all/')
       setProjects(res.data)
     } catch (err: any) {
       console.error('Failed to fetch projects:', err)
@@ -58,14 +58,10 @@ export default function ProjectsSection() {
       }
 
       if (editingProject) {
-        await api.put(`/portfolio/projects/${editingProject.id}/`, formData, {
-          
-        })
+        await api.put(`/portfolio/projects/${editingProject.id}/`, formData, {})
         alert(t('adminDashboard.projectUpdatedSuccess'))
       } else {
-        await api.post('/portfolio/projects/', formData, {
-          
-        })
+        await api.post('/portfolio/projects/', formData, {})
         alert(t('adminDashboard.projectCreatedSuccess'))
       }
       setEditingProject(null)
@@ -75,11 +71,11 @@ export default function ProjectsSection() {
         category: '',
         image: null,
         order: 0,
-        is_active: true
+        is_active: true,
       })
       fetchProjects()
     } catch (err: any) {
-      console.error("Failed to save project", err)
+      console.error('Failed to save project', err)
       alert(err.response?.data?.detail || t('adminDashboard.failedSaveProject'))
     } finally {
       setSavingProject(false)
@@ -94,7 +90,7 @@ export default function ProjectsSection() {
       category: project.category,
       image: null,
       order: project.order,
-      is_active: project.is_active
+      is_active: project.is_active,
     })
   }
 
@@ -105,7 +101,7 @@ export default function ProjectsSection() {
       alert(t('adminDashboard.projectDeletedSuccess'))
       fetchProjects()
     } catch (err: any) {
-      console.error("Failed to delete project", err)
+      console.error('Failed to delete project', err)
       let errorMessage = t('adminDashboard.failedDeleteProject', 'Failed to delete project')
       if (err.response?.data?.error) {
         errorMessage = err.response.data.error
@@ -124,27 +120,30 @@ export default function ProjectsSection() {
       category: '',
       image: null,
       order: 0,
-      is_active: true
+      is_active: true,
     })
   }
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         {/* Project Form */}
         <div className="lg:col-span-1">
           <Card className="bg-black/45 border-red-500/20 backdrop-blur-md sticky top-[170px]">
             <CardHeader className="border-b border-white/5 pb-4">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-red-500" />
-                {editingProject ? t('adminDashboard.editProject') : t('adminDashboard.addNewProject')}
+                {editingProject
+                  ? t('adminDashboard.editProject')
+                  : t('adminDashboard.addNewProject')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleSaveProject} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.title')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.title')}
+                  </label>
                   <input
                     type="text"
                     required
@@ -154,9 +153,11 @@ export default function ProjectsSection() {
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.category')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.category')}
+                  </label>
                   <input
                     type="text"
                     required
@@ -168,11 +169,15 @@ export default function ProjectsSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.description')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.description')}
+                  </label>
                   <textarea
                     required
                     value={projectForm.description}
-                    onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                    onChange={(e) =>
+                      setProjectForm({ ...projectForm, description: e.target.value })
+                    }
                     placeholder="Project description"
                     rows={3}
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none resize-none"
@@ -180,7 +185,9 @@ export default function ProjectsSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.image')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.image')}
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
@@ -198,12 +205,16 @@ export default function ProjectsSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.order')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.order')}
+                  </label>
                   <input
                     type="number"
                     required
                     value={projectForm.order}
-                    onChange={(e) => setProjectForm({ ...projectForm, order: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setProjectForm({ ...projectForm, order: parseInt(e.target.value) || 0 })
+                    }
                     placeholder="0"
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none"
                   />
@@ -214,15 +225,19 @@ export default function ProjectsSection() {
                     type="checkbox"
                     id="is_active"
                     checked={projectForm.is_active}
-                    onChange={(e) => setProjectForm({ ...projectForm, is_active: e.target.checked })}
+                    onChange={(e) =>
+                      setProjectForm({ ...projectForm, is_active: e.target.checked })
+                    }
                     className="w-4 h-4 bg-black/40 border border-white/10 rounded focus:border-red-500 focus:outline-none"
                   />
-                  <label htmlFor="is_active" className="text-xs text-white/60">{t('adminDashboard.active')}</label>
+                  <label htmlFor="is_active" className="text-xs text-white/60">
+                    {t('adminDashboard.active')}
+                  </label>
                 </div>
 
                 <div className="flex gap-2">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={savingProject}
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white h-11 rounded-lg font-semibold"
                   >
@@ -239,7 +254,7 @@ export default function ProjectsSection() {
                     )}
                   </Button>
                   {editingProject && (
-                    <Button 
+                    <Button
                       type="button"
                       onClick={handleCancelEdit}
                       variant="outline"
@@ -277,16 +292,29 @@ export default function ProjectsSection() {
                   </thead>
                   <tbody>
                     {projects.map((project) => (
-                      <tr key={project.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr
+                        key={project.id}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      >
                         <td className="p-4">
                           <div className="font-bold text-white">{project.title}</div>
-                          <div className="text-xs text-white/40 mt-1 truncate max-w-[200px]">{project.description}</div>
+                          <div className="text-xs text-white/40 mt-1 truncate max-w-[200px]">
+                            {project.description}
+                          </div>
                         </td>
                         <td className="p-4 text-white/60">{project.category}</td>
                         <td className="p-4 text-white/60">{project.order}</td>
                         <td className="p-4">
-                          <Badge className={project.is_active ? 'bg-green-500/20 border-green-500/30 text-green-400' : 'bg-red-500/20 border-red-500/30 text-red-400'}>
-                            {project.is_active ? t('adminDashboard.active') : t('adminDashboard.inactive')}
+                          <Badge
+                            className={
+                              project.is_active
+                                ? 'bg-green-500/20 border-green-500/30 text-green-400'
+                                : 'bg-red-500/20 border-red-500/30 text-red-400'
+                            }
+                          >
+                            {project.is_active
+                              ? t('adminDashboard.active')
+                              : t('adminDashboard.inactive')}
                           </Badge>
                         </td>
                         <td className="p-4 text-right flex items-center justify-end gap-2">
@@ -316,7 +344,6 @@ export default function ProjectsSection() {
             </CardContent>
           </Card>
         </div>
-
       </div>
     </div>
   )

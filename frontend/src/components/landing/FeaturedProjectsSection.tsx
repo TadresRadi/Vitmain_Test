@@ -1,7 +1,6 @@
-import { useTranslation } from "react-i18next"
-import { motion } from "framer-motion"
-import { useFeaturedProjects } from "@/hooks/queries/usePortfolio"
-
+import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
+import { useFeaturedProjects } from '@/hooks/queries/usePortfolio'
 
 export function FeaturedProjectsSection() {
   const { t } = useTranslation()
@@ -16,12 +15,16 @@ export function FeaturedProjectsSection() {
           viewport={{ once: true }}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl font-cinematic font-bold mb-4 text-white transition-colors">{t("landing.featuredProjectsTitle", "We Highly Recommend These Clients")}</h2>
-          <p className="text-xl text-white/60 transition-colors">{t("landing.featuredProjectsSubtitle", "Our latest and greatest work")}</p>
+          <h2 className="text-5xl font-cinematic font-bold mb-4 text-white transition-colors">
+            {t('landing.featuredProjectsTitle', 'We Highly Recommend These Clients')}
+          </h2>
+          <p className="text-xl text-white/60 transition-colors">
+            {t('landing.featuredProjectsSubtitle', 'Our latest and greatest work')}
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProjects.map((project: any, i: number) => (
+          {featuredProjects.map((project: any, i: number) => (
             <motion.div
               key={project.id}
               initial={{ opacity: 0, y: 50 }}
@@ -39,7 +42,9 @@ export function FeaturedProjectsSection() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-8 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                <span className="text-vitamin-base font-medium tracking-wider uppercase text-sm mb-2 block">{project.category}</span>
+                <span className="text-vitamin-base font-medium tracking-wider uppercase text-sm mb-2 block">
+                  {project.category}
+                </span>
                 <h3 className="text-3xl font-bold text-white">{project.title}</h3>
                 <p className="text-white/60 text-sm mt-2 line-clamp-2">{project.description}</p>
               </div>
@@ -48,7 +53,7 @@ export function FeaturedProjectsSection() {
 
           {featuredProjects.length === 0 && (
             <div className="col-span-full text-center py-12 text-white/40">
-              {t("landing.noFeaturedProjects", "No featured projects yet. Check back soon.")}
+              {t('landing.noFeaturedProjects', 'No featured projects yet. Check back soon.')}
             </div>
           )}
         </div>

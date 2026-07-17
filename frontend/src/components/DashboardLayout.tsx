@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react"
-import { Link, useLocation, useNavigate } from "react-router-dom"
-import { useAuthStore } from "@/store/authStore"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { useState, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   LayoutDashboard,
   MessageSquare,
@@ -12,12 +12,12 @@ import {
   Menu,
   X,
   Sparkles,
-} from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useTranslation } from "react-i18next"
-import AnimatedBackground from "@/components/AnimatedBackground"
-import api from "@/lib/axios"
-import type { UsageResponse } from "@/types/api"
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
+import AnimatedBackground from '@/components/AnimatedBackground'
+import api from '@/lib/axios'
+import type { UsageResponse } from '@/types/api'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -28,25 +28,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [planSlug, setPlanSlug] = useState<string | null>(null)
 
   useEffect(() => {
-    api.get<UsageResponse>("/users/usage")
+    api
+      .get<UsageResponse>('/users/usage')
       .then((res) => setPlanSlug(res.data.plan_slug))
       .catch(() => setPlanSlug(null))
   }, [])
 
   const sidebarItems = [
-    { icon: LayoutDashboard, label: t("dashboardLayout.dashboard"), path: "/dashboard" },
-    ...(planSlug !== "pro"
-      ? [{ icon: MessageSquare, label: t("dashboardLayout.campaigns"), path: "/chat" }]
+    { icon: LayoutDashboard, label: t('dashboardLayout.dashboard'), path: '/dashboard' },
+    ...(planSlug !== 'pro'
+      ? [{ icon: MessageSquare, label: t('dashboardLayout.campaigns'), path: '/chat' }]
       : []),
-    { icon: CreditCard, label: t("dashboardLayout.subscription"), path: "/subscription" },
-    { icon: HelpCircle, label: t("dashboardLayout.support", "Support"), path: "/support" },
+    { icon: CreditCard, label: t('dashboardLayout.subscription'), path: '/subscription' },
+    { icon: HelpCircle, label: t('dashboardLayout.support', 'Support'), path: '/support' },
   ]
-
 
   return (
     <div className="min-h-screen flex relative text-white bg-black/40 dark:bg-black/60 transition-colors duration-1000">
       <AnimatedBackground />
-      
+
       {/* Mobile sidebar overlay */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -63,7 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside
         className={`fixed md:sticky top-0 left-0 z-50 h-screen w-64 border-r border-white/20 bg-black/60 backdrop-blur-md flex flex-col transition-transform md:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-white/20">
@@ -85,8 +85,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   location.pathname === item.path
-                    ? "bg-vitamin-base text-white"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                    ? 'bg-vitamin-base text-white'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <item.icon className="h-4 w-4" />
@@ -102,11 +102,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="w-full justify-start text-white hover:bg-white/10"
             onClick={() => {
               logout()
-              navigate("/")
+              navigate('/')
             }}
           >
             <LogOut className="mr-2 h-4 w-4" />
-            {t("dashboardLayout.logout")}
+            {t('dashboardLayout.logout')}
           </Button>
         </div>
       </aside>
@@ -121,12 +121,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Menu className="h-5 w-5 text-white" />
           </button>
           <h1 className="text-lg font-semibold capitalize text-white">
-            {sidebarItems.find((i) => i.path === location.pathname)?.label || "Dashboard"}
+            {sidebarItems.find((i) => i.path === location.pathname)?.label || 'Dashboard'}
           </h1>
         </header>
-        <main className="flex-1 p-4 md:p-8 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 p-4 md:p-8 overflow-auto">{children}</main>
       </div>
     </div>
   )

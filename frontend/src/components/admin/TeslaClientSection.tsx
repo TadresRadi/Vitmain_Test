@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash2, Save, Loader2, Car } from "lucide-react"
-import { api } from "@/lib/axios"
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Edit, Trash2, Save, Loader2, Car } from 'lucide-react'
+import { api } from '@/lib/axios'
 
 interface TeslaClientImage {
   id: number
@@ -22,13 +22,13 @@ export default function TeslaClientSection() {
     title: '',
     image: null as File | null,
     order: 0,
-    is_active: true
+    is_active: true,
   })
   const [savingImage, setSavingImage] = useState(false)
 
   const fetchImages = async () => {
     try {
-      const res = await api.get("/portfolio/tesla-client-images/all/")
+      const res = await api.get('/portfolio/tesla-client-images/all/')
       setImages(res.data)
     } catch (err: any) {
       console.error('Failed to fetch Tesla Client images:', err)
@@ -58,23 +58,30 @@ export default function TeslaClientSection() {
 
       if (editingImage) {
         await api.put(`/portfolio/tesla-client-images/${editingImage.id}/`, formData)
-        alert(t('adminDashboard.teslaClientUpdatedSuccess', 'Tesla Client image updated successfully.'))
+        alert(
+          t('adminDashboard.teslaClientUpdatedSuccess', 'Tesla Client image updated successfully.')
+        )
       } else {
         await api.post('/portfolio/tesla-client-images/', formData)
-        alert(t('adminDashboard.teslaClientCreatedSuccess', 'Tesla Client image added successfully.'))
-      
+        alert(
+          t('adminDashboard.teslaClientCreatedSuccess', 'Tesla Client image added successfully.')
+        )
       }
       setEditingImage(null)
       setImageForm({
         title: '',
         image: null,
         order: 0,
-        is_active: true
+        is_active: true,
       })
       fetchImages()
     } catch (err: any) {
-      console.error("Failed to save Tesla Client image", err)
-      alert(err.response?.data?.detail || err.response?.data?.image?.[0] || t('adminDashboard.failedSaveTeslaClient', 'Failed to save Tesla Client image.'))
+      console.error('Failed to save Tesla Client image', err)
+      alert(
+        err.response?.data?.detail ||
+          err.response?.data?.image?.[0] ||
+          t('adminDashboard.failedSaveTeslaClient', 'Failed to save Tesla Client image.')
+      )
     } finally {
       setSavingImage(false)
     }
@@ -86,19 +93,26 @@ export default function TeslaClientSection() {
       title: item.title,
       image: null,
       order: item.order,
-      is_active: item.is_active
+      is_active: item.is_active,
     })
   }
 
   const handleDeleteImage = async (imageId: number) => {
-    if (!confirm(t('adminDashboard.confirmDeleteTeslaClient', 'Delete this Tesla Client image?'))) return
+    if (!confirm(t('adminDashboard.confirmDeleteTeslaClient', 'Delete this Tesla Client image?')))
+      return
     try {
       await api.delete(`/portfolio/tesla-client-images/${imageId}/`)
-      alert(t('adminDashboard.teslaClientDeletedSuccess', 'Tesla Client image deleted successfully.'))
+      alert(
+        t('adminDashboard.teslaClientDeletedSuccess', 'Tesla Client image deleted successfully.')
+      )
       fetchImages()
     } catch (err: any) {
-      console.error("Failed to delete Tesla Client image", err)
-      alert(err.response?.data?.error || err.response?.data?.detail || t('adminDashboard.failedDeleteTeslaClient', 'Failed to delete Tesla Client image.'))
+      console.error('Failed to delete Tesla Client image', err)
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.detail ||
+          t('adminDashboard.failedDeleteTeslaClient', 'Failed to delete Tesla Client image.')
+      )
     }
   }
 
@@ -108,7 +122,7 @@ export default function TeslaClientSection() {
       title: '',
       image: null,
       order: 0,
-      is_active: true
+      is_active: true,
     })
   }
 
@@ -120,24 +134,33 @@ export default function TeslaClientSection() {
             <CardHeader className="border-b border-white/5 pb-4">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-red-500" />
-                {editingImage ? t('adminDashboard.editTeslaClientImage', 'Edit Image') : t('adminDashboard.addTeslaClientImage', 'Add Image')}
+                {editingImage
+                  ? t('adminDashboard.editTeslaClientImage', 'Edit Image')
+                  : t('adminDashboard.addTeslaClientImage', 'Add Image')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleSaveImage} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.title')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.title')}
+                  </label>
                   <input
                     type="text"
                     value={imageForm.title}
                     onChange={(e) => setImageForm({ ...imageForm, title: e.target.value })}
-                    placeholder={t('adminDashboard.teslaClientTitlePlaceholder', 'Optional label / alt text')}
+                    placeholder={t(
+                      'adminDashboard.teslaClientTitlePlaceholder',
+                      'Optional label / alt text'
+                    )}
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.image')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.image')}
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
@@ -156,12 +179,16 @@ export default function TeslaClientSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">{t('adminDashboard.order')}</label>
+                  <label className="text-xs text-white/60 font-semibold uppercase tracking-wider">
+                    {t('adminDashboard.order')}
+                  </label>
                   <input
                     type="number"
                     required
                     value={imageForm.order}
-                    onChange={(e) => setImageForm({ ...imageForm, order: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setImageForm({ ...imageForm, order: parseInt(e.target.value) || 0 })
+                    }
                     placeholder="0"
                     className="w-full bg-black/40 border border-white/10 text-white rounded-lg px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none"
                   />
@@ -175,7 +202,9 @@ export default function TeslaClientSection() {
                     onChange={(e) => setImageForm({ ...imageForm, is_active: e.target.checked })}
                     className="w-4 h-4 bg-black/40 border border-white/10 rounded focus:border-red-500 focus:outline-none"
                   />
-                  <label htmlFor="tesla_is_active" className="text-xs text-white/60">{t('adminDashboard.active')}</label>
+                  <label htmlFor="tesla_is_active" className="text-xs text-white/60">
+                    {t('adminDashboard.active')}
+                  </label>
                 </div>
 
                 <div className="flex gap-2">
@@ -234,7 +263,10 @@ export default function TeslaClientSection() {
                   </thead>
                   <tbody>
                     {images.map((item) => (
-                      <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr
+                        key={item.id}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      >
                         <td className="p-4">
                           {item.image_url ? (
                             <img
@@ -249,8 +281,16 @@ export default function TeslaClientSection() {
                         <td className="p-4 text-white">{item.title || '—'}</td>
                         <td className="p-4 text-white/60">{item.order}</td>
                         <td className="p-4">
-                          <Badge className={item.is_active ? 'bg-green-500/20 border-green-500/30 text-green-400' : 'bg-red-500/20 border-red-500/30 text-red-400'}>
-                            {item.is_active ? t('adminDashboard.active') : t('adminDashboard.inactive')}
+                          <Badge
+                            className={
+                              item.is_active
+                                ? 'bg-green-500/20 border-green-500/30 text-green-400'
+                                : 'bg-red-500/20 border-red-500/30 text-red-400'
+                            }
+                          >
+                            {item.is_active
+                              ? t('adminDashboard.active')
+                              : t('adminDashboard.inactive')}
                           </Badge>
                         </td>
                         <td className="p-4 text-right flex items-center justify-end gap-2">
@@ -277,7 +317,10 @@ export default function TeslaClientSection() {
                     {images.length === 0 && (
                       <tr>
                         <td colSpan={5} className="p-8 text-center text-white/40">
-                          {t('adminDashboard.noTeslaClientImages', 'No Tesla Client images yet. Add images to display them on the homepage.')}
+                          {t(
+                            'adminDashboard.noTeslaClientImages',
+                            'No Tesla Client images yet. Add images to display them on the homepage.'
+                          )}
                         </td>
                       </tr>
                     )}

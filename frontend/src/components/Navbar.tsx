@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { useAuthStore } from "@/store/authStore"
-import { Button } from "@/components/ui/button"
-import { Menu, X, Sun, Moon } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import LanguageSwitcher from "./LanguageSwitcher"
-import { useTranslation } from "react-i18next"
-import LogoImage from "./imge/vitamin-Logo-White.png"
-import api from "@/lib/axios"
-import type { UsageResponse } from "@/types/api"
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
+import { Button } from '@/components/ui/button'
+import { Menu, X, Sun, Moon } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import LanguageSwitcher from './LanguageSwitcher'
+import { useTranslation } from 'react-i18next'
+import LogoImage from './imge/vitamin-Logo-White.png'
+import api from '@/lib/axios'
+import type { UsageResponse } from '@/types/api'
 
 export default function Navbar() {
   const { t } = useTranslation()
@@ -23,26 +23,25 @@ export default function Navbar() {
       setPlanSlug(null)
       return
     }
-    api.get<UsageResponse>("/users/usage")
+    api
+      .get<UsageResponse>('/users/usage')
       .then((res) => setPlanSlug(res.data.plan_slug))
       .catch(() => setPlanSlug(null))
   }, [isAuthenticated])
 
   const navLinks = [
-    { name: t("navbar.home"), path: "/" },
-    { name: t("navbar.about", { defaultValue: "About Us" }), path: "/about" },
-    { name: t("navbar.work", { defaultValue: "Our Work" }), path: "/work" },
-    { name: t("navbar.teslaClients", { defaultValue: "Tesla Clients" }), path: "/tesla-clients" },
-    { name: t("navbar.pricing"), path: "/pricing" },
-    { name: t("contact.title"), path: "/contact" },
-    ...(isAuthenticated && planSlug !== "pro"
-      ? [{ name: t("navbar.chat"), path: "/chat" }]
-      : []),
+    { name: t('navbar.home'), path: '/' },
+    { name: t('navbar.about', { defaultValue: 'About Us' }), path: '/about' },
+    { name: t('navbar.work', { defaultValue: 'Our Work' }), path: '/work' },
+    { name: t('navbar.teslaClients', { defaultValue: 'Tesla Clients' }), path: '/tesla-clients' },
+    { name: t('navbar.pricing'), path: '/pricing' },
+    { name: t('contact.title'), path: '/contact' },
+    ...(isAuthenticated && planSlug !== 'pro' ? [{ name: t('navbar.chat'), path: '/chat' }] : []),
   ]
 
   const toggleTheme = () => {
     setIsDark(!isDark)
-    document.documentElement.classList.toggle("dark")
+    document.documentElement.classList.toggle('dark')
   }
 
   return (
@@ -80,33 +79,36 @@ export default function Navbar() {
               <>
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate('/dashboard')}
                   className="border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10"
                 >
-                  {t("navbar.dashboard")}
+                  {t('navbar.dashboard')}
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => { logout(); navigate("/") }}
+                  onClick={() => {
+                    logout()
+                    navigate('/')
+                  }}
                   className="border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10"
                 >
-                  {t("navbar.logout")}
+                  {t('navbar.logout')}
                 </Button>
               </>
             ) : (
               <>
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate('/login')}
                   className="border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10"
                 >
-                  {t("navbar.login")}
+                  {t('navbar.login')}
                 </Button>
                 <Button
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate('/register')}
                   className="border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10"
                 >
-                  {t("navbar.getStarted")}
+                  {t('navbar.getStarted')}
                 </Button>
               </>
             )}
@@ -125,7 +127,7 @@ export default function Navbar() {
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
+            animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden border-t border-border glass-dark dark:border-white/10"
           >
@@ -153,36 +155,49 @@ export default function Navbar() {
               </div>
               {isAuthenticated ? (
                 <>
-                  <Button 
-                    className="w-full border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10" 
-                    variant="outline" 
-                    onClick={() => { setIsOpen(false); navigate("/dashboard") }}
+                  <Button
+                    className="w-full border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                    variant="outline"
+                    onClick={() => {
+                      setIsOpen(false)
+                      navigate('/dashboard')
+                    }}
                   >
-                    {t("navbar.dashboard")}
+                    {t('navbar.dashboard')}
                   </Button>
-                  <Button 
-                    className="w-full border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10" 
-                    variant="outline" 
-                    onClick={() => { setIsOpen(false); logout(); navigate("/") }}
+                  <Button
+                    className="w-full border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                    variant="outline"
+                    onClick={() => {
+                      setIsOpen(false)
+                      logout()
+                      navigate('/')
+                    }}
                   >
-                    {t("navbar.logout")}
+                    {t('navbar.logout')}
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button 
-                    className="w-full border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10" 
-                    variant="outline" 
-                    onClick={() => { setIsOpen(false); navigate("/login") }}
+                  <Button
+                    className="w-full border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                    variant="outline"
+                    onClick={() => {
+                      setIsOpen(false)
+                      navigate('/login')
+                    }}
                   >
-                    {t("navbar.login")}
+                    {t('navbar.login')}
                   </Button>
-                  <Button 
-                    className="w-full border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10" 
-                    variant="outline" 
-                    onClick={() => { setIsOpen(false); navigate("/register") }}
+                  <Button
+                    className="w-full border-border text-foreground hover:bg-accent dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                    variant="outline"
+                    onClick={() => {
+                      setIsOpen(false)
+                      navigate('/register')
+                    }}
                   >
-                    {t("navbar.getStarted")}
+                    {t('navbar.getStarted')}
                   </Button>
                 </>
               )}

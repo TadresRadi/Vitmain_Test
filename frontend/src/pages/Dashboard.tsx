@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@/components/ui/button"
-import { Download } from "lucide-react"
-import DashboardLayout from "@/components/DashboardLayout"
-import { useTranslation } from "react-i18next"
-import { getDashboardContent } from "@/services/dashboardService"
-import type { GeneratedImage, GeneratedPost } from "@/types/api"
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Download } from 'lucide-react'
+import DashboardLayout from '@/components/DashboardLayout'
+import { useTranslation } from 'react-i18next'
+import { getDashboardContent } from '@/services/dashboardService'
+import type { GeneratedImage, GeneratedPost } from '@/types/api'
 
 export default function Dashboard() {
   const { t } = useTranslation()
@@ -34,11 +34,11 @@ export default function Dashboard() {
       })
       .catch((err) => {
         if (!isMounted) return
-        console.error("Failed to fetch dashboard content:", err)
+        console.error('Failed to fetch dashboard content:', err)
         setPostsLoading(false)
         setImagesLoading(false)
-        setPostsError(t("dashboard.fetchError"))
-        setImagesError(t("dashboard.fetchError"))
+        setPostsError(t('dashboard.fetchError'))
+        setImagesError(t('dashboard.fetchError'))
       })
 
     return () => {
@@ -51,7 +51,7 @@ export default function Dashboard() {
       const response = await fetch(imageUrl)
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
+      const a = document.createElement('a')
       a.href = url
       a.download = `vitmain-ai-image-${imageId}.png`
       document.body.appendChild(a)
@@ -59,22 +59,22 @@ export default function Dashboard() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (error) {
-      console.error("Failed to download image:", error)
+      console.error('Failed to download image:', error)
     }
   }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     })
   }
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
+      hour: '2-digit',
+      minute: '2-digit',
     })
   }
 
@@ -84,9 +84,9 @@ export default function Dashboard() {
         {/* AI Generated Posts Section */}
         <Card>
           <CardHeader>
-            <CardTitle>{t("dashboard.aiGeneratedPosts")}</CardTitle>
+            <CardTitle>{t('dashboard.aiGeneratedPosts')}</CardTitle>
             <CardDescription>
-              {postsLoading ? t("common.loading") : t("dashboard.aiGeneratedPostsDesc")}
+              {postsLoading ? t('common.loading') : t('dashboard.aiGeneratedPostsDesc')}
             </CardDescription>
           </CardHeader>
 
@@ -101,12 +101,10 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : postsError ? (
-              <div className="text-center py-8 text-destructive text-sm">
-                {postsError}
-              </div>
+              <div className="text-center py-8 text-destructive text-sm">{postsError}</div>
             ) : posts.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                {t("dashboard.noPosts")}
+                {t('dashboard.noPosts')}
               </div>
             ) : (
               <div className="space-y-4">
@@ -135,9 +133,9 @@ export default function Dashboard() {
         {/* AI Generated Images Section */}
         <Card>
           <CardHeader>
-            <CardTitle>{t("dashboard.aiGeneratedImages")}</CardTitle>
+            <CardTitle>{t('dashboard.aiGeneratedImages')}</CardTitle>
             <CardDescription>
-              {imagesLoading ? t("common.loading") : t("dashboard.aiGeneratedImagesDesc")}
+              {imagesLoading ? t('common.loading') : t('dashboard.aiGeneratedImagesDesc')}
             </CardDescription>
           </CardHeader>
 
@@ -149,12 +147,10 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : imagesError ? (
-              <div className="text-center py-8 text-destructive text-sm">
-                {imagesError}
-              </div>
+              <div className="text-center py-8 text-destructive text-sm">{imagesError}</div>
             ) : images.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
-                {t("dashboard.noImages")}
+                {t('dashboard.noImages')}
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -168,7 +164,7 @@ export default function Dashboard() {
                   >
                     <img
                       src={image.image_url}
-                      alt={t("dashboard.generatedImage")}
+                      alt={t('dashboard.generatedImage')}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
@@ -182,7 +178,7 @@ export default function Dashboard() {
                         className="flex items-center gap-2"
                       >
                         <Download className="h-4 w-4" />
-                        {t("dashboard.downloadImage")}
+                        {t('dashboard.downloadImage')}
                       </Button>
                     </div>
                   </motion.div>

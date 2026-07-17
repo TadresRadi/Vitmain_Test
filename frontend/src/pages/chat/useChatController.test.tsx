@@ -1,6 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import type { AIPostGeneration } from "@/types/api"
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { AIPostGeneration } from '@/types/api'
 
 const navigateMock = vi.hoisted(() => vi.fn())
 const toastMock = vi.hoisted(() => vi.fn())
@@ -23,62 +23,62 @@ const regenerationMock = vi.hoisted(() => ({
   setRegenerationOption: vi.fn(),
 }))
 
-vi.mock("react-router-dom", () => ({
+vi.mock('react-router-dom', () => ({
   useNavigate: () => navigateMock,
   useLocation: () => ({ state: locationState.current }),
 }))
 
-vi.mock("react-i18next", () => ({
+vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (_key: string, fallback: string) => fallback,
   }),
 }))
 
-vi.mock("@/hooks/use-toast", () => ({
+vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: toastMock }),
 }))
 
-vi.mock("@/services/chatService", () => chatServiceMock)
-vi.mock("@/services/onboardingService", () => onboardingMock)
-vi.mock("@/services/regenerationFlowService", () => regenerationMock)
+vi.mock('@/services/chatService', () => chatServiceMock)
+vi.mock('@/services/onboardingService', () => onboardingMock)
+vi.mock('@/services/regenerationFlowService', () => regenerationMock)
 
 const postGeneration: AIPostGeneration = {
-  id: "gen-1",
-  posts: ["Post 1", "Post 2", "Post 3", "Post 4", "Post 5"],
+  id: 'gen-1',
+  posts: ['Post 1', 'Post 2', 'Post 3', 'Post 4', 'Post 5'],
   edit_count: 0,
   has_images: false,
   posts_review_complete: false,
-  images_status: "not_started",
+  images_status: 'not_started',
   images_generation_started_at: null,
   images_generation_completed_at: null,
-  created_at: "2026-07-17T00:00:00Z",
+  created_at: '2026-07-17T00:00:00Z',
 }
 
-describe("useChatController", () => {
+describe('useChatController', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     locationState.current = undefined
-    onboardingMock.getOnboarding.mockResolvedValue({ business_name: "Vitamin" })
+    onboardingMock.getOnboarding.mockResolvedValue({ business_name: 'Vitamin' })
     chatServiceMock.getPremiumPosts.mockResolvedValue({ post_generation: null })
     chatServiceMock.shouldReviewPosts.mockReturnValue(true)
   })
 
-  it("redirects to onboarding when no onboarding profile exists", async () => {
+  it('redirects to onboarding when no onboarding profile exists', async () => {
     onboardingMock.getOnboarding.mockResolvedValueOnce(null)
-    const { useChatController } = await import("./useChatController")
+    const { useChatController } = await import('./useChatController')
 
     const { result } = renderHook(() => useChatController())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(navigateMock).toHaveBeenCalledWith("/new-onboarding")
+    expect(navigateMock).toHaveBeenCalledWith('/new-onboarding')
     expect(toastMock).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Onboarding Required" }),
+      expect.objectContaining({ title: 'Onboarding Required' })
     )
   })
 
-  it("loads existing posts and opens review when needed", async () => {
+  it('loads existing posts and opens review when needed', async () => {
     chatServiceMock.getPremiumPosts.mockResolvedValueOnce({ post_generation: postGeneration })
-    const { useChatController } = await import("./useChatController")
+    const { useChatController } = await import('./useChatController')
 
     const { result } = renderHook(() => useChatController())
 
@@ -87,12 +87,12 @@ describe("useChatController", () => {
     expect(result.current.showPostReview).toBe(true)
   })
 
-  it("generates forced posts and clears stale images", async () => {
+  it('generates forced posts and clears stale images', async () => {
     chatServiceMock.getPremiumPosts.mockResolvedValueOnce({ post_generation: null })
     chatServiceMock.generatePremiumPosts.mockResolvedValueOnce({
       post_generation: postGeneration,
     })
-    const { useChatController } = await import("./useChatController")
+    const { useChatController } = await import('./useChatController')
 
     const { result } = renderHook(() => useChatController())
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -108,17 +108,17 @@ describe("useChatController", () => {
     expect(result.current.showPostReview).toBe(true)
   })
 
-  it("sets regeneration options before navigating to the next flow", async () => {
-    const { useChatController } = await import("./useChatController")
+  it('sets regeneration options before navigating to the next flow', async () => {
+    const { useChatController } = await import('./useChatController')
     const { result } = renderHook(() => useChatController())
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     act(() => result.current.handleUseNewBusinessInfo())
-    expect(regenerationMock.setRegenerationOption).toHaveBeenCalledWith("new_business_info")
-    expect(navigateMock).toHaveBeenCalledWith("/new-onboarding")
+    expect(regenerationMock.setRegenerationOption).toHaveBeenCalledWith('new_business_info')
+    expect(navigateMock).toHaveBeenCalledWith('/new-onboarding')
 
     act(() => result.current.handleUseExistingBusinessInfo())
-    expect(regenerationMock.setRegenerationOption).toHaveBeenCalledWith("existing_business_info")
-    expect(navigateMock).toHaveBeenCalledWith("/pricing")
+    expect(regenerationMock.setRegenerationOption).toHaveBeenCalledWith('existing_business_info')
+    expect(navigateMock).toHaveBeenCalledWith('/pricing')
   })
 })
