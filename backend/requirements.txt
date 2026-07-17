@@ -43,7 +43,7 @@ PyYAML==6.0.3
 six==1.17.0
 python-dateutil==2.9.0.post0
 sqlparse==0.5.5
-asgiref==3.11.1
+asgiref==3.12.1
 typing_extensions==4.15.0
 tzdata==2026.2
 certifi==2026.5.20
