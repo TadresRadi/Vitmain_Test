@@ -33,7 +33,7 @@ sentry-sdk==2.64.0
 prometheus_client==0.25.0
 
 # Logging
-python-json-logger==4.0.0
+python-json-logger==4.1.0
 python-dotenv==1.2.2
 
 # Templating / Utils
