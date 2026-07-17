@@ -55,4 +55,4 @@ anyio==4.12.1
 async-timeout==5.0.1
 platformdirs==4.4.0
 filelock==3.29.7
-gunicorn==22.0.0
+gunicorn==26.0.0
