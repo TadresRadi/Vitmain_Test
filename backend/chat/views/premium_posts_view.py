@@ -3,6 +3,7 @@ import logging
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db import transaction
 
 from core.utils import log_user_activity
 from onboarding.models import OnboardingResponse
@@ -109,7 +110,13 @@ class PremiumPostsView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        post_gen = persist_post_generation(request.user, posts)
+        with transaction.atomic():
+            if force_regenerate:
+                request.user.post_generations.filter(
+                    posts_review_complete=False
+                ).update(posts_review_complete=True)
+
+            post_gen = persist_post_generation(request.user, posts)
 
         # Update user status to indicate posts have been generated
         request.user.posts_generated = True

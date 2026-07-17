@@ -1,0 +1,14 @@
+[run]
+source =
+    .
+omit =
+    */migrations/*
+    */tests/*
+    */tests.py
+    manage.py
+    backend/asgi.py
+    backend/wsgi.py
+
+[report]
+show_missing = True
+skip_empty = True
