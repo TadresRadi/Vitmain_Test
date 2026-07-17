@@ -15,7 +15,7 @@ pip-audit==2.10.1
 safety==3.8.1
 
 # pip-audit dependencies
-cyclonedx-python-lib==9.1.0
+cyclonedx-python-lib==11.11.0
 dparse==0.6.4
 license-expression==30.4.4
 packageurl-python==0.17.6
