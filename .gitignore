@@ -1,80 +1,136 @@
 # ============================================================================
-# Root .gitignore — applies to the whole repo
-# (supplements backend/.gitignore and frontend/.gitignore)
+# Root .gitignore — Comprehensive Git Ignore for the entire project
 # ============================================================================
 
-# ---- Secrets / env ----
+# ----------------------------------------------------------------------------
+# Secrets & Environments (NEVER commit secrets!)
+# ----------------------------------------------------------------------------
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env.production
 .env.development
-# NOTE: .env.example IS tracked (it's the template, no real secrets).
+.env.monitor
+.env.example.local
+*.env
+!*.env.example
 
-# ---- Python ----
+# ----------------------------------------------------------------------------
+# OS / System Files
+# ----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ----------------------------------------------------------------------------
+# IDEs and Text Editors
+# ----------------------------------------------------------------------------
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# ----------------------------------------------------------------------------
+# Python Backend
+# ----------------------------------------------------------------------------
+# Caches and bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-*.egg-info/
-*.egg
-.installed.cfg
+
+# Distribution / packaging / builds
 build/
+develop-eggs/
 dist/
-wheels/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
 sdist/
 var/
-parts/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# ---- Node / Frontend build artifacts ----
-node_modules/
-frontend/node_modules/
-frontend/dist/
-frontend/coverage/
-.parcel-cache/
-.vite/
-.next/
-
-# ---- Test / coverage caches ----
-.pytest_cache/
-.coverage
-htmlcov/
-coverage/
-*.lcov
-.nyc_output/
-
-# ---- Virtual envs ----
+# Virtual Environments
 venv/
 env/
 ENV/
 .venv/
+pip-log.txt
+pip-delete-this-directory.txt
 
-# ---- Django media & static ----
+# Django specific
+db.sqlite3
+db.sqlite3-journal
 backend/media/
 backend/staticfiles/
+backend/logs/
 
-# ---- Logs ----
+# ----------------------------------------------------------------------------
+# Node / Frontend Build & Cache
+# ----------------------------------------------------------------------------
+node_modules/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/dist-ssr/
+/frontend/coverage/
+.npm
+.eslintcache
+.tsbuildinfo
+.vite/
+.parcel-cache/
+.next/
+
+# ----------------------------------------------------------------------------
+# Testing & Code Coverage
+# ----------------------------------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+*.lcov
+.nyc_output/
+.tox/
+.nox/
+.cache/
+.ruff_cache/
+.mypy_cache/
+
+# ----------------------------------------------------------------------------
+# Docker Local Overrides & Volumes
+# ----------------------------------------------------------------------------
+docker-compose.override.yml
+.docker-volumes/
+
+# ----------------------------------------------------------------------------
+# Build Packages / ZIP Archives (CI/CD Local Outputs)
+# ----------------------------------------------------------------------------
+build-package/
+*.zip
+*.tar.gz
+*.tgz
 *.log
 logs/
-
-# ---- IDE / Editor ----
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# ---- OS ----
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# ---- Docker (local overrides) ----
-docker-compose.override.yml
-
-# ---- Misc caches ----
-.cache/
-.mypy_cache/
-.ruff_cache/
-.tox/

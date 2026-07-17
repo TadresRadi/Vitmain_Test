@@ -1,15 +1,46 @@
 version: 2
 updates:
+  # Python backend dependencies
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     allow:
-      - dependency-type: "direct"
+      - dependency-type: "all" # Allows both direct and indirect (transitive) updates to keep the environment secure
+    groups:
+      python-dev-dependencies:
+        patterns:
+          - "pytest*"
+          - "bandit"
+          - "flake8"
+          - "pip-audit"
+          - "safety"
+          - "freezegun"
+          - "Faker"
+          - "factory_boy"
+          - "coverage"
 
+  # npm frontend dependencies
   - package-ecosystem: "npm"
     directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      frontend-dev-dependencies:
+        patterns:
+          - "eslint*"
+          - "prettier*"
+          - "typescript*"
+          - "vite*"
+          - "vitest*"
+          - "@testing-library/*"
+          - "@typescript-eslint/*"
+
+  # GitHub Actions workflows dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5

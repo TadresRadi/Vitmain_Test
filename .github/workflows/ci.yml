@@ -1,4 +1,4 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
@@ -7,24 +7,61 @@ on:
     branches: [ main, master ]
 
 jobs:
-  lint:
-    name: Lint (flake8)
+  # Backend Linting
+  backend-lint:
+    name: Backend Lint (flake8)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install flake8
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements-dev.txt'
+
+      - name: Install Linting dependencies
+        working-directory: backend
         run: |
           python -m pip install --upgrade pip
           pip install flake8
-      - name: Run flake8
-        run: flake8 backend --select=F,E9
 
-  tests:
-    name: Tests (pytest)
+      - name: Run Flake8
+        working-directory: backend
+        run: flake8 .
+
+  # Backend Security checks
+  backend-security:
+    name: Backend Security (Bandit & pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements-dev.txt'
+
+      - name: Install Security dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit pip-audit safety
+
+      - name: Run Bandit (Static Analysis)
+        working-directory: backend
+        run: bandit -r . -n 5 -c bandit.yaml
+
+      - name: Run pip-audit (Vulnerability Scan)
+        working-directory: backend
+        run: pip-audit -r requirements.txt --progress-spinner=off
+
+  # Backend Unit Tests
+  backend-test:
+    name: Backend Tests (pytest)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -44,6 +81,12 @@ jobs:
         image: redis:7
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/vitmain_test
       DB_NAME: vitmain_test
@@ -60,17 +103,154 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements-dev.txt'
+
       - name: Install dependencies
+        working-directory: backend
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements-dev.txt
+          pip install -r requirements-dev.txt
+
       - name: Run migrations
         working-directory: backend
         run: python manage.py migrate --noinput
-      - name: Run tests
+
+      - name: Run tests with coverage
         working-directory: backend
-        run: pytest -v
+        run: pytest -v --cov=. --cov-report=xml --cov-report=html
+
+      - name: Upload Backend Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/htmlcov/
+          retention-days: 7
+
+  # Frontend Lint & Format Checks
+  frontend-lint:
+    name: Frontend Lint & Format (ESLint & Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run Prettier check
+        working-directory: frontend
+        run: npm run format:check
+
+  # Frontend Type Checking
+  frontend-typecheck:
+    name: Frontend Type Checking (TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run TypeScript typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+  # Frontend Security Scanning
+  frontend-security:
+    name: Frontend Security (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Audit dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+  # Frontend Unit Tests
+  frontend-test:
+    name: Frontend Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Vitest with coverage
+        working-directory: frontend
+        run: npm run test:coverage
+
+      - name: Upload Frontend Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 7
+
+  # Frontend Build Verification
+  frontend-build:
+    name: Frontend Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build
