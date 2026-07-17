@@ -68,7 +68,7 @@ jobs:
 
       # Build Backend Image
       - name: Build Backend Docker Image (Verify)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           file: ./backend/Dockerfile
@@ -79,7 +79,7 @@ jobs:
 
       # Build Frontend Image
       - name: Build Frontend Docker Image (Verify)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
