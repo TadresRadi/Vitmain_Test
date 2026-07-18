@@ -19,7 +19,8 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 STATIC_ROOT.mkdir(parents=True, exist_ok=True)
 # Load environment variables
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+if not os.getenv("DATABASE_URL"):
+    load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 # Replicate API token (used for AI-generated images)
 REPLICATE_API_TOKEN = os.environ.get("REPLICATE_API_TOKEN")
@@ -164,7 +165,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DB_NAME = os.environ.get('DB_NAME', 'vitmain_db')
 DB_USER = os.environ.get('DB_USER', 'postgres')
 DB_PASSWORD = os.environ.get('DB_PASSWORD', 'postgres')
-DB_HOST = os.environ.get('DB_HOST', '127.0.0.1')
+DB_HOST = os.environ.get("DB_HOST", "vitmain_db")
 DB_PORT = os.environ.get('DB_PORT', '5432')
 
 DATABASES = {

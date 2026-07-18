@@ -1,84 +1,112 @@
-version: '3.8'
 
 services:
-  # Postgres Database
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
   db:
     image: postgres:15-alpine
     container_name: vitmain_db
     restart: always
+
+    env_file:
+      - .env
+
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-vitmain_prod}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
     networks:
       - vitmain_network
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-vitmain_prod}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
+  # ==========================================
+  # Redis
+  # ==========================================
   redis:
     image: redis:7-alpine
     container_name: vitmain_redis
     restart: always
+
     volumes:
       - redis_data:/data
+
     networks:
       - vitmain_network
+
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ==========================================
   # Django Backend
+  # ==========================================
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+
     container_name: vitmain_backend
     restart: always
+
+    env_file:
+      - .env
+
     environment:
-      DEBUG: "False"
-      SECRET_KEY: ${SECRET_KEY:-prod-secret-key-change-me}
-      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-vitmain_prod}
+      DB_HOST: db
+      DB_PORT: 5432
+
       REDIS_URL: redis://redis:6379/1
-      ALLOWED_HOSTS: localhost,127.0.0.1,backend
-      VODAFONE_WEBHOOK_SECRET_TOKEN: ${VODAFONE_WEBHOOK_SECRET_TOKEN:-webhook-secret-token}
-      VODAFONE_RECEIVER_NUMBER: ${VODAFONE_RECEIVER_NUMBER:-01000000000}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+      RUNNING_IN_DOCKER: "1"
+
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - logs_volume:/app/logs
+
     depends_on:
       db:
         condition: service_healthy
+
       redis:
         condition: service_healthy
+
     networks:
       - vitmain_network
-    expose:
-      - "8000"
 
-  # Frontend Nginx server
+    ports:
+      - "8000:8000"
+
+  # ==========================================
+  # Frontend
+  # ==========================================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+
     container_name: vitmain_frontend
     restart: always
-    ports:
-      - "80:80"
+
     depends_on:
       - backend
+
     networks:
       - vitmain_network
+
+    ports:
+      - "80:80"
 
 volumes:
   postgres_data:
