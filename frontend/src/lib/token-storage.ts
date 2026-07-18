@@ -1,152 +1,88 @@
 /**
  * Secure Token Storage
- * Stores JWT tokens in memory with httpOnly cookie backup
- * Never stores sensitive tokens in localStorage
+ *
+ * - Access token: in memory + sessionStorage backup (short-lived, 15 min)
+ * - Refresh token: NEVER stored in JavaScript. Stored in an httpOnly
+ *   cookie set by the backend, automatically sent with requests via
+ *   withCredentials: true.
+ *
+ * This means:
+ * - XSS attacks can read the access token (15 min lifetime, limited damage)
+ * - XSS attacks CANNOT read or steal the refresh token (httpOnly cookie)
+ * - Page refresh survives (access token in sessionStorage for up to 15 min)
+ * - After 15 min, the axios interceptor calls /auth/refresh, which uses
+ *   the httpOnly cookie to get a new access token
  */
 
-interface TokenPair {
-  accessToken: string
-  refreshToken: string
-  expiresAt?: number
+interface TokenStorage {
+  getAccessToken(): string | null
+  setAccessToken(token: string): void
+  clear(): void
+  isAuthenticated(): boolean
 }
 
-class TokenStorage {
-  private static instance: TokenStorage
-  private tokens: TokenPair | null = null
-
-  // Constants
-  private readonly ACCESS_TOKEN_MEMORY_KEY = 'vitmain_access'
-  private readonly TOKEN_EXPIRY_BUFFER = 60 * 1000 // 1 minute buffer
-
+class SecureTokenStorage implements TokenStorage {
+  private static instance: SecureTokenStorage
+  private accessToken: string | null = null
+  private readonly STORAGE_KEY = 'vitmain_access_token'
   private constructor() {
-    this.loadFromMemory()
+    this.loadFromSession()
   }
 
-  /**
-   * Get singleton instance
-   */
   static getInstance(): TokenStorage {
-    if (!TokenStorage.instance) {
-      TokenStorage.instance = new TokenStorage()
+    if (!SecureTokenStorage.instance) {
+      SecureTokenStorage.instance = new SecureTokenStorage()
     }
-    return TokenStorage.instance
+    return SecureTokenStorage.instance
   }
 
   /**
-   * Store tokens
-   * - Access token in memory (cleared on refresh)
-   * - Refresh token in httpOnly cookie (set by server)
-   *
-   * @param accessToken JWT access token
-   * @param refreshToken JWT refresh token
-   * @param expiresIn Token expiry in seconds
+   * Store the access token in memory + sessionStorage.
+   * The refresh token is NOT stored here — it's in an httpOnly cookie.
    */
-  setTokens(accessToken: string, refreshToken: string, expiresIn?: number): void {
-    if (!accessToken) {
+  setAccessToken(token: string): void {
+    if (!token) {
       throw new Error('Access token is required')
     }
-
-    // Calculate expiry time
-    const expiresAt = expiresIn ? Date.now() + expiresIn * 1000 : undefined
-
-    // Store in memory
-    this.tokens = {
-      accessToken,
-      refreshToken,
-      expiresAt,
-    }
-
-    // Store in sessionStorage as backup (cleared on tab close)
+    this.accessToken = token
     try {
-      sessionStorage.setItem(this.ACCESS_TOKEN_MEMORY_KEY, JSON.stringify(this.tokens))
+      sessionStorage.setItem(this.STORAGE_KEY, token)
     } catch (error) {
-      console.warn('Could not store tokens in sessionStorage:', error)
+      console.warn('Could not store access token in sessionStorage:', error)
     }
-
-    // Note: Refresh token should be set by server as httpOnly cookie
   }
 
-  /**
-   * Get access token
-   * @returns Access token or null
-   */
   getAccessToken(): string | null {
-    if (!this.tokens) {
-      this.loadFromMemory()
+    if (!this.accessToken) {
+      this.loadFromSession()
     }
-
-    if (!this.tokens) {
-      return null
-    }
-
-    // Check if token is expired
-    if (this.isTokenExpired(this.tokens.expiresAt)) {
-      console.warn('Access token has expired')
-      this.clear()
-      return null
-    }
-
-    return this.tokens.accessToken
+    return this.accessToken
   }
 
-  /**
-   * Get refresh token from httpOnly cookie
-   * @returns Refresh token or null
-   */
-  getRefreshToken(): string | null {
-    if (!this.tokens?.refreshToken) {
-      return null
-    }
-    return this.tokens.refreshToken
-  }
-
-  /**
-   * Check if token is expired
-   * @param expiresAt Expiry timestamp
-   * @returns True if expired or about to expire
-   */
-  private isTokenExpired(expiresAt?: number): boolean {
-    if (!expiresAt) {
-      return false // If no expiry, consider it valid
-    }
-    return Date.now() + this.TOKEN_EXPIRY_BUFFER >= expiresAt
-  }
-
-  /**
-   * Check if user is authenticated
-   * @returns True if access token exists and is not expired
-   */
-  isAuthenticated(): boolean {
-    return this.getAccessToken() !== null
-  }
-
-  /**
-   * Clear all tokens from storage
-   */
   clear(): void {
-    this.tokens = null
+    this.accessToken = null
     try {
-      sessionStorage.removeItem(this.ACCESS_TOKEN_MEMORY_KEY)
+      sessionStorage.removeItem(this.STORAGE_KEY)
     } catch (error) {
       console.warn('Could not clear sessionStorage:', error)
     }
   }
 
-  /**
-   * Load tokens from sessionStorage
-   * Useful when tab is refreshed but session is still active
-   */
-  private loadFromMemory(): void {
+  isAuthenticated(): boolean {
+    return this.getAccessToken() !== null
+  }
+
+  private loadFromSession(): void {
     try {
-      const stored = sessionStorage.getItem(this.ACCESS_TOKEN_MEMORY_KEY)
-      if (stored) {
-        this.tokens = JSON.parse(stored)
+      const token = sessionStorage.getItem(this.STORAGE_KEY)
+      if (token) {
+        this.accessToken = token
       }
     } catch (error) {
-      console.warn('Could not load tokens from sessionStorage:', error)
-      this.tokens = null
+      console.warn('Could not load access token from sessionStorage:', error)
+      this.accessToken = null
     }
   }
 }
 
-export const tokenStorage = TokenStorage.getInstance()
+export const tokenStorage = SecureTokenStorage.getInstance()

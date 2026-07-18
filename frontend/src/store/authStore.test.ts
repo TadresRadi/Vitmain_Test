@@ -12,11 +12,11 @@ const mocks = vi.hoisted(() => ({
   apiPost: vi.fn(),
   clearTokens: vi.fn(),
   getProfile: vi.fn(),
-  getRefreshToken: vi.fn(),
+  getAccessToken: vi.fn(),
   isAuthenticated: vi.fn(),
   loginRequest: vi.fn(),
   registerRequest: vi.fn(),
-  setTokens: vi.fn(),
+  setAccessToken: vi.fn(),
 }))
 
 vi.mock('@/lib/axios', () => ({
@@ -34,9 +34,9 @@ vi.mock('@/services/authService', () => ({
 vi.mock('@/lib/token-storage', () => ({
   tokenStorage: {
     clear: mocks.clearTokens,
-    getRefreshToken: mocks.getRefreshToken,
+    getAccessToken: mocks.getAccessToken,
     isAuthenticated: mocks.isAuthenticated,
-    setTokens: mocks.setTokens,
+    setAccessToken: mocks.setAccessToken,
   },
 }))
 
@@ -62,7 +62,6 @@ describe('authStore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetStore()
-    mocks.getRefreshToken.mockReturnValue('refresh-token')
   })
 
   it('logs in, stores tokens, and updates authenticated state', async () => {
@@ -75,7 +74,7 @@ describe('authStore', () => {
     const response = await useAuthStore.getState().login('user@example.com', 'secret')
 
     expect(loginRequest).toHaveBeenCalledWith('user@example.com', 'secret')
-    expect(tokenStorage.setTokens).toHaveBeenCalledWith('access-token', 'refresh-token')
+    expect(tokenStorage.setAccessToken).toHaveBeenCalledWith('access-token')
     expect(response.user).toEqual(user)
     expect(useAuthStore.getState()).toMatchObject({
       user,
@@ -129,7 +128,7 @@ describe('authStore', () => {
       dob: '2000-01-01',
       user_type: 'owner',
     })
-    expect(tokenStorage.setTokens).toHaveBeenCalledWith('access-token', 'refresh-token')
+    expect(tokenStorage.setAccessToken).toHaveBeenCalledWith('access-token')
     expect(useAuthStore.getState().isAuthenticated).toBe(true)
   })
 
@@ -144,7 +143,7 @@ describe('authStore', () => {
 
     await useAuthStore.getState().logout()
 
-    expect(api.post).toHaveBeenCalledWith('/auth/logout', { refresh_token: 'refresh-token' })
+    expect(api.post).toHaveBeenCalledWith('/auth/logout', {})
     expect(tokenStorage.clear).toHaveBeenCalled()
     expect(useAuthStore.getState()).toMatchObject({
       user: null,
@@ -223,6 +222,6 @@ describe('authStore', () => {
     expect(api.post).toHaveBeenNthCalledWith(4, '/auth/google/callback', {
       id_token: 'id-token',
     })
-    expect(tokenStorage.setTokens).toHaveBeenLastCalledWith('google-access', 'google-refresh')
+        expect(tokenStorage.setAccessToken).toHaveBeenLastCalledWith('google-access')
   })
 })

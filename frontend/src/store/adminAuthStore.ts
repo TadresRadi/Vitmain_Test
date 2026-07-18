@@ -27,7 +27,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         // Store the actual JWT tokens via tokenStorage (in-memory +
         // sessionStorage, NOT localStorage). The axios interceptor reads
         // from tokenStorage, so this is sufficient for authenticated requests.
-        tokenStorage.setTokens(data.access_token, data.refresh_token)
+        tokenStorage.setAccessToken(data.access_token)
 
         set({
           isAdminAuthenticated: true,

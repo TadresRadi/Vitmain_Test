@@ -41,14 +41,12 @@ export default function GoogleAuthButton({ mode, onSuccess }: GoogleAuthButtonPr
       const token = credentialResponse.credential
       if (!token) throw new Error('No credential returned')
 
-      const response = await api.post('/auth/google/callback', {
-        id_token: token,
-      })
-
-      // Handle as logged-in user
-      const { setTokens, setUser } = useAuthStore.getState()
-      setTokens(response.data.access_token, response.data.refresh_token)
-      setUser(response.data.user)
+      // Use the store action which handles token storage correctly
+      // (access token in memory + sessionStorage, refresh token in httpOnly cookie)
+      const success = await useAuthStore.getState().loginWithGoogle(token)
+      if (!success) {
+        throw new Error('Google authentication failed')
+      }
 
       toast({
         title: mode === 'login' ? t('login.welcomeBack') : t('register.successMsg'),

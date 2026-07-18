@@ -7,7 +7,8 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView as SimpleJWTTokenRefreshView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from django.utils import timezone
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
@@ -25,20 +26,16 @@ from core.exceptions import AuthenticationError, ExternalServiceError, Validatio
 from core.decorators import rate_limit
 from core.utils import log_user_activity
 from core.http_utils import get_client_ip
+from users.services.jwt_cookie_service import (
+    set_jwt_refresh_cookie,
+    clear_jwt_refresh_cookie,
+    get_refresh_token_from_cookie,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
-    """
-    Login view - exchange email/password for JWT tokens.
-
-    POST /api/auth/login
-    {
-        "email": "user@example.com",
-        "password": "password"
-    }
-    """
     serializer_class = MyTokenObtainPairSerializer
 
     @rate_limit(endpoint='auth_login', rate='5/m')
@@ -49,6 +46,15 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
         try:
             response = super().post(request, *args, **kwargs)
+
+            # Set refresh token as httpOnly cookie, remove from response body
+            if response.status_code == 200:
+                refresh_token = response.data.get('refresh')
+                if refresh_token:
+                    set_jwt_refresh_cookie(response, refresh_token)
+                    # Never expose refresh token to JavaScript
+                    response.data.pop('refresh', None)
+                    response.data.pop('refresh_token', None)
 
             # Log successful login
             email = request.data.get('email', 'unknown')
@@ -182,15 +188,16 @@ class GoogleOAuthCallbackView(APIView):
                 user_agent=user_agent,
             )
             
-            # Serialize response
+            # Serialize response — refresh token goes in httpOnly cookie, NOT body
             user_serializer = UserDetailSerializer(user)
             response_data = {
                 'access_token': jwt_access,
-                'refresh_token': str(refresh),
                 'user': user_serializer.data,
             }
-            
-            return Response(response_data, status=status.HTTP_200_OK)
+
+            response = Response(response_data, status=status.HTTP_200_OK)
+            set_jwt_refresh_cookie(response, str(refresh))
+            return response
         
         except AuthenticationError as e:
             logger.warning(f"Authentication error: {str(e)}")
@@ -249,6 +256,7 @@ class GoogleAuthConfigView(APIView):
             'enabled': bool(settings.GOOGLE_CLIENT_ID),
         })
 
+
 class LogoutView(APIView):
     """
     Logout user by blacklisting tokens.
@@ -290,11 +298,58 @@ class LogoutView(APIView):
                 'timestamp': timezone.now().isoformat()
             })
             
-            return Response(
+            # Clear the refresh token cookie
+            response = Response(
                 {'message': 'Successfully logged out'},
                 status=status.HTTP_200_OK
             )
-        
+            clear_jwt_refresh_cookie(response)
+            return response
+
         except Exception as e:
             logger.exception("Logout error")
             raise ExternalServiceError("Logout failed")
+        
+from users.services.jwt_cookie_service import (
+    set_jwt_refresh_cookie,
+    clear_jwt_refresh_cookie,
+    get_refresh_token_from_cookie,
+)
+
+
+class CookieTokenRefreshView(SimpleJWTTokenRefreshView):
+    """
+    Token refresh view that reads the refresh token from an httpOnly cookie.
+
+    POST /api/auth/refresh
+    - No body required. The refresh token is read from the cookie.
+    - Returns: { "access": "<new_access_token>" }
+    - If ROTATE_REFRESH_TOKENS=True, also sets a new refresh cookie.
+    """
+
+    def post(self, request, *args, **kwargs):
+        # Read refresh token from cookie, not request body
+        refresh_token = get_refresh_token_from_cookie(request)
+        if not refresh_token:
+            return Response(
+                {'error': 'No refresh token cookie found'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        serializer = self.get_serializer(data={'refresh': refresh_token})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception:
+            return Response(
+                {'error': 'Invalid or expired refresh token'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        response_data = {'access': serializer.validated_data['access']}
+        response = Response(response_data, status=status.HTTP_200_OK)
+
+        # If rotation is enabled, set the new refresh token as a cookie
+        if 'refresh' in serializer.validated_data:
+            set_jwt_refresh_cookie(response, serializer.validated_data['refresh'])
+
+        return response

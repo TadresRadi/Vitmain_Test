@@ -13,7 +13,7 @@ export interface RegisterPayload {
 
 export interface AdminLoginResponse {
   access_token: string
-  refresh_token: string
+  // refresh_token is in httpOnly cookie, not response body
   user: {
     id: string
     email: string

@@ -17,6 +17,7 @@ from subscriptions.models import Subscription
 from chat.models.generation_history import GeneratedPost, GeneratedImage
 from users.serializers import CustomUserSerializer
 from payments.models import PaymentOrder
+from users.services.jwt_cookie_service import set_jwt_refresh_cookie
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -60,10 +61,9 @@ class AdminAuthLoginView(APIView):
         
         refresh = RefreshToken.for_user(user)
         access_token = refresh.access_token
-        
-        return Response({
+
+        response = Response({
             'access_token': str(access_token),
-            'refresh_token': str(refresh),
             'user': {
                 'id': str(user.id),
                 'email': user.email,
@@ -71,6 +71,11 @@ class AdminAuthLoginView(APIView):
                 'full_name': user.full_name,
             }
         }, status=status.HTTP_200_OK)
+
+        # Set refresh token as httpOnly cookie
+        from users.services.jwt_cookie_service import set_jwt_refresh_cookie
+        set_jwt_refresh_cookie(response, str(refresh))
+        return response
 
 
 class AdminAuthProfileView(APIView):

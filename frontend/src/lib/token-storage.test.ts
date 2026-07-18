@@ -1,46 +1,41 @@
 /**
- * Tests for TokenStorage singleton.
+ * Tests for TokenStorage singleton (httpOnly cookie variant).
  *
- * Verifies that tokens are stored in memory + sessionStorage (NOT localStorage),
- * cleared properly, and that expiry is handled correctly.
+ * Verifies that:
+ * - Access token is stored in memory + sessionStorage (NOT localStorage)
+ * - Refresh token is NEVER stored in JavaScript (it's in httpOnly cookie)
+ * - Tokens are cleared properly
+ * - No getRefreshToken method exists (security: JS cannot read refresh token)
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { tokenStorage } from './token-storage'
 
 describe('TokenStorage', () => {
   beforeEach(() => {
-    // Clear all storage before each test
     sessionStorage.clear()
     localStorage.clear()
-    // Reset the singleton's in-memory state
     tokenStorage.clear()
   })
 
   it('stores and retrieves access token', () => {
-    tokenStorage.setTokens('access123', 'refresh456')
+    tokenStorage.setAccessToken('access123')
     expect(tokenStorage.getAccessToken()).toBe('access123')
   })
 
-  it('stores and retrieves refresh token', () => {
-    tokenStorage.setTokens('access123', 'refresh456')
-    expect(tokenStorage.getRefreshToken()).toBe('refresh456')
-  })
-
   it('throws if access token is empty', () => {
-    expect(() => tokenStorage.setTokens('', 'refresh456')).toThrow('Access token is required')
+    expect(() => tokenStorage.setAccessToken('')).toThrow('Access token is required')
   })
 
-  it('clears all tokens', () => {
-    tokenStorage.setTokens('access123', 'refresh456')
+  it('clears the access token', () => {
+    tokenStorage.setAccessToken('access123')
     expect(tokenStorage.getAccessToken()).toBe('access123')
 
     tokenStorage.clear()
     expect(tokenStorage.getAccessToken()).toBeNull()
-    expect(tokenStorage.getRefreshToken()).toBeNull()
   })
 
-  it('isAuthenticated returns true when token exists', () => {
-    tokenStorage.setTokens('access123', 'refresh456')
+  it('isAuthenticated returns true when access token exists', () => {
+    tokenStorage.setAccessToken('access123')
     expect(tokenStorage.isAuthenticated()).toBe(true)
   })
 
@@ -50,9 +45,8 @@ describe('TokenStorage', () => {
   })
 
   it('does NOT store tokens in localStorage', () => {
-    tokenStorage.setTokens('access123', 'refresh456')
+    tokenStorage.setAccessToken('access123')
 
-    // Check that no token-related keys are in localStorage
     const keys = Object.keys(localStorage)
     const tokenKeys = keys.filter(
       (k) => k.includes('token') || k.includes('vitmain') || k.includes('access')
@@ -60,16 +54,26 @@ describe('TokenStorage', () => {
     expect(tokenKeys).toHaveLength(0)
   })
 
-  it('persists to sessionStorage for tab refresh', () => {
-    tokenStorage.setTokens('access123', 'refresh456')
+  it('persists access token to sessionStorage for tab refresh', () => {
+    tokenStorage.setAccessToken('access123')
 
-    // Verify something is in sessionStorage (the backup)
     const sessionKeys = Object.keys(sessionStorage)
     expect(sessionKeys.length).toBeGreaterThan(0)
   })
 
-  it('returns null when no tokens set', () => {
+  it('returns null when no token set', () => {
     expect(tokenStorage.getAccessToken()).toBeNull()
-    expect(tokenStorage.getRefreshToken()).toBeNull()
+  })
+
+  it('does NOT expose a getRefreshToken method (security)', () => {
+    // The refresh token lives in an httpOnly cookie and must NEVER be
+    // accessible to JavaScript. Verify the method does not exist.
+    expect((tokenStorage as any).getRefreshToken).toBeUndefined()
+  })
+
+  it('does NOT expose a setTokens method (security)', () => {
+    // The old setTokens method accepted a refresh token argument — it
+    // must not exist anymore.
+    expect((tokenStorage as any).setTokens).toBeUndefined()
   })
 })

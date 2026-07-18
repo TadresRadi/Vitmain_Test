@@ -83,7 +83,10 @@ class SecureAxios {
       (error) => Promise.reject(error)
     )
 
-    // Response interceptor - handle token refresh
+        // Response interceptor - handle token refresh
+    // The refresh token is in an httpOnly cookie, automatically sent via
+    // withCredentials: true. No need to read it from storage or send it
+    // in the request body.
     instance.interceptors.response.use(
       (response) => response,
       async (error) => {
@@ -91,29 +94,30 @@ class SecureAxios {
 
         // Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
-          const refreshToken = tokenStorage.getRefreshToken()
-          if (!refreshToken || originalRequest.url?.includes('/auth/refresh')) {
+          // If the refresh endpoint itself returned 401, the cookie is
+          // invalid/expired — redirect to login.
+          if (originalRequest.url?.includes('/auth/refresh')) {
+            tokenStorage.clear()
+            window.location.href = '/login'
             return Promise.reject(error)
           }
 
           originalRequest._retry = true
 
           try {
-            // Try to refresh token
-            const response = await instance.post('auth/refresh', {
-              refresh: refreshToken,
-            })
+            // Call refresh — refresh token is sent automatically via cookie
+            const response = await instance.post('auth/refresh', {})
 
             if (response.data.access) {
-              // Update token
-              tokenStorage.setTokens(response.data.access, refreshToken)
+              // Store the new access token
+              tokenStorage.setAccessToken(response.data.access)
 
-              // Retry original request
+              // Retry original request with new access token
               originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`
               return instance(originalRequest)
             }
           } catch (refreshError) {
-            // Refresh failed - logout user
+            // Refresh failed — clear token and redirect to login
             tokenStorage.clear()
             window.location.href = '/login'
             return Promise.reject(refreshError)

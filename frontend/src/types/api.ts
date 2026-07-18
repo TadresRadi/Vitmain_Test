@@ -31,9 +31,8 @@ export interface LoginUser {
 
 export interface LoginResponse {
   access_token: string
-  refresh_token: string
+  // refresh_token is no longer in the response body — it's in an httpOnly cookie
   access: string
-  refresh: string
   user: LoginUser
 }
 

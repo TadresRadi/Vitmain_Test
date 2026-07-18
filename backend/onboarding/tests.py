@@ -141,7 +141,8 @@ def test_get_falls_back_to_latest_inactive_onboarding(api_client):
         is_active=False,
         **onboarding_payload(business_name="Latest"),
     )
-    latest.created_at = first.created_at + (latest.created_at - first.created_at)
+    from datetime import timedelta
+    latest.created_at = first.created_at + timedelta(seconds=1)
     latest.save(update_fields=["created_at"])
     api_client.force_authenticate(user=user)
 

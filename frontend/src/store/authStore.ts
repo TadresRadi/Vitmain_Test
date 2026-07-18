@@ -49,8 +49,6 @@ interface AuthState {
 
   setUser: (user: User) => void
 
-  setTokens: (accessToken: string, refreshToken: string, expiresIn?: number) => void
-
   clearError: () => void
 
   changePassword: (oldPassword: string, newPassword: string) => Promise<boolean>
@@ -69,20 +67,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
   onboarding_completed: null,
 
-  setTokens: (accessToken, refreshToken, expiresIn) => {
-    try {
-      tokenStorage.setTokens(accessToken, refreshToken, expiresIn)
-
-      set({
-        isAuthenticated: true,
-        error: null,
-      })
-    } catch {
-      set({
-        error: 'Failed to save authentication',
-      })
-    }
-  },
 
   setUser: (user) => {
     set({
@@ -101,7 +85,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const data = await loginRequest(email, password)
 
-      tokenStorage.setTokens(data.access_token, data.refresh_token)
+      tokenStorage.setAccessToken(data.access_token)
 
       set({
         user: data.user,
@@ -145,7 +129,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       const loginRes = await loginRequest(email, password)
 
-      tokenStorage.setTokens(loginRes.access_token, loginRes.refresh_token)
+      tokenStorage.setAccessToken(loginRes.access_token)
 
       set({
         user: loginRes.user,
@@ -174,9 +158,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     })
 
     try {
-      await api.post('/auth/logout', {
-        refresh_token: tokenStorage.getRefreshToken(),
-      })
+      await api.post('/auth/logout', {})
     } catch (error) {
       console.warn(error)
     } finally {
@@ -310,9 +292,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         id_token: idToken,
       })
 
-      const { access_token, refresh_token, user } = response.data
+      const { access_token, user } = response.data
 
-      tokenStorage.setTokens(access_token, refresh_token)
+      tokenStorage.setAccessToken(access_token)
 
       set({
         user,

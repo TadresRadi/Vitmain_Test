@@ -296,10 +296,10 @@ REST_FRAMEWORK = {
 }
 # SimpleJWT Settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': False,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -307,6 +307,18 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
+# ============================================================================
+# JWT COOKIE SETTINGS (for httpOnly refresh token storage)
+# ============================================================================
+# The refresh token is stored in an httpOnly cookie (never accessible to JS).
+# The access token is returned in the JSON response and stored in memory /
+# sessionStorage by the frontend (short-lived: 15 minutes).
+JWT_AUTH_COOKIE = 'vitmain_refresh'
+JWT_AUTH_COOKIE_SAMESITE = 'Lax'
+JWT_AUTH_COOKIE_SECURE = os.environ.get("JWT_AUTH_COOKIE_SECURE", str(not DEBUG)).lower() == "true"
+JWT_AUTH_COOKIE_HTTPONLY = True
+JWT_AUTH_COOKIE_PATH = '/'
+JWT_AUTH_COOKIE_DOMAIN = None  # Set to your domain in production for cross-subdomain
 # Django Allauth Settings
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',

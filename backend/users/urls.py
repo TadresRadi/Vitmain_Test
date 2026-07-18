@@ -1,5 +1,5 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
+from users.views.auth_views import MyTokenObtainPairView, RegisterView, GoogleOAuthCallbackView, GoogleAuthConfigView, LogoutView, CookieTokenRefreshView
 from users.views import (
     MyTokenObtainPairView,
     RegisterView,
@@ -28,7 +28,7 @@ from users.views.password_views import (
 urlpatterns = [
     # Authentication
     path('auth/login', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('auth/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/refresh', CookieTokenRefreshView.as_view(), name='token_refresh'),
     path('auth/register', RegisterView.as_view(), name='auth_register'),
     
     # Google OAuth - REMOVED 'api/' prefix
