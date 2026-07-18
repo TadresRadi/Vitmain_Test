@@ -25,6 +25,7 @@ export interface LoginUser {
   full_name: string | null
   is_active?: boolean
   onboarding_completed: boolean
+  is_email_verified?: boolean
   auth_provider?: string
   profile_picture?: string
 }

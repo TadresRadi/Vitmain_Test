@@ -278,10 +278,55 @@ Post-Deployment Checklist
 text
 
 
-### Verify
+  ### Verify
 
-```bash
-wc -l DEPLOYMENT_GUIDE.md
-# Expected: ~250+ lines
-head -1 DEPLOYMENT_GUIDE.md
-# Expected: # Deployment Guide — Vitmain
+  ```bash
+  wc -l DEPLOYMENT_GUIDE.md
+  # Expected: ~250+ lines
+  head -1 DEPLOYMENT_GUIDE.md
+  # Expected: # Deployment Guide — Vitmain
+
+  Vodafone Cash Webhook
+  Webhook Contract
+  The webhook endpoint is POST /api/payments/vodafone-cash/webhook.
+
+  Authentication: HMAC-SHA256 signature over the raw request body, sent in the X-Vodafone-Signature header. The shared secret is VODAFONE_WEBHOOK_SECRET_TOKEN from your .env.
+
+  Headers:
+
+  Content-Type: application/json
+  X-Vodafone-Signature: <hex HMAC-SHA256 of raw body>
+
+  text
+
+
+  **Body:**
+  ```json
+  {
+      "sender_number": "01012345678",
+      "amount": "200.00",
+      "transaction_id": "TX123456",
+      "raw_sms": "Full SMS text from Vodafone",
+      "reference_code": "VITMAIN-ABC123"
+  }
+  reference_code is optional but recommended — it enables Priority 1 matching.
+
+  Computing the signature (Python example):
+
+  python
+
+  import hashlib
+  import hmac
+  import json
+
+  secret = "your-webhook-secret"
+  body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+  signature = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+
+  # Send as: X-Vodafone-Signature: <signature>
+  Responses:
+
+  200 OK — transaction processed (matched, unmatched, or ignored duplicate)
+  400 Bad Request — missing required fields or invalid payload
+  401 Unauthorized — missing or invalid signature
+  500 Internal Server Error — webhook secret not configured or server error

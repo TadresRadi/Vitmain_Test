@@ -110,7 +110,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  register: async (email, password, password_confirm, full_name, phone_number, dob, user_type) => {
+    register: async (email, password, password_confirm, full_name, phone_number, dob, user_type) => {
     try {
       set({
         isLoading: true,
@@ -127,14 +127,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         user_type,
       })
 
-      const loginRes = await loginRequest(email, password)
-
-      tokenStorage.setAccessToken(loginRes.access_token)
-
+      // Do NOT auto-login — the user must verify their email first.
+      // The Register page redirects to /login with a success message.
       set({
-        user: loginRes.user,
-        isAuthenticated: true,
-        onboarding_completed: loginRes.user.onboarding_completed,
         isLoading: false,
       })
     } catch (err) {

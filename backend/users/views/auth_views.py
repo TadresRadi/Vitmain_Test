@@ -3,11 +3,13 @@ Authentication views.
 Handles login, registration, and OAuth flows.
 """
 import logging
+from users.services.email_verification_service import EmailVerificationService
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView as SimpleJWTTokenRefreshView
+from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from django.utils import timezone
 from django.views.decorators.cache import cache_page
@@ -33,6 +35,7 @@ from users.services.jwt_cookie_service import (
 )
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -91,6 +94,7 @@ class RegisterView(APIView):
     {
         "email": "user@example.com",
         "password": "password",
+        "password_confirm": "password",
         "full_name": "Full Name"
     }
     """
@@ -99,7 +103,7 @@ class RegisterView(APIView):
     @rate_limit(endpoint='auth_register', rate='3/h')
     def post(self, request):
         from users.serializers import RegisterSerializer
-        serializer = RegisterSerializer(data=request.data)
+        serializer = RegisterSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -108,7 +112,13 @@ class RegisterView(APIView):
             'email': user.email,
         })
 
-        return Response({'message': 'Registration successful'}, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                'message': 'Registration successful. Please check your email to verify your account.',
+                'email_verification_required': True,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class GoogleOAuthCallbackView(APIView):
@@ -353,3 +363,88 @@ class CookieTokenRefreshView(SimpleJWTTokenRefreshView):
             set_jwt_refresh_cookie(response, serializer.validated_data['refresh'])
 
         return response
+class VerifyEmailView(APIView):
+    """
+    Verify email address with token from verification email.
+
+    POST /api/auth/verify-email
+    {
+        "user_id": "uuid",
+        "token": "verification_token"
+    }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        token = request.data.get('token')
+
+        if not user_id or not token:
+            return Response(
+                {'error': 'user_id and token are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        success, error = EmailVerificationService.verify_user(user_id, token)
+        if not success:
+            return Response(
+                {'error': error or 'Verification failed.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {'message': 'Email verified successfully. You can now log in.'},
+            status=status.HTTP_200_OK,
+        )
+
+
+class ResendVerificationView(APIView):
+    """
+    Resend email verification link.
+
+    POST /api/auth/resend-verification
+    {
+        "email": "user@example.com"
+    }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    @rate_limit(endpoint='resend_verification', rate='3/h')
+    def post(self, request):
+        from core.constant_response import ConstantResponse
+
+        email = (request.data.get('email') or '').strip().lower()
+        if not email or '@' not in email:
+            return Response(
+                {'message': 'If an account exists with this email, a verification link has been sent.'},
+                status=status.HTTP_200_OK,
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Don't reveal if user exists
+            return Response(
+                {'message': 'If an account exists with this email, a verification link has been sent.'},
+                status=status.HTTP_200_OK,
+            )
+
+        if user.is_email_verified:
+            return Response(
+                {'message': 'Email is already verified. You can log in.'},
+                status=status.HTTP_200_OK,
+            )
+
+        if user.auth_provider != 'local':
+            return Response(
+                {'message': 'This account uses social login and does not need email verification.'},
+                status=status.HTTP_200_OK,
+            )
+
+        frontend_url = request.META.get('HTTP_ORIGIN', 'http://localhost:5173')
+        EmailVerificationService.initiate_verification(user, frontend_url)
+
+        return Response(
+            {'message': 'If an account exists with this email, a verification link has been sent.'},
+            status=status.HTTP_200_OK,
+        )

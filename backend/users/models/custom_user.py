@@ -83,6 +83,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     posts_generated = models.BooleanField(default=False)
     images_generated = models.BooleanField(default=False)
     auth_provider = models.CharField(max_length=20, choices=AUTH_PROVIDER_CHOICES, default='local')
+    is_email_verified = models.BooleanField(default=False)
+    profile_picture = models.URLField(max_length=500, null=True, blank=True)
     profile_picture = models.URLField(max_length=500, null=True, blank=True)
     last_login = models.DateTimeField(null=True, blank=True)
 

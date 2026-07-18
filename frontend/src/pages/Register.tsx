@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -7,10 +7,10 @@ import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/authStore'
 import { useToast } from '@/hooks/use-toast'
-import api from '@/lib/axios'
-import type { UsageResponse } from '@/types/api'
 import vitaminLogo from '@/components/imge/vitamin-Logo-White.png'
 import GoogleAuthButton from '@/components/GoogleAuthButton'
+import api from '@/lib/axios'
+import type { UsageResponse } from '@/types/api'
 
 export default function Register() {
   const { t } = useTranslation()
@@ -24,8 +24,6 @@ export default function Register() {
   const [dob, setDob] = useState('')
   const [userType, setUserType] = useState('explorer')
   const [loading, setLoading] = useState(false)
-  const [searchParams] = useSearchParams()
-  const plan = searchParams.get('plan')
 
   const register = useAuthStore((state) => state.register)
   const navigate = useNavigate()
@@ -47,40 +45,16 @@ export default function Register() {
     try {
       await register(email, password, passwordConfirm, fullName, phoneNumber, dob, userType)
 
-      if (plan === 'basic' || plan === 'pro') {
-        const subRes = await api.post('/subscription/subscribe', {
-          plan_slug: plan,
-        })
-
-        toast({
-          title: t('common.success', 'Success'),
-          description: t('register.successMsg', 'Registration successful! Welcome to Vitamin AI.'),
-        })
-
-        if (subRes.data.action === 'redirect_payment') {
-          const query = new URLSearchParams({
-            plan: subRes.data.plan_slug,
-            plan_name: subRes.data.plan_name,
-            amount: String(subRes.data.amount),
-          })
-
-          navigate(`/payment/vodafone-cash?${query.toString()}`, {
-            replace: true,
-          })
-          return
-        }
-
-        if (subRes.data.action === 'redirect_support') {
-          navigate('/support', { replace: true })
-          return
-        }
-      }
-
+      // Registration successful — user must verify email before logging in.
+      // Redirect to login with a success prompt.
       toast({
         title: t('common.success', 'Success'),
-        description: t('register.successMsg', 'Registration successful! Welcome to Vitamin AI.'),
+        description: t(
+          'register.verifyEmail',
+          'Registration successful! Please check your email to verify your account, then log in.'
+        ),
       })
-      navigate('/new-onboarding')
+      navigate('/login', { replace: true })
     } catch (err: any) {
       console.error(err)
       toast({

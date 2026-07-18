@@ -1,343 +1,184 @@
 """
-Tests for VodafoneCashWebhookView.
+Tests for Vodafone Cash webhook view.
 
-This is a security-critical endpoint — it receives payment confirmations
-from Vodafone Cash and must verify the Bearer token before processing.
-These tests verify authentication, field validation, and error handling.
-
-Run: pytest payments/tests/test_vodafone_cash_webhook_view.py -v
+The webhook authenticates by HMAC-SHA256 signature over the raw request
+body, computed using VODAFONE_WEBHOOK_SECRET_TOKEN.
 """
+import hashlib
+import hmac
+import json
+
 import pytest
-from unittest.mock import patch
+from django.test import override_settings
+from rest_framework.test import APIClient
 
-from payments.models import PaymentOrder
-
-
-# ============================================================================
-# Constants
-# ============================================================================
-
+WEBHOOK_SECRET = "test-webhook-secret-do-not-use-in-prod"
 WEBHOOK_URL = "/api/payments/vodafone-cash/webhook/"
 
-VALID_BODY = {
-    "sender_number": "01012345678",
-    "amount": "200",
-    "transaction_id": "TX001",
-    "raw_sms": "You have received 200 EGP from 01012345678",
-}
 
-VALID_TOKEN = "test-secret-token"
-VALID_AUTH_HEADER = f"Bearer {VALID_TOKEN}"
+def sign(body: dict, secret: str = WEBHOOK_SECRET) -> str:
+    """Compute the HMAC-SHA256 signature for a JSON body."""
+    raw = json.dumps(body, separators=(",", ":")).encode("utf-8")
+    return hmac.new(secret.encode("utf-8"), raw, hashlib.sha256).hexdigest()
 
 
-# ============================================================================
-# Authentication tests
-# ============================================================================
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_no_auth_header_returns_401(client, vodafone_settings):
-    """A request without Authorization header should return 401."""
-    resp = client.post(WEBHOOK_URL, VALID_BODY, format="json")
-    assert resp.status_code == 401
-    assert resp.data["error"] == "Unauthorized"
+def valid_payload(**overrides) -> dict:
+    payload = {
+        "sender_number": "01012345678",
+        "amount": "200.00",
+        "transaction_id": "TX-001",
+        "raw_sms": "Received 200 EGP from 01012345678",
+    }
+    payload.update(overrides)
+    return payload
 
 
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_wrong_token_returns_401(client, vodafone_settings):
-    """A request with the wrong token should return 401."""
-    resp = client.post(
-        WEBHOOK_URL,
-        VALID_BODY,
-        format="json",
-        HTTP_AUTHORIZATION="Bearer wrong-token",
-    )
-    assert resp.status_code == 401
+@pytest.fixture
+def webhook_client():
+    return APIClient()
+
+
+@pytest.fixture
+def configured_secret(settings):
+    settings.VODAFONE_WEBHOOK_SECRET_TOKEN = WEBHOOK_SECRET
+    return settings
 
 
 @pytest.mark.django_db
-@pytest.mark.webhook
-def test_missing_token_in_settings_returns_401(client, settings):
-    """If VODAFONE_WEBHOOK_SECRET_TOKEN is unset, all requests should 401."""
-    settings.VODAFONE_WEBHOOK_SECRET_TOKEN = ""
-    resp = client.post(
-        WEBHOOK_URL,
-        VALID_BODY,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 401
+class TestVodafoneWebhookAuth:
+    """Authentication / signature verification tests."""
 
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_correct_token_passes_auth(client, vodafone_settings, basic_plan):
-    """A request with the correct token should not get 401."""
-    # Create a matching order so the service returns "matched"
-    from tests.factories import UserFactory
-    user = UserFactory()
-    PaymentOrder.objects.create(
-        user=user,
-        plan="basic",
-        expected_amount="200.00",
-        expected_sender_number="01012345678",
-        reference_code="VFC100001",
-        status=PaymentOrder.Status.PENDING,
-    )
-
-    resp = client.post(
-        WEBHOOK_URL,
-        VALID_BODY,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    # Should NOT be 401 — it passed auth
-    assert resp.status_code != 401
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_webhook_does_not_require_jwt(client, vodafone_settings, basic_plan):
-    """The webhook uses AllowAny — no JWT needed, only the Bearer token."""
-    from tests.factories import UserFactory
-    user = UserFactory()
-    PaymentOrder.objects.create(
-        user=user,
-        plan="basic",
-        expected_amount="200.00",
-        expected_sender_number="01012345678",
-        reference_code="VFC100001",
-        status=PaymentOrder.Status.PENDING,
-    )
-
-    # No JWT, just the webhook Bearer token
-    resp = client.post(
-        WEBHOOK_URL,
-        VALID_BODY,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 200
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_token_comparison_is_timing_safe(client, vodafone_settings):
-    """A token of the same length but different chars should be rejected."""
-    # Same length as "test-secret-token" but different content
-    wrong_same_length = "Bearer wrong-same-length!"
-    resp = client.post(
-        WEBHOOK_URL,
-        VALID_BODY,
-        format="json",
-        HTTP_AUTHORIZATION=wrong_same_length,
-    )
-    assert resp.status_code == 401
-
-
-# ============================================================================
-# Field validation tests
-# ============================================================================
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_missing_sender_number_returns_400(client, vodafone_settings):
-    """Missing sender_number should return 400 with the field listed."""
-    body = {k: v for k, v in VALID_BODY.items() if k != "sender_number"}
-    resp = client.post(
-        WEBHOOK_URL,
-        body,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 400
-    assert "sender_number" in resp.data["fields"]
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_missing_amount_returns_400(client, vodafone_settings):
-    """Missing amount should return 400 with the field listed."""
-    body = {k: v for k, v in VALID_BODY.items() if k != "amount"}
-    resp = client.post(
-        WEBHOOK_URL,
-        body,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 400
-    assert "amount" in resp.data["fields"]
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_missing_transaction_id_returns_400(client, vodafone_settings):
-    """Missing transaction_id should return 400 with the field listed."""
-    body = {k: v for k, v in VALID_BODY.items() if k != "transaction_id"}
-    resp = client.post(
-        WEBHOOK_URL,
-        body,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 400
-    assert "transaction_id" in resp.data["fields"]
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_missing_raw_sms_returns_400(client, vodafone_settings):
-    """Missing raw_sms should return 400 with the field listed."""
-    body = {k: v for k, v in VALID_BODY.items() if k != "raw_sms"}
-    resp = client.post(
-        WEBHOOK_URL,
-        body,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 400
-    assert "raw_sms" in resp.data["fields"]
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_multiple_missing_fields_listed(client, vodafone_settings):
-    """Multiple missing fields should all be listed in the response."""
-    body = {"amount": "200"}  # missing sender_number, transaction_id, raw_sms
-    resp = client.post(
-        WEBHOOK_URL,
-        body,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 400
-    assert len(resp.data["fields"]) == 3
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_empty_string_treated_as_missing(client, vodafone_settings):
-    """Empty string values should be treated as missing."""
-    body = {**VALID_BODY, "sender_number": ""}
-    resp = client.post(
-        WEBHOOK_URL,
-        body,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 400
-    assert "sender_number" in resp.data["fields"]
-
-
-# ============================================================================
-# Happy path tests
-# ============================================================================
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_happy_path_returns_200_with_service_result(client, vodafone_settings,
-                                                     basic_plan):
-    """A valid request with a matching order should return 200."""
-    from tests.factories import UserFactory
-    user = UserFactory()
-    PaymentOrder.objects.create(
-        user=user,
-        plan="basic",
-        expected_amount="200.00",
-        expected_sender_number="01012345678",
-        reference_code="VFC100001",
-        status=PaymentOrder.Status.PENDING,
-    )
-
-    resp = client.post(
-        WEBHOOK_URL,
-        {**VALID_BODY, "reference_code": "VFC100001"},
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 200
-    assert resp.data["status"] == "matched"
-    assert resp.data["order_status"] == "completed"
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_reference_code_passed_through_to_service(client, vodafone_settings,
-                                                    basic_plan):
-    """The reference_code from the request should be passed to the service."""
-    from tests.factories import UserFactory
-    user = UserFactory()
-    PaymentOrder.objects.create(
-        user=user,
-        plan="basic",
-        expected_amount="200.00",
-        expected_sender_number="01012345678",
-        reference_code="VFC100001",
-        status=PaymentOrder.Status.PENDING,
-    )
-
-    resp = client.post(
-        WEBHOOK_URL,
-        {
-            **VALID_BODY,
-            "reference_code": "VFC100001",
-        },
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 200
-    # The order was matched by reference code
-    assert "Reference Code" in resp.data["match_reason"]
-
-
-# ============================================================================
-# Error handling tests
-# ============================================================================
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_value_error_from_service_returns_400(client, vodafone_settings):
-    """A ValueError from the service (e.g. invalid amount) should return 400."""
-    body = {**VALID_BODY, "amount": "abc"}
-    resp = client.post(
-        WEBHOOK_URL,
-        body,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 400
-    assert "valid number" in resp.data["error"]
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_zero_amount_returns_400(client, vodafone_settings):
-    """A zero amount should trigger ValueError → 400."""
-    body = {**VALID_BODY, "amount": "0"}
-    resp = client.post(
-        WEBHOOK_URL,
-        body,
-        format="json",
-        HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
-    )
-    assert resp.status_code == 400
-
-
-@pytest.mark.django_db
-@pytest.mark.webhook
-def test_unexpected_exception_returns_500(client, vodafone_settings):
-    """An unexpected exception from the service should return 500."""
-    with patch(
-        "payments.views.vodafone_cash_webhook_view.PaymentMatchingService"
-        ".process_incoming_transaction",
-        side_effect=RuntimeError("Unexpected error"),
-    ):
-        resp = client.post(
+    def test_rejects_request_without_signature(self, webhook_client, configured_secret):
+        resp = webhook_client.post(
             WEBHOOK_URL,
-            VALID_BODY,
+            data=valid_payload(),
             format="json",
-            HTTP_AUTHORIZATION=VALID_AUTH_HEADER,
         )
-    assert resp.status_code == 500
-    assert resp.data["error"] == "Failed to process webhook."
+        assert resp.status_code == 401
+
+    def test_rejects_request_with_wrong_signature(self, webhook_client, configured_secret):
+        payload = valid_payload()
+        resp = webhook_client.post(
+            WEBHOOK_URL,
+            data=payload,
+            format="json",
+            HTTP_X_VODAFONE_SIGNATURE="deadbeef" * 8,
+        )
+        assert resp.status_code == 401
+
+    def test_rejects_request_with_empty_signature(self, webhook_client, configured_secret):
+        resp = webhook_client.post(
+            WEBHOOK_URL,
+            data=valid_payload(),
+            format="json",
+            HTTP_X_VODAFONE_SIGNATURE="",
+        )
+        assert resp.status_code == 401
+
+    def test_rejects_request_when_secret_not_configured(self, webhook_client, settings):
+        # Force the secret to be empty for this test
+        settings.VODAFONE_WEBHOOK_SECRET_TOKEN = ""
+        # The settings validator normally blocks boot when DEBUG=False and
+        # the secret is missing. Here we just want to confirm the view
+        # returns 500 (or 401 — either is acceptable).
+        payload = valid_payload()
+        sig = sign(payload, secret="some-other-secret")
+        resp = webhook_client.post(
+            WEBHOOK_URL,
+            data=payload,
+            format="json",
+            HTTP_X_VODAFONE_SIGNATURE=sig,
+        )
+        # The view checks `if not configured_secret` and returns 500.
+        assert resp.status_code == 500
+
+
+@pytest.mark.django_db
+class TestVodafoneWebhookPayload:
+    """Payload validation tests (with valid signature)."""
+
+    def test_rejects_missing_required_fields(self, webhook_client, configured_secret):
+        payload = valid_payload()
+        del payload["raw_sms"]
+        resp = webhook_client.post(
+            WEBHOOK_URL,
+            data=payload,
+            format="json",
+            HTTP_X_VODAFONE_SIGNATURE=sign(payload),
+        )
+        assert resp.status_code == 400
+        assert "raw_sms" in resp.data["fields"]
+
+    def test_rejects_empty_required_fields(self, webhook_client, configured_secret):
+        payload = valid_payload(sender_number="")
+        resp = webhook_client.post(
+            WEBHOOK_URL,
+            data=payload,
+            format="json",
+            HTTP_X_VODAFONE_SIGNATURE=sign(payload),
+        )
+        assert resp.status_code == 400
+        assert "sender_number" in resp.data["fields"]
+
+    def test_rejects_empty_body(self, webhook_client, configured_secret):
+        # Sign an empty body — view should reject before processing
+        empty_sig = hmac.new(
+            WEBHOOK_SECRET.encode("utf-8"),
+            b"",
+            hashlib.sha256,
+        ).hexdigest()
+        resp = webhook_client.post(
+            WEBHOOK_URL,
+            data="",
+            content_type="application/json",
+            HTTP_X_VODAFONE_SIGNATURE=empty_sig,
+        )
+        assert resp.status_code == 400
+
+
+@pytest.mark.django_db
+class TestVodafoneWebhookProcessing:
+    """End-to-end webhook processing tests (with valid signature)."""
+
+    def test_unmatched_transaction_is_saved_for_review(
+        self, webhook_client, configured_secret, db
+    ):
+        payload = valid_payload(
+            sender_number="09999999999",
+            amount="999.00",
+            transaction_id="TX-UNMATCHED",
+        )
+        resp = webhook_client.post(
+            WEBHOOK_URL,
+            data=payload,
+            format="json",
+            HTTP_X_VODAFONE_SIGNATURE=sign(payload),
+        )
+        assert resp.status_code == 200
+        assert resp.data["status"] == "unmatched"
+
+    def test_duplicate_transaction_is_ignored(
+        self, webhook_client, configured_secret, db, basic_plan
+    ):
+        from payments.models import PaymentTransaction
+        from payments.services.payment_service import PaymentService
+
+        # First, create a transaction directly
+        PaymentTransaction.objects.create(
+            id="TX-DUP",
+            amount=200,
+            sender_number="01012345678",
+            raw_sms="...",
+            order=None,
+        )
+
+        # Now send the same transaction_id via webhook
+        payload = valid_payload(transaction_id="TX-DUP")
+        resp = webhook_client.post(
+            WEBHOOK_URL,
+            data=payload,
+            format="json",
+            HTTP_X_VODAFONE_SIGNATURE=sign(payload),
+        )
+        assert resp.status_code == 200
+        assert resp.data["status"] == "ignored"

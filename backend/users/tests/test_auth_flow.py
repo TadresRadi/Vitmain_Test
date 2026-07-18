@@ -19,6 +19,7 @@ def test_login_refresh_logout():
     user = User.objects.create_user(
         email="flow@example.com",
         password="testpass123",
+        is_email_verified=True,
     )
 
     # 1. Login — access token in body, refresh token in cookie
@@ -43,7 +44,6 @@ def test_login_refresh_logout():
     assert "vitmain_refresh" in resp.cookies, "Refresh cookie not set!"
 
     # 2. Refresh — cookie is sent automatically by APIClient
-    # No body needed — the view reads from the cookie
     r = client.post("/api/auth/refresh", {}, format="json")
     assert r.status_code == 200, f"Token refresh failed: {r.data}"
     assert "access" in r.data, "Refresh response missing access token"

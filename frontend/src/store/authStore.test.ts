@@ -99,13 +99,8 @@ describe('authStore', () => {
     })
   })
 
-  it('registers then logs in the new user', async () => {
+  it('registers the new user without auto-login (email verification required)', async () => {
     mocks.registerRequest.mockResolvedValue(undefined)
-    mocks.loginRequest.mockResolvedValue({
-      access_token: 'access-token',
-      refresh_token: 'refresh-token',
-      user,
-    })
 
     await useAuthStore
       .getState()
@@ -128,8 +123,9 @@ describe('authStore', () => {
       dob: '2000-01-01',
       user_type: 'owner',
     })
-    expect(tokenStorage.setAccessToken).toHaveBeenCalledWith('access-token')
-    expect(useAuthStore.getState().isAuthenticated).toBe(true)
+    // Register should NOT auto-login — user must verify email first
+    expect(tokenStorage.setAccessToken).not.toHaveBeenCalled()
+    expect(useAuthStore.getState().isAuthenticated).toBe(false)
   })
 
   it('logs out locally even when the API logout request fails', async () => {

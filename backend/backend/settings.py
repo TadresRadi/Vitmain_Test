@@ -327,11 +327,17 @@ AUTHENTICATION_BACKENDS = [
 
 SITE_ID = 1
 
+# Email verification — required for local signups, bypassed for Google OAuth
+# (Google already verifies emails). Custom logic in RegisterSerializer
+# and MyTokenObtainPairSerializer handles the difference.
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'none'  # Disabled for Google OAuth
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # We handle verification manually
 ACCOUNT_USERNAME_REQUIRED = False
 
 ACCOUNT_UNIQUE_EMAIL = True
+
+# Email verification token TTL (24 hours)
+EMAIL_VERIFICATION_TOKEN_TTL = 3600 * 24  # 24 hours in seconds
 
 # Custom Adapters
 ACCOUNT_ADAPTER = 'users.adapters.CustomAccountAdapter'

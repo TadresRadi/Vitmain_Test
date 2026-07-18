@@ -91,7 +91,7 @@ class SettingsValidator:
         """Validate CSRF protection."""
         if settings.DEBUG:
             cls.WARNINGS.append(
-                "DEBUG=True - CSRF protection is relaxed"
+                "DEBUG=true - CSRF protection is relaxed"
             )
         
         if not settings.CSRF_TRUSTED_ORIGINS:
