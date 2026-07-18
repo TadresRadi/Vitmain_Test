@@ -93,6 +93,8 @@ INSTALLED_APPS = [
     'django_prometheus',
     # Third-party apps
     'rest_framework',
+    'drf_spectacular',
+    'rest_framework_simplejwt',
     'rest_framework_simplejwt',
     'allauth',
     'allauth.account',
@@ -279,11 +281,6 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # APIKeyAuthentication MUST come before JWTAuthentication.
-        # DRF stops at the first AuthenticationFailed, so if JWT runs
-        # first, it raises InvalidToken for API keys and blocks APIKeyAuth.
-        # APIKeyAuth returns None for non-API-key tokens (JWTs), letting
-        # JWTAuthentication handle them.
         'core.auth_backends.APIKeyAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -293,6 +290,37 @@ REST_FRAMEWORK = {
     'DEFAULT_EXCEPTION_HANDLER': 'core.exception_handlers.custom_exception_handler',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+# ============================================================================
+# OpenAPI Schema (drf-spectacular)
+# ============================================================================
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Vitmain Marketing API',
+    'DESCRIPTION': 'AI-powered marketing assistant for small businesses.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    # Authentication schemes
+    'SECURITY': [
+        {'jwtAuth': []},
+        {'apiKeyAuth': []},
+    ],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'jwtAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            },
+            'apiKeyAuth': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'Authorization',
+                'description': 'API key in format: Bearer vitmain_<token>',
+            },
+        }
+    },
 }
 # SimpleJWT Settings
 SIMPLE_JWT = {

@@ -3,13 +3,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from core.utils import log_user_activity
 from users.serializers import CustomUserSerializer, SupervisorCreateSerializer
+from users.permissions import IsSuperAdmin
 
 class SupervisorCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
 
     def post(self, request):
-        if request.user.role != 'super_admin':
-            return Response({"error": "Only super admins can create supervisors."}, status=status.HTTP_403_FORBIDDEN)
         
         serializer = SupervisorCreateSerializer(data=request.data)
         if not serializer.is_valid():

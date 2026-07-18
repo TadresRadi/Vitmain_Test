@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.conf.urls.static import static
 from core.health import HealthCheckView, SecurityStatusView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 import os
 
@@ -34,6 +35,10 @@ urlpatterns = [
     path('api/portfolio/', include('portfolio.urls')),
     path('api/payments/', include('payments.urls', namespace='payments')),
     path('api/', include('core.urls')),
+        # API Documentation
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 if os.environ.get("ENABLE_PROMETHEUS", "false").lower() == "true":

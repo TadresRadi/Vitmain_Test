@@ -100,6 +100,7 @@ class PaymentMatchingService:
                     "+ Exact Amount Match"
                 )
 
+        needs_review = False
         if matched_order is None:
             matched_order = (
                 PaymentOrder.objects
@@ -113,9 +114,8 @@ class PaymentMatchingService:
             )
 
             if matched_order:
-                match_reason = (
-                    "Priority 2 Fallback: Sender Number Match"
-                )
+                match_reason = "Priority 2 Fallback: Sender Number Match (needs review)"
+                needs_review = True
 
         try:
             with transaction.atomic():
@@ -125,6 +125,7 @@ class PaymentMatchingService:
                     amount=numeric_amount,
                     sender_number=sender_number,
                     raw_sms=raw_sms,
+                    needs_review=needs_review,
                 )
         except IntegrityError:
             existing_transaction = (
@@ -157,7 +158,18 @@ class PaymentMatchingService:
 
         matched_order.received_amount += numeric_amount
 
-        if matched_order.received_amount >= matched_order.expected_amount:
+        if needs_review:
+            # Ambiguous match — do NOT auto-complete. Wait for admin review.
+            matched_order.extra_amount = Decimal("0.00")
+            # Keep status as PARTIAL so it's visible but not completed
+            matched_order.status = PaymentOrder.Status.PARTIAL
+            logger.warning(
+                "Payment transaction %s matched to order %s via fallback "
+                "(sender-only) — flagged for manual review",
+                payment_transaction.pk,
+                matched_order.id,
+            )
+        elif matched_order.received_amount >= matched_order.expected_amount:
             matched_order.extra_amount = (
                 matched_order.received_amount
                 - matched_order.expected_amount
@@ -186,4 +198,5 @@ class PaymentMatchingService:
             "expected_amount": float(matched_order.expected_amount),
             "extra_amount": float(matched_order.extra_amount),
             "order_id": str(matched_order.id),
+            "needs_review": needs_review,
         }

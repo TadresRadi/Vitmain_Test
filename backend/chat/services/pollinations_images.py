@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Optional
 from urllib.parse import quote
+from chat.services.image_provider_base import ImageProvider, get_image_registry
 
 import requests
 
@@ -61,3 +62,23 @@ def generate_pollinations_image_bytes(
         payload = {"text": resp.text[:500]}
 
     raise RuntimeError(f"Pollinations image generation failed: {resp.status_code} - {payload}")
+
+class PollinationsImageProvider(ImageProvider):
+    """Pollinations image provider implementation."""
+    name = "pollinations"
+
+    def generate_image_bytes(self, prompt: str, **kwargs) -> bytes:
+        model = kwargs.get("model", "flux")
+        output_ext = kwargs.get("output_ext", "jpg")
+        return generate_pollinations_image_bytes(
+            prompt=prompt,
+            model=model,
+            output_ext=output_ext,
+        )
+
+    def is_configured(self) -> bool:
+        return get_pollinations_token() is not None
+
+
+# Register with the global registry
+get_image_registry().register(PollinationsImageProvider())

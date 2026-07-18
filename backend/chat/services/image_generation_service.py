@@ -87,7 +87,9 @@ def process_image_generation(user, post_gen: AIPostGeneration, base_url: str):
         )
 
         try:
-            image_bytes = generate_pollinations_image_bytes(
+            from chat.services.image_provider_base import get_image_provider
+            provider = get_image_provider()  # Uses IMAGE_PROVIDER env var, default pollinations
+            image_bytes = provider.generate_image_bytes(
                 prompt=prompt,
                 model="flux",
             )

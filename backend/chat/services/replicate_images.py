@@ -68,3 +68,20 @@ def generate_image(prompt: str, model: str, version: Optional[str] = None, **kwa
 
     return str(prediction)
 
+from chat.services.image_provider_base import ImageProvider, get_image_registry
+
+class ReplicateImageProvider(ImageProvider):
+    name = "replicate"
+
+    def generate_image_bytes(self, prompt: str, **kwargs) -> bytes:
+        # Call the existing module-level function
+        from chat.services.replicate_images import generate_replicate_image_bytes
+        return generate_replicate_image_bytes(prompt=prompt, **kwargs)
+
+    def is_configured(self) -> bool:
+        import os
+        return bool(os.environ.get("REPLICATE_API_TOKEN", "").strip())
+
+
+get_image_registry().register(ReplicateImageProvider())
+

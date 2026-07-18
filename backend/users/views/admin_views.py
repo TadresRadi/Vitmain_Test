@@ -18,6 +18,7 @@ from chat.models.generation_history import GeneratedPost, GeneratedImage
 from users.serializers import CustomUserSerializer
 from payments.models import PaymentOrder
 from users.services.jwt_cookie_service import set_jwt_refresh_cookie
+from users.permissions import IsAdminOrSupervisor, IsSuperAdmin
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -79,15 +80,9 @@ class AdminAuthLoginView(APIView):
 
 
 class AdminAuthProfileView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrSupervisor]
     
     def get(self, request):
-        if request.user.role not in ADMIN_ROLES:
-            return Response(
-                {'error': 'Access denied. Admin or supervisor privileges required.'},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         return Response({
             'id': str(request.user.id),
             'email': request.user.email,
@@ -96,11 +91,9 @@ class AdminAuthProfileView(APIView):
         }, status=status.HTTP_200_OK)
 
 class AdminOverviewView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrSupervisor]
 
     def get(self, request):
-        if request.user.role not in ['super_admin', 'supervisor']:
-            return Response({"error": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
             
         total_users = User.objects.filter(role='user').count()
         subscribed_users = Subscription.objects.filter(active=True, plan__slug='pro').count()
@@ -147,11 +140,9 @@ class AdminOverviewView(APIView):
         })
 
 class AdminAuditLogsView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
 
     def get(self, request, user_id):
-        if request.user.role != 'super_admin':
-            return Response({"error": "Only super admins can access activity logs."}, status=status.HTTP_403_FORBIDDEN)
         
         logs = AuditLog.objects.filter(user_id=user_id).order_by('-created_at')
         logs_data = []
@@ -168,17 +159,14 @@ class AdminAuditLogsView(APIView):
 
 
 class AdminUserListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrSupervisor]
 
     def get(self, request):
-        if request.user.role not in ['super_admin', 'supervisor']:
-            return Response({"error": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
-
-        users = User.objects.all().order_by('-date_joined')
-        serializer = CustomUserSerializer(users, many=True)
-        return Response(serializer.data)
+        # Permission already checked by IsAdminOrSupervisor
+        ...
 
     def delete(self, request, user_id):
+        # Only super_admin can delete — check via IsSuperAdmin permission
         if request.user.role != 'super_admin':
             return Response(
                 {"error": "Only super admins can delete users."},
@@ -241,11 +229,9 @@ class AdminUserListView(APIView):
 
 
 class AdminUserRoleView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
 
     def put(self, request, user_id):
-        if request.user.role != 'super_admin':
-            return Response({"error": "Only super admins can update user roles."}, status=status.HTTP_403_FORBIDDEN)
         
         new_role = request.data.get('role')
         if not new_role:
@@ -286,25 +272,9 @@ class AdminUserRoleView(APIView):
             return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminUserDetailView(APIView):
-    """Return a detailed activity profile for a single user.
-
-    Returns:
-        - user: basic info (id, email, full_name, role, date_joined)
-        - total_amount_paid: sum of received_amount on COMPLETED payment orders
-        - total_images_generated: count of GeneratedImage rows for this user
-        - total_posts_generated: count of AIPostGeneration rows * 5
-        - payments: list of all payment orders with sender numbers + status
-        - onboarding: the user's active (or most recent) onboarding answers, or null
-    """
-
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrSupervisor]
 
     def get(self, request, user_id):
-        if request.user.role not in ['super_admin', 'supervisor']:
-            return Response(
-                {"error": "Access denied."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         try:
             user = User.objects.get(id=user_id)

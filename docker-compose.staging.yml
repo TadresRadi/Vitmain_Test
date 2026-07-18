@@ -1,0 +1,44 @@
+# Staging environment — production-like config for testing deployments.
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+#
+# Differences from production:
+# - Runs on different ports (8080 frontend, 8001 backend) to avoid conflicts
+# - Uses separate database volume
+# - DEBUG=false but with relaxed ALLOWED_HOSTS for testing
+# - No HSTS (so you can test without TLS first)
+
+services:
+  db:
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+
+  pgbouncer:
+    container_name: vitmain_pgbouncer_staging
+
+  redis:
+    container_name: vitmain_redis_staging
+    volumes:
+      - redis_data_staging:/data
+
+  backend:
+    container_name: vitmain_backend_staging
+    environment:
+      DB_HOST: pgbouncer
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379/1
+      RUNNING_IN_DOCKER: "1"
+      DEBUG: "false"
+      ALLOWED_HOSTS: "*"
+      SECURE_SSL_REDIRECT: "false"
+      SECURE_HSTS_SECONDS: "0"
+    ports:
+      - "8001:8000"
+
+  frontend:
+    container_name: vitmain_frontend_staging
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data_staging:
+  redis_data_staging:
