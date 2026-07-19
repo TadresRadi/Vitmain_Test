@@ -3,4 +3,9 @@ dist
 coverage
 .git
 .env
-.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# NOTE: .env.production is NOT ignored — it contains safe defaults
+# that Vite reads during `npm run build` in Docker.

@@ -8,8 +8,10 @@ import { tokenStorage } from './token-storage'
 import { csrfTokenService } from './csrf'
 
 function getApiBaseURL(): string {
-  const configuredUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-  return configuredUrl.replace(/\/+$/, '') // Remove trailing slashes only
+  // Default to relative '/api' — works in Docker (Nginx proxies to backend)
+  // and in local dev (Vite proxy or direct backend access).
+  const configuredUrl = import.meta.env.VITE_API_URL || '/api'
+  return configuredUrl.replace(/\/+$/, '')
 }
 
 class SecureAxios {
