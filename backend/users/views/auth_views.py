@@ -84,8 +84,6 @@ class MyTokenObtainPairView(TokenObtainPairView):
             raise
 
 
-
-
 class RegisterView(APIView):
     """
     User registration view.
@@ -319,12 +317,6 @@ class LogoutView(APIView):
         except Exception as e:
             logger.exception("Logout error")
             raise ExternalServiceError("Logout failed")
-        
-from users.services.jwt_cookie_service import (
-    set_jwt_refresh_cookie,
-    clear_jwt_refresh_cookie,
-    get_refresh_token_from_cookie,
-)
 
 
 class CookieTokenRefreshView(SimpleJWTTokenRefreshView):
@@ -363,13 +355,16 @@ class CookieTokenRefreshView(SimpleJWTTokenRefreshView):
             set_jwt_refresh_cookie(response, serializer.validated_data['refresh'])
 
         return response
+
+
 class VerifyEmailView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-
         email = request.data.get("email")
         token = request.data.get("token")
+
+        logger.info("VerifyEmailView POST: email=%s, token=%s", email, token[:20] + "..." if token else None)
 
         if not email or not token:
             return Response(
@@ -380,15 +375,20 @@ class VerifyEmailView(APIView):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
+            logger.warning("VerifyEmailView: User not found for email=%s", email)
             return Response(
                 {"error": "User not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        logger.info("VerifyEmailView: User found, id=%s, is_email_verified=%s", user.id, user.is_email_verified)
+
         success, error = EmailVerificationService.verify_user(
             str(user.id),
             token,
         )
+
+        logger.info("VerifyEmailView: verify_user result: success=%s, error=%s", success, error)
 
         if not success:
             return Response(
@@ -400,6 +400,8 @@ class VerifyEmailView(APIView):
             {"message": "Email verified successfully."},
             status=status.HTTP_200_OK,
         )
+
+
 class ResendVerificationView(APIView):
     """
     Resend email verification link.
