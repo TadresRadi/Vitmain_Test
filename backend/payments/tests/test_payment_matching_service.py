@@ -92,7 +92,7 @@ def test_priority1_reference_code_match_completes_order(basic_plan):
 def test_partial_payment_sets_partial_status(basic_plan):
     """A partial payment (with reference code) should set status to PARTIAL."""
     user = UserFactory()
-    order = _create_order(user, expected_amount=Decimal("200.00"), reference_code="VFC200001")
+    order = _create_order(user, expected_amount=Decimal("200.00"), reference_code="VFC200001", )
 
     result = _process(
         amount="100",

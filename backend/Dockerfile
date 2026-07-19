@@ -47,6 +47,16 @@ RUN pip install --no-cache --no-index --find-links=/wheels -r requirements.txt &
 # Copy application source code
 COPY . .
 
+# Copy project files
+COPY . .
+
+# Build arg for API URL — baked into the build at compile time
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
+
+# Build Vite application
+RUN npm run build
+
 # Create a non-root system user and adjust permissions
 RUN addgroup --system django && \
     adduser --system --ingroup django django-user && \

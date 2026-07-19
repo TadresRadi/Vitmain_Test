@@ -134,3 +134,7 @@ build-package/
 *.tgz
 *.log
 logs/
+
+# Allow frontend .env files with safe defaults (no secrets)
+!frontend/.env.example
+!frontend/.env.production
