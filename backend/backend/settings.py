@@ -358,6 +358,7 @@ SITE_ID = 1
 # and MyTokenObtainPairSerializer handles the difference.
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # We handle verification manually
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_LOGIN_METHODS = {'email': 'email'}
 ACCOUNT_UNIQUE_EMAIL = True
 
 # Email verification token TTL (24 hours)
