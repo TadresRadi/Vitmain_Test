@@ -356,10 +356,8 @@ SITE_ID = 1
 # Email verification — required for local signups, bypassed for Google OAuth
 # (Google already verifies emails). Custom logic in RegisterSerializer
 # and MyTokenObtainPairSerializer handles the difference.
-ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # We handle verification manually
-ACCOUNT_USERNAME_REQUIRED = False
-
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_UNIQUE_EMAIL = True
 
 # Email verification token TTL (24 hours)
