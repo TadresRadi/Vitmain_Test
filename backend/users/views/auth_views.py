@@ -364,40 +364,42 @@ class CookieTokenRefreshView(SimpleJWTTokenRefreshView):
 
         return response
 class VerifyEmailView(APIView):
-    """
-    Verify email address with token from verification email.
-
-    POST /api/auth/verify-email
-    {
-        "user_id": "uuid",
-        "token": "verification_token"
-    }
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        user_id = request.data.get('user_id')
-        token = request.data.get('token')
 
-        if not user_id or not token:
+        email = request.data.get("email")
+        token = request.data.get("token")
+
+        if not email or not token:
             return Response(
-                {'error': 'user_id and token are required.'},
+                {"error": "email and token are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        success, error = EmailVerificationService.verify_user(user_id, token)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        success, error = EmailVerificationService.verify_user(
+            str(user.id),
+            token,
+        )
+
         if not success:
             return Response(
-                {'error': error or 'Verification failed.'},
+                {"error": error},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         return Response(
-            {'message': 'Email verified successfully. You can now log in.'},
+            {"message": "Email verified successfully."},
             status=status.HTTP_200_OK,
         )
-
-
 class ResendVerificationView(APIView):
     """
     Resend email verification link.

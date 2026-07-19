@@ -11,6 +11,7 @@ import type { UsageResponse } from '@/types/api'
 import api from '@/lib/axios'
 import { getPremiumPosts } from '@/services/chatService'
 
+const VerifyEmail = lazy(() => import("@/pages/VerifyEmail"));
 const Landing = lazy(() => import('@/pages/Landing'))
 const About = lazy(() => import('@/pages/About'))
 const Work = lazy(() => import('@/pages/Work'))
@@ -94,6 +95,7 @@ function AppContent() {
             <Route path="/work" element={<Work />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-email"element={<VerifyEmail />}/>
             <Route
               path="/new-onboarding"
               element={

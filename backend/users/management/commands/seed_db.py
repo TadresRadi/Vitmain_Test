@@ -3,11 +3,13 @@ import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from subscriptions.models import Plan
+import secrets
 
 User = get_user_model()
 
 class Command(BaseCommand):
     help = 'Seeds initial plans, super admin user, and basic configuration data'
+    
 
     def handle(self, *args, **options):
         self.stdout.write('Seeding initial data...')
@@ -47,11 +49,12 @@ class Command(BaseCommand):
 
         # 2. Seed Super Admin User
         admin_email = os.environ.get('SEED_ADMIN_EMAIL', 'admin@vitmain.com')
-        admin_password = os.environ.get('SEED_ADMIN_PASSWORD')
+        admin_password = os.environ.get(
+    "SEED_ADMIN_PASSWORD",
+    secrets.token_urlsafe(16)
+)
         
         if not User.objects.filter(email=admin_email).exists():
-            if not admin_password:
-                raise RuntimeError("SEED_ADMIN_PASSWORD env var is required to create the initial super admin.")
 
             admin_user = User.objects.create_superuser(
                 email=admin_email,
@@ -61,8 +64,11 @@ class Command(BaseCommand):
                 user_type='business_owner',
                 role='super_admin'
             )
+            admin_user.is_email_verified = True
+            admin_user.save(update_fields=["is_email_verified"])
             self.stdout.write(f"Super Admin user created successfully: {admin_email}")
         else:
             self.stdout.write(f"Super Admin user '{admin_email}' already exists.")
 
         self.stdout.write(self.style.SUCCESS('Successfully seeded all initial database resources.'))
+

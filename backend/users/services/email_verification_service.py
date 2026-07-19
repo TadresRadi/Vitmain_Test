@@ -128,11 +128,21 @@ class EmailVerificationService:
             return False
 
         email_service = get_email_service()
+        verification_url = (
+            f"{frontend_url}/verify-email"
+            f"?email={user.email}"
+            f"&token={token}")
+        if settings.DEBUG:
+            logger.info("=" * 80)
+            logger.info("EMAIL VERIFICATION LINK")
+            logger.info(verification_url)
+            logger.info("=" * 80)
         return email_service.send_email_verification(
             user_email=user.email,
             verification_token=token,
             frontend_url=frontend_url,
         )
+    
 
 
 # Singleton

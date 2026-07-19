@@ -18,8 +18,10 @@ class SubscribeView(APIView):
                 {"error": "plan_slug is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
+        print("Requested slug:", plan_slug)
+        print("Plans in DB:", list(Plan.objects.values("name", "slug")))
         try:
+
             plan = Plan.objects.get(slug=plan_slug)
         except Plan.DoesNotExist:
             return Response(

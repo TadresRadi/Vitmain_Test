@@ -108,6 +108,11 @@ class EmailService:
             verify_link = (
                 f"{frontend_url}/verify-email?token={verification_token}&email={user_email}"
             )
+            if settings.DEBUG:
+                logger.info("=" * 80)
+                logger.info("EMAIL VERIFICATION LINK")
+                logger.info(verify_link)
+                logger.info("=" * 80)
             
             # Prepare context
             context = {
