@@ -153,9 +153,9 @@ class EmailService:
                 logger.info(f"Email verification sent to: {user_email}")
             
             return success
-        
-        except Exception :
-            logger.exception(f"Error sending email verification")
+
+        except Exception as e:
+            logger.error("Error sending email verification: %s", str(e), exc_info=True)
             return False
     
     @staticmethod

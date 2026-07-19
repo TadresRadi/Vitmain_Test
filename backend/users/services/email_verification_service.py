@@ -132,44 +132,41 @@ class EmailVerificationService:
 
         logger.info("Verification token stored for user: %s", user.email)
 
-        # Build the verification URL (for DEBUG logging and email link)
+        # Build the verification URL
         verification_url = (
             f"{frontend_url}/verify-email"
             f"?email={user.email}"
             f"&token={token}"
         )
 
-        # In DEBUG mode, log the full verification link so developers
-        # can click it without a real email server.
-        if settings.DEBUG:
-            logger.info("=" * 80)
-            logger.info("EMAIL VERIFICATION LINK (DEBUG MODE)")
-            logger.info("User: %s", user.email)
-            logger.info("Link: %s", verification_url)
-            logger.info("=" * 80)
+        # ALWAYS log the verification link (visible in docker-compose logs backend).
+        # This is internal logging, not exposed to users.
+        logger.info("=" * 80)
+        logger.info("EMAIL VERIFICATION LINK")
+        logger.info("User: %s", user.email)
+        logger.info("Link: %s", verification_url)
+        logger.info("=" * 80)
 
+        # Try to send the actual email
         email_service = get_email_service()
-        sent = email_service.send_email_verification(
-            user_email=user.email,
-            verification_token=token,
-            frontend_url=frontend_url,
-        )
+        try:
+            sent = email_service.send_email_verification(
+                user_email=user.email,
+                verification_token=token,
+                frontend_url=frontend_url,
+            )
+        except Exception as e:
+            logger.error("Error calling email service: %s", str(e))
+            sent = False
 
         if sent:
             logger.info("Verification email sent successfully to: %s", user.email)
         else:
-            logger.warning("Verification email could not be sent to: %s (email service returned False)", user.email)
+            logger.warning(
+                "Verification email could not be sent to: %s "
+                "(email service unavailable or template error). "
+                "Use the VERIFICATION LINK above to verify manually.",
+                user.email,
+            )
 
         return sent
-    
-
-
-# Singleton
-_email_verification_service = None
-
-
-def get_email_verification_service() -> EmailVerificationService:
-    global _email_verification_service
-    if _email_verification_service is None:
-        _email_verification_service = EmailVerificationService()
-    return _email_verification_service
