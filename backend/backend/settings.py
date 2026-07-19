@@ -122,11 +122,11 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    # NEW: Security middleware (uncomment in security hardening phase)
-    # 'core.https_middleware.HTTPSEnforcerMiddleware',
-    # 'core.https_middleware.SecureProxyHeadersMiddleware',
-    # 'core.security_headers.SecurityHeadersMiddleware',
-    # 'core.security_headers.CSPHeaderMiddleware',
+    # Security middleware — enabled in Phase 4 hardening
+    'core.https_middleware.HTTPSEnforcerMiddleware',
+    'core.https_middleware.SecureProxyHeadersMiddleware',
+    'core.security_headers.SecurityHeadersMiddleware',
+    'core.security_headers.CSPHeaderMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
