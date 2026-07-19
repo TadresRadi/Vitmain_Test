@@ -90,11 +90,15 @@ def test_priority1_reference_code_match_completes_order(basic_plan):
 @pytest.mark.django_db
 @pytest.mark.money
 def test_partial_payment_sets_partial_status(basic_plan):
-    """A payment less than expected_amount should set status to PARTIAL."""
+    """A partial payment (with reference code) should set status to PARTIAL."""
     user = UserFactory()
-    order = _create_order(user, expected_amount=Decimal("200.00"))
+    order = _create_order(user, expected_amount=Decimal("200.00"), reference_code="VFC200001")
 
-    result = _process(amount="100", transaction_id="TX001")
+    result = _process(
+        amount="100",
+        transaction_id="TX001",
+        reference_code="VFC200001",
+    )
 
     assert result["status"] == "matched"
     assert result["order_status"] == "partial"
@@ -106,21 +110,20 @@ def test_partial_payment_sets_partial_status(basic_plan):
     # No subscription should be created for partial payments
     assert not Subscription.objects.filter(user=user).exists()
 
-
 @pytest.mark.django_db
 @pytest.mark.money
 def test_two_partial_payments_complete_order(basic_plan):
-    """Two partial payments that sum to expected_amount should complete the order."""
+    """Two partial payments (with reference code) that sum to expected_amount should complete."""
     user = UserFactory()
-    order = _create_order(user, expected_amount=Decimal("200.00"))
+    order = _create_order(user, expected_amount=Decimal("200.00"), reference_code="VFC200002")
 
     # First payment — partial
-    _process(amount="120", transaction_id="TX001")
+    _process(amount="120", transaction_id="TX001", reference_code="VFC200002")
     order.refresh_from_db()
     assert order.status == "partial"
 
     # Second payment — completes the order
-    result = _process(amount="80", transaction_id="TX002")
+    result = _process(amount="80", transaction_id="TX002", reference_code="VFC200002")
     assert result["status"] == "matched"
     assert result["order_status"] == "completed"
 
@@ -139,11 +142,15 @@ def test_two_partial_payments_complete_order(basic_plan):
 @pytest.mark.django_db
 @pytest.mark.money
 def test_overpayment_records_extra_amount(basic_plan):
-    """An overpayment should complete the order and record the extra amount."""
+    """An overpayment (with reference code) should complete the order and record extra."""
     user = UserFactory()
-    order = _create_order(user, expected_amount=Decimal("200.00"))
+    order = _create_order(user, expected_amount=Decimal("200.00"), reference_code="VFC200003")
 
-    result = _process(amount="250", transaction_id="TX001")
+    result = _process(
+        amount="250",
+        transaction_id="TX001",
+        reference_code="VFC200003",
+    )
 
     assert result["status"] == "matched"
     assert result["order_status"] == "completed"
