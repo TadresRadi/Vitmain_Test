@@ -162,11 +162,13 @@ class AdminUserListView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminOrSupervisor]
 
     def get(self, request):
-        # Permission already checked by IsAdminOrSupervisor
-        ...
+        users = User.objects.all().order_by('-date_joined')
+        serializer = CustomUserSerializer(users, many=True)
+        return Response(serializer.data)
 
     def delete(self, request, user_id):
-        # Only super_admin can delete — check via IsSuperAdmin permission
+        # Only super_admin can delete — IsAdminOrSupervisor guards GET,
+        # but DELETE requires super_admin specifically.
         if request.user.role != 'super_admin':
             return Response(
                 {"error": "Only super admins can delete users."},
@@ -226,7 +228,6 @@ class AdminUserListView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
 
 class AdminUserRoleView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]

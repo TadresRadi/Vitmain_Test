@@ -18,7 +18,7 @@ class RateLimitConfig:
     # Format: 'requests/period' (e.g., '10/m' = 10 requests per minute)
     ENDPOINTS = {
         'auth_login': '5/m',           # 5 attempts per minute
-        'auth_register': '3/h',         # 3 registrations per hour
+        'auth_register': '3/h',         # nosec B105 - rate-limit string (3/hour), not a credential
         'google_callback': '10/m',      # 10 OAuth attempts per minute
         'password_reset': '3/h',        # 3 reset requests per hour
         'api_default': '100/h',         # 100 requests per hour

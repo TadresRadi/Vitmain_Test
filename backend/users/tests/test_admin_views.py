@@ -13,6 +13,11 @@ from rest_framework.test import APIClient
 
 User = get_user_model()
 
+# Shared dummy passwords for admin-view tests. Not real credentials.
+ADMIN_PASSWORD = "adminpass123"  # nosec B105 - test fixture
+SUPERVISOR_PASSWORD = "superpass123"  # nosec B105 - test fixture
+USER_PASSWORD = "userpass123"  # nosec B105 - test fixture
+
 
 # ============================================================================
 # Fixtures
@@ -22,7 +27,7 @@ User = get_user_model()
 def super_admin(db):
     return User.objects.create_user(
         email="admin@example.com",
-        password="adminpass123",
+        password=ADMIN_PASSWORD,
         role="super_admin",
         is_staff=True,
         is_superuser=True,
@@ -34,7 +39,7 @@ def super_admin(db):
 def supervisor(db):
     return User.objects.create_user(
         email="supervisor@example.com",
-        password="superpass123",
+        password=SUPERVISOR_PASSWORD,
         role="supervisor",
         is_staff=True,
         is_email_verified=True,
@@ -45,7 +50,7 @@ def supervisor(db):
 def regular_user(db):
     return User.objects.create_user(
         email="user@example.com",
-        password="userpass123",
+        password=USER_PASSWORD,
         role="user",
         is_email_verified=True,
     )
@@ -84,7 +89,7 @@ class TestAdminAuthLogin:
     def test_admin_can_login_with_correct_credentials(self):
         User.objects.create_user(
             email="admin@example.com",
-            password="adminpass123",
+            password=ADMIN_PASSWORD,
             role="super_admin",
             is_staff=True,
             is_superuser=True,
@@ -93,7 +98,7 @@ class TestAdminAuthLogin:
         client = APIClient()
         resp = client.post(
             "/api/admin/auth/login",
-            {"email": "admin@example.com", "password": "adminpass123"},
+            {"email": "admin@example.com", "password": ADMIN_PASSWORD},
             format="json",
         )
         assert resp.status_code == 200
@@ -103,14 +108,14 @@ class TestAdminAuthLogin:
     def test_regular_user_cannot_login_via_admin_portal(self):
         User.objects.create_user(
             email="user@example.com",
-            password="userpass123",
+            password=USER_PASSWORD,
             role="user",
             is_email_verified=True,
         )
         client = APIClient()
         resp = client.post(
             "/api/admin/auth/login",
-            {"email": "user@example.com", "password": "userpass123"},
+            {"email": "user@example.com", "password": USER_PASSWORD},
             format="json",
         )
         assert resp.status_code == 403
@@ -118,7 +123,7 @@ class TestAdminAuthLogin:
     def test_login_with_wrong_password_returns_401(self):
         User.objects.create_user(
             email="admin@example.com",
-            password="adminpass123",
+            password=ADMIN_PASSWORD,
             role="super_admin",
             is_staff=True,
             is_superuser=True,
@@ -144,7 +149,7 @@ class TestAdminAuthLogin:
     def test_supervisor_can_login_via_admin_portal(self):
         User.objects.create_user(
             email="super@example.com",
-            password="superpass123",
+            password=SUPERVISOR_PASSWORD,
             role="supervisor",
             is_staff=True,
             is_email_verified=True,
@@ -152,7 +157,7 @@ class TestAdminAuthLogin:
         client = APIClient()
         resp = client.post(
             "/api/admin/auth/login",
-            {"email": "super@example.com", "password": "superpass123"},
+            {"email": "super@example.com", "password": SUPERVISOR_PASSWORD},
             format="json",
         )
         assert resp.status_code == 200
@@ -232,7 +237,7 @@ class TestAdminUserList:
     def test_admin_cannot_delete_super_admin(self, admin_client, db):
         other_admin = User.objects.create_user(
             email="other-admin@example.com",
-            password="pass123",
+            password=ADMIN_PASSWORD,
             role="super_admin",
             is_staff=True,
             is_superuser=True,
@@ -291,7 +296,7 @@ class TestAdminUserRole:
         """A super admin's role cannot be changed by another super admin."""
         other_admin = User.objects.create_user(
             email="other-admin@example.com",
-            password="pass123",
+            password=ADMIN_PASSWORD,
             role="super_admin",
             is_staff=True,
             is_superuser=True,

@@ -156,30 +156,29 @@ class PaymentMatchingService:
                 "transaction_id": payment_transaction.pk,
             }
 
-        matched_order.received_amount += numeric_amount
-
         if needs_review:
-            # Ambiguous match — do NOT auto-complete. Wait for admin review.
+    # لا تضيف المبلغ أثناء انتظار المراجعة
             matched_order.extra_amount = Decimal("0.00")
-            # Keep status as PARTIAL so it's visible but not completed
             matched_order.status = PaymentOrder.Status.PARTIAL
+
             logger.warning(
                 "Payment transaction %s matched to order %s via fallback "
                 "(sender-only) — flagged for manual review",
                 payment_transaction.pk,
-                matched_order.id,
-            )
-        elif matched_order.received_amount >= matched_order.expected_amount:
-            matched_order.extra_amount = (
-                matched_order.received_amount
-                - matched_order.expected_amount
-            )
-            matched_order.status = PaymentOrder.Status.COMPLETED
-
-            PaymentService.activate_subscription(matched_order)
+                matched_order.id,)
         else:
-            matched_order.extra_amount = Decimal("0.00")
-            matched_order.status = PaymentOrder.Status.PARTIAL
+            matched_order.received_amount += numeric_amount
+
+            if matched_order.received_amount >= matched_order.expected_amount:
+                matched_order.extra_amount = (
+                matched_order.received_amount
+                - matched_order.expected_amount)
+                matched_order.status = PaymentOrder.Status.COMPLETED
+                PaymentService.activate_subscription(matched_order)
+            else:
+                matched_order.extra_amount = Decimal("0.00")
+                matched_order.status = PaymentOrder.Status.PARTIAL
+
 
         matched_order.save(
             update_fields=[

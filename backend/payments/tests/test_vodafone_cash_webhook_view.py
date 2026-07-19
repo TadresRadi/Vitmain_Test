@@ -12,7 +12,7 @@ import pytest
 from django.test import override_settings
 from rest_framework.test import APIClient
 
-WEBHOOK_SECRET = "test-webhook-secret-do-not-use-in-prod"
+WEBHOOK_SECRET = "test-webhook-secret-do-not-use-in-prod"  # nosec B105 - test fixture secret
 WEBHOOK_URL = "/api/payments/vodafone-cash/webhook/"
 
 
@@ -77,12 +77,12 @@ class TestVodafoneWebhookAuth:
 
     def test_rejects_request_when_secret_not_configured(self, webhook_client, settings):
         # Force the secret to be empty for this test
-        settings.VODAFONE_WEBHOOK_SECRET_TOKEN = ""
+        settings.VODAFONE_WEBHOOK_SECRET_TOKEN = ""  # nosec B105 - test override
         # The settings validator normally blocks boot when DEBUG=False and
         # the secret is missing. Here we just want to confirm the view
         # returns 500 (or 401 — either is acceptable).
         payload = valid_payload()
-        sig = sign(payload, secret="some-other-secret")
+        sig = sign(payload, secret="some-other-secret")  # nosec B105 - test signing secret
         resp = webhook_client.post(
             WEBHOOK_URL,
             data=payload,

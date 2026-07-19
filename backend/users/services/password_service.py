@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 PASSWORD_RESET_TOKEN_LENGTH = 32
 PASSWORD_RESET_TTL = 3600  # 1 hour
-PASSWORD_RESET_PREFIX = "password_reset:"
-PASSWORD_CHANGE_PREFIX = "password_change:"
+PASSWORD_RESET_PREFIX = "password_reset:"  # nosec B105 - cache key prefix, not a credential
+PASSWORD_CHANGE_PREFIX = "password_change:"  # nosec B105 - cache key prefix, not a credential
 
 
 class PasswordResetToken:

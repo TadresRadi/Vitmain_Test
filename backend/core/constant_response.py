@@ -18,7 +18,7 @@ class ConstantResponse:
     GENERIC_ERROR = "Operation failed. Please try again."
     
     # For password reset - same message whether user exists or not
-    PASSWORD_RESET_MESSAGE = (
+    PASSWORD_RESET_MESSAGE = (  # nosec B105 - user-facing message, not a credential
         "If an account exists with this email, "
         "a password reset link has been sent to it."
     )

@@ -8,13 +8,16 @@ from users.permissions import IsAdminOrSupervisor, IsSuperAdmin
 
 User = get_user_model()
 
+# Shared dummy password for permission tests. Not a real credential.
+TEST_PASSWORD = "pass123"  # nosec B105 - test fixture, not a real credential
+
 
 @pytest.mark.django_db
 class TestIsAdminOrSupervisor:
     def test_super_admin_has_permission(self):
         user = User.objects.create_user(
             email="admin@example.com",
-            password="pass123",
+            password=TEST_PASSWORD,
             role="super_admin",
             is_email_verified=True,
         )
@@ -27,7 +30,7 @@ class TestIsAdminOrSupervisor:
     def test_supervisor_has_permission(self):
         user = User.objects.create_user(
             email="supervisor@example.com",
-            password="pass123",
+            password=TEST_PASSWORD,
             role="supervisor",
             is_email_verified=True,
         )
@@ -40,7 +43,7 @@ class TestIsAdminOrSupervisor:
     def test_regular_user_denied(self):
         user = User.objects.create_user(
             email="user@example.com",
-            password="pass123",
+            password=TEST_PASSWORD,
             role="user",
             is_email_verified=True,
         )
@@ -64,7 +67,7 @@ class TestIsSuperAdmin:
     def test_super_admin_has_permission(self):
         user = User.objects.create_user(
             email="admin@example.com",
-            password="pass123",
+            password=TEST_PASSWORD,
             role="super_admin",
             is_email_verified=True,
         )
@@ -77,7 +80,7 @@ class TestIsSuperAdmin:
     def test_supervisor_denied(self):
         user = User.objects.create_user(
             email="supervisor@example.com",
-            password="pass123",
+            password=TEST_PASSWORD,
             role="supervisor",
             is_email_verified=True,
         )
@@ -90,7 +93,7 @@ class TestIsSuperAdmin:
     def test_regular_user_denied(self):
         user = User.objects.create_user(
             email="user@example.com",
-            password="pass123",
+            password=TEST_PASSWORD,
             role="user",
             is_email_verified=True,
         )

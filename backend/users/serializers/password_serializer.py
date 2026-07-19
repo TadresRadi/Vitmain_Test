@@ -52,12 +52,12 @@ class PasswordChangeSerializer(serializers.Serializer):
         """Validate password change data."""
         if data['new_password'] != data['confirm_password']:
             raise serializers.ValidationError(
-                {'confirm_password': 'Passwords do not match'}
+                {'confirm_password': 'Passwords do not match'}  # nosec B105 - user-facing message
             )
-        
+
         if data['old_password'] == data['new_password']:
             raise serializers.ValidationError(
-                {'new_password': 'New password must be different from current password'}
+                {'new_password': 'New password must be different from current password'}  # nosec B105 - user-facing message
             )
         
         return data
@@ -119,7 +119,7 @@ class PasswordResetSerializer(serializers.Serializer):
         """Validate reset data."""
         if data['new_password'] != data['confirm_password']:
             raise serializers.ValidationError(
-                {'confirm_password': 'Passwords do not match'}
+                {'confirm_password': 'Passwords do not match'}  # nosec B105 - user-facing message
             )
         return data
 

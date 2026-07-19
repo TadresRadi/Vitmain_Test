@@ -6,7 +6,5 @@ exclude_dirs:
 
 skips:
   - B324
-  - B105
-  - B106
   - B110
   - B311

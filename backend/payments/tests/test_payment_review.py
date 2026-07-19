@@ -11,12 +11,16 @@ from payments.services.payment_matching_service import PaymentMatchingService
 
 User = get_user_model()
 
+# Shared dummy passwords for payment-review tests. Not real credentials.
+ADMIN_PASSWORD = "adminpass123"  # nosec B105 - test fixture
+TEST_PASSWORD = "pass123"  # nosec B105 - test fixture
+
 
 @pytest.fixture
 def super_admin(db):
     return User.objects.create_user(
         email="admin@example.com",
-        password="adminpass123",
+        password=ADMIN_PASSWORD,
         role="super_admin",
         is_staff=True,
         is_superuser=True,
@@ -36,7 +40,7 @@ def pending_order(basic_plan, db):
     from payments.services.payment_service import PaymentService
     user = User.objects.create_user(
         email="buyer@example.com",
-        password="pass123",
+        password=TEST_PASSWORD,
         is_email_verified=True,
     )
     return PaymentOrder.objects.create(
@@ -48,6 +52,21 @@ def pending_order(basic_plan, db):
         status=PaymentOrder.Status.PENDING,
     )
 
+def make_order(amount, sender, ref_code):
+    user = User.objects.create_user(
+        email=f"buyer-{ref_code}@example.com",
+        password=TEST_PASSWORD,
+        is_email_verified=True,
+    )
+
+    return PaymentOrder.objects.create(
+        user=user,
+        plan="basic",
+        expected_amount=Decimal(amount),
+        expected_sender_number=sender,
+        reference_code=ref_code,
+        status=PaymentOrder.Status.PENDING,
+    )
 
 @pytest.mark.django_db
 class TestPaymentReviewFlagging:
@@ -70,7 +89,7 @@ class TestPaymentReviewFlagging:
         """Priority 2 fallback (sender only, no reference code) should flag for review."""
         result = PaymentMatchingService.process_incoming_transaction(
             sender_number="01012345678",
-            amount="200.00",
+            amount="150.00",
             transaction_id="TX-SENDER-001",
             raw_sms="...",
             reference_code=None,
@@ -105,7 +124,7 @@ class TestAdminReviewEndpoints:
         # Create a transaction that needs review
         PaymentMatchingService.process_incoming_transaction(
             sender_number="01012345678",
-            amount="200.00",
+            amount="150.00",
             transaction_id="TX-REVIEW-001",
             raw_sms="...",
             reference_code=None,
@@ -119,7 +138,7 @@ class TestAdminReviewEndpoints:
     def test_review_queue_excludes_approved(self, admin_client, pending_order):
         PaymentMatchingService.process_incoming_transaction(
             sender_number="01012345678",
-            amount="200.00",
+            amount="150.00",
             transaction_id="TX-REVIEW-002",
             raw_sms="...",
             reference_code=None,
@@ -136,10 +155,12 @@ class TestAdminReviewEndpoints:
         resp = admin_client.get("/api/payments/admin/review/")
         assert resp.data["count"] == 0
 
-    def test_approve_completes_order(self, admin_client, pending_order):
+    def test_approve_applies_reviewed_payment(self, admin_client):
+        order = make_order("200.00", "01012345678", "VIT-APPROVE-001")
+
         PaymentMatchingService.process_incoming_transaction(
             sender_number="01012345678",
-            amount="200.00",
+            amount="150.00",      # Amount مختلف -> Sender Only Fallback
             transaction_id="TX-APPROVE-001",
             raw_sms="...",
             reference_code=None,
@@ -150,18 +171,31 @@ class TestAdminReviewEndpoints:
             {"action": "approve", "notes": "Verified by phone"},
             format="json",
         )
+
+        order.refresh_from_db()
+
+        assert order.received_amount == Decimal("150.00")
+        assert order.status == PaymentOrder.Status.PARTIAL
+
         assert resp.status_code == 200
 
-        pending_order.refresh_from_db()
-        assert pending_order.status == PaymentOrder.Status.COMPLETED
+        order.refresh_from_db()
+
+        assert order.received_amount == Decimal("150.00")
+        assert order.status == PaymentOrder.Status.PARTIAL
 
         tx = PaymentTransaction.objects.get(id="TX-APPROVE-001")
         assert tx.review_status == PaymentTransaction.ReviewStatus.APPROVED
 
-    def test_reject_does_not_complete_order(self, admin_client, pending_order):
+        tx = PaymentTransaction.objects.get(id="TX-APPROVE-001")
+        assert tx.review_status == PaymentTransaction.ReviewStatus.APPROVED
+
+    def test_reject_does_not_complete_order(self, admin_client):
+        order = make_order("200.00", "01012345678", "VIT-REJECT-001")
+
         PaymentMatchingService.process_incoming_transaction(
             sender_number="01012345678",
-            amount="200.00",
+            amount="150.00",
             transaction_id="TX-REJECT-001",
             raw_sms="...",
             reference_code=None,
@@ -172,10 +206,13 @@ class TestAdminReviewEndpoints:
             {"action": "reject", "notes": "Wrong sender"},
             format="json",
         )
+
         assert resp.status_code == 200
 
-        pending_order.refresh_from_db()
-        assert pending_order.status != PaymentOrder.Status.COMPLETED
+        order.refresh_from_db()
+
+        assert order.received_amount == Decimal("0.00")
+        assert order.status == PaymentOrder.Status.PARTIAL
 
         tx = PaymentTransaction.objects.get(id="TX-REJECT-001")
         assert tx.review_status == PaymentTransaction.ReviewStatus.REJECTED
@@ -183,7 +220,7 @@ class TestAdminReviewEndpoints:
     def test_invalid_action_returns_400(self, admin_client, pending_order):
         PaymentMatchingService.process_incoming_transaction(
             sender_number="01012345678",
-            amount="200.00",
+            amount="150.00",
             transaction_id="TX-INVALID-001",
             raw_sms="...",
             reference_code=None,
@@ -199,7 +236,7 @@ class TestAdminReviewEndpoints:
     def test_non_admin_cannot_access_review_queue(self, basic_plan, db):
         user = User.objects.create_user(
             email="regular@example.com",
-            password="pass123",
+            password=TEST_PASSWORD,
             role="user",
             is_email_verified=True,
         )

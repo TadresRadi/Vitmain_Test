@@ -12,9 +12,6 @@ services:
     volumes:
       - postgres_data_staging:/var/lib/postgresql/data
 
-  pgbouncer:
-    container_name: vitmain_pgbouncer_staging
-
   redis:
     container_name: vitmain_redis_staging
     volumes:
@@ -23,7 +20,7 @@ services:
   backend:
     container_name: vitmain_backend_staging
     environment:
-      DB_HOST: pgbouncer
+      DB_HOST: db
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379/1
       RUNNING_IN_DOCKER: "1"

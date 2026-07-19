@@ -5,13 +5,16 @@ from rest_framework.test import APIClient
 
 User = get_user_model()
 
+# Shared dummy password for API-key auth tests. Not a real credential.
+TEST_PASSWORD = "pw12345"  # nosec B105 - test fixture, not a real credential
+
 
 @pytest.mark.django_db
 def test_api_key_auth_header():
     """A valid API key in the Authorization header should authenticate the request."""
     user = User.objects.create_user(
         email="akey@example.com",
-        password="pw12345",
+        password=TEST_PASSWORD,
     )
     svc = get_api_key_service()
     raw_key, _api_key = svc.create_api_key(user=user, name="test")

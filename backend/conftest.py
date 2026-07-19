@@ -106,5 +106,5 @@ def vodafone_settings(settings):
     requiring real environment variables.
     """
     settings.VODAFONE_RECEIVER_NUMBER = "01098765432"
-    settings.VODAFONE_WEBHOOK_SECRET_TOKEN = "test-secret-token"
+    settings.VODAFONE_WEBHOOK_SECRET_TOKEN = "test-secret-token"  # nosec B105 - test fixture token, not a real secret
     return settings

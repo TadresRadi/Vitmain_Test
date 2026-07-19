@@ -5,19 +5,22 @@ from users.services.email_verification_service import EmailVerificationService
 
 User = get_user_model()
 
+# Shared dummy password for email-verification tests. Not a real credential.
+TEST_PASSWORD = "testpass123"  # nosec B105 - test fixture, not a real credential
+
 
 @pytest.mark.django_db
 def test_unverified_user_cannot_login():
     """A local user with is_email_verified=False cannot log in."""
     User.objects.create_user(
         email="unverified@example.com",
-        password="testpass123",
+        password=TEST_PASSWORD,
         is_email_verified=False,
     )
     client = APIClient()
     resp = client.post(
         "/api/auth/login",
-        {"email": "unverified@example.com", "password": "testpass123"},
+        {"email": "unverified@example.com", "password": TEST_PASSWORD},
         format="json",
     )
     assert resp.status_code == 400
@@ -29,13 +32,13 @@ def test_verified_user_can_login():
     """A local user with is_email_verified=True can log in."""
     User.objects.create_user(
         email="verified@example.com",
-        password="testpass123",
+        password=TEST_PASSWORD,
         is_email_verified=True,
     )
     client = APIClient()
     resp = client.post(
         "/api/auth/login",
-        {"email": "verified@example.com", "password": "testpass123"},
+        {"email": "verified@example.com", "password": TEST_PASSWORD},
         format="json",
     )
     assert resp.status_code == 200
@@ -63,7 +66,7 @@ def test_verify_email_endpoint_with_valid_token():
     """POST /api/auth/verify-email with a valid token marks user as verified."""
     user = User.objects.create_user(
         email="verifyme@example.com",
-        password="testpass123",
+        password=TEST_PASSWORD,
         is_email_verified=False,
     )
     token = EmailVerificationService.generate_token()
@@ -85,7 +88,7 @@ def test_verify_email_endpoint_with_invalid_token():
     """POST /api/auth/verify-email with a bad token returns 400."""
     user = User.objects.create_user(
         email="verifyme@example.com",
-        password="testpass123",
+        password=TEST_PASSWORD,
         is_email_verified=False,
     )
     EmailVerificationService.store_token(user, "real-token-but-not-this")
@@ -117,7 +120,7 @@ def test_resend_verification_does_not_reveal_user_existence():
     # Existing unverified email
     User.objects.create_user(
         email="real@example.com",
-        password="testpass123",
+        password=TEST_PASSWORD,
         is_email_verified=False,
     )
     resp2 = client.post(

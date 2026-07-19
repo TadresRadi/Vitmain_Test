@@ -91,17 +91,13 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
     'django_prometheus',
-    # Third-party apps
     'rest_framework',
     'drf_spectacular',
-    'rest_framework_simplejwt',
     'rest_framework_simplejwt',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-
-    # Local apps
     'core',
     'users',
     'subscriptions',
@@ -301,7 +297,9 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
-    # Authentication schemes
+    # Exclude endpoints that cause schema generation issues
+    'EXCLUDE_RELATIONSHIPS': True,
+    'SCHEMA_COERCE_PATH_PK_SUFFIX': False,
     'SECURITY': [
         {'jwtAuth': []},
         {'apiKeyAuth': []},

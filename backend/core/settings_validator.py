@@ -122,7 +122,7 @@ class SettingsValidator:
                 "Database password is empty or not set"
             )
         
-        if db_password == 'password' or db_password == 'postgres':
+        if db_password == 'password' or db_password == 'postgres':  # nosec B105 - comparing against known weak defaults
             cls.ERRORS.append(
                 "Database password is using default/weak value"
             )
@@ -148,7 +148,7 @@ class SettingsValidator:
         """Validate secret key and credentials."""
         secret_key = settings.SECRET_KEY
         
-        if not secret_key or secret_key == 'dev-secret-key':
+        if not secret_key or secret_key == 'dev-secret-key':  # nosec B105 - comparing against known weak default
             cls.ERRORS.append(
                 "SECRET_KEY is not set or using development value"
             )

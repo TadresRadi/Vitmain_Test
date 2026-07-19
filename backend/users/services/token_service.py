@@ -11,8 +11,8 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-TOKEN_BLACKLIST_PREFIX = "token_blacklist:"
-TOKEN_REFRESH_ROTATION_KEY = "token_rotation:"
+TOKEN_BLACKLIST_PREFIX = "token_blacklist:"  # nosec B105 - cache key prefix, not a credential
+TOKEN_REFRESH_ROTATION_KEY = "token_rotation:"  # nosec B105 - cache key prefix, not a credential
 
 
 class TokenService:

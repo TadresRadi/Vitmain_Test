@@ -4,6 +4,9 @@ from rest_framework.test import APIClient
 
 User = get_user_model()
 
+# Shared dummy password for auth-flow tests. Not a real credential.
+TEST_PASSWORD = "testpass123"  # nosec B105 - test fixture, not a real credential
+
 
 @pytest.mark.django_db
 def test_login_refresh_logout():
@@ -18,7 +21,7 @@ def test_login_refresh_logout():
     client = APIClient()
     user = User.objects.create_user(
         email="flow@example.com",
-        password="testpass123",
+        password=TEST_PASSWORD,
         is_email_verified=True,
     )
 
@@ -27,7 +30,7 @@ def test_login_refresh_logout():
         "/api/auth/login",
         {
             "email": user.email,
-            "password": "testpass123",
+            "password": TEST_PASSWORD,
         },
         format="json",
     )
