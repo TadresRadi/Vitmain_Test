@@ -77,8 +77,8 @@ class EmailService:
             
             return success
         
-        except Exception as e:
-            logger.error(f"Error sending password reset email: {str(e)}")
+        except Exception:
+            logger.exception(f"Error sending password reset email")
             return False
     
     @staticmethod
@@ -124,31 +124,38 @@ class EmailService:
             }
             
             # Render templates
+            logger.info("Rendering HTML template...")
             html_message = render_to_string(
                 'emails/email_verification.html',
                 context
             )
+            logger.info("HTML template rendered successfully")
+
+            logger.info("Rendering TEXT template...")
             plain_message = render_to_string(
                 'emails/email_verification.txt',
                 context
             )
+            logger.info("TEXT template rendered successfully")
             
             # Send email
             subject = 'Verify Your Email - Vitmain'
+            logger.info("Sending verification email...")
             success = EmailService._send_email(
                 subject=subject,
                 plain_message=plain_message,
                 html_message=html_message,
                 recipient_list=[user_email],
             )
+            logger.info("Email send returned: %s", success)
             
             if success:
                 logger.info(f"Email verification sent to: {user_email}")
             
             return success
         
-        except Exception as e:
-            logger.error(f"Error sending email verification: {str(e)}")
+        except Exception :
+            logger.exception(f"Error sending email verification")
             return False
     
     @staticmethod
@@ -186,8 +193,8 @@ class EmailService:
                 recipient_list=[user_email],
             )
         
-        except Exception as e:
-            logger.error(f"Error sending password change confirmation: {str(e)}")
+        except Exception:
+            logger.exception(f"Error sending password change confirmation")
             return False
     
     @staticmethod
@@ -230,8 +237,8 @@ class EmailService:
             logger.debug(f"Email sent to: {recipient_list}")
             return True
         
-        except Exception as e:
-            logger.error(f"Error sending email: {str(e)}")
+        except Exception:
+            logger.exception(f"Error sending email")
             return False
     
     @staticmethod

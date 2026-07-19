@@ -117,6 +117,7 @@ class EmailVerificationService:
 
     @staticmethod
     def initiate_verification(user: User, frontend_url: str) -> bool:
+        
         """
         Generate token, store it, and send verification email.
         Returns True if email was sent.
@@ -124,7 +125,9 @@ class EmailVerificationService:
         from core.email_service import get_email_service
 
         token = EmailVerificationService.generate_token()
+        logger.info("Starting email verification")
         if not EmailVerificationService.store_token(user, token):
+            logger.info("Token generated")
             return False
 
         email_service = get_email_service()
@@ -137,6 +140,7 @@ class EmailVerificationService:
             logger.info("EMAIL VERIFICATION LINK")
             logger.info(verification_url)
             logger.info("=" * 80)
+            logger.info("Calling EmailService.send_email_verification()")
         return email_service.send_email_verification(
             user_email=user.email,
             verification_token=token,
