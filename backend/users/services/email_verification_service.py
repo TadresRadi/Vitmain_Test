@@ -117,7 +117,6 @@ class EmailVerificationService:
 
     @staticmethod
     def initiate_verification(user: User, frontend_url: str) -> bool:
-        
         """
         Generate token, store it, and send verification email.
         Returns True if email was sent.
@@ -125,27 +124,43 @@ class EmailVerificationService:
         from core.email_service import get_email_service
 
         token = EmailVerificationService.generate_token()
-        logger.info("Starting email verification")
+        logger.info("Starting email verification for user: %s", user.email)
+
         if not EmailVerificationService.store_token(user, token):
-            logger.info("Token generated")
+            logger.error("Failed to store verification token for user: %s", user.email)
             return False
 
-        email_service = get_email_service()
+        logger.info("Verification token stored for user: %s", user.email)
+
+        # Build the verification URL (for DEBUG logging and email link)
         verification_url = (
             f"{frontend_url}/verify-email"
             f"?email={user.email}"
-            f"&token={token}")
+            f"&token={token}"
+        )
+
+        # In DEBUG mode, log the full verification link so developers
+        # can click it without a real email server.
         if settings.DEBUG:
             logger.info("=" * 80)
-            logger.info("EMAIL VERIFICATION LINK")
-            logger.info(verification_url)
+            logger.info("EMAIL VERIFICATION LINK (DEBUG MODE)")
+            logger.info("User: %s", user.email)
+            logger.info("Link: %s", verification_url)
             logger.info("=" * 80)
-            logger.info("Calling EmailService.send_email_verification()")
-        return email_service.send_email_verification(
+
+        email_service = get_email_service()
+        sent = email_service.send_email_verification(
             user_email=user.email,
             verification_token=token,
             frontend_url=frontend_url,
         )
+
+        if sent:
+            logger.info("Verification email sent successfully to: %s", user.email)
+        else:
+            logger.warning("Verification email could not be sent to: %s (email service returned False)", user.email)
+
+        return sent
     
 
 

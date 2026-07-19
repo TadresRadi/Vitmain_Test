@@ -1,7 +1,0 @@
-Verify your email
-
-Open this link:
-
-{{ verification_link }}
-
-This link expires in {{ expiry_hours }} hours.

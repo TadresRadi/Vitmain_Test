@@ -1,74 +1,161 @@
-import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import api from "@/lib/axios";
+import { useEffect, useState } from 'react'
+import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { CheckCircle, XCircle, Loader2, Mail, RotateCw } from 'lucide-react'
+import api from '@/lib/axios'
+import { useToast } from '@/hooks/use-toast'
+import { useTranslation } from 'react-i18next'
+
+type VerifyStatus = 'loading' | 'success' | 'error'
 
 export default function VerifyEmail() {
-  const [params] = useSearchParams();
+  const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { toast } = useToast()
 
-  const email = params.get("email");
-  const token = params.get("token");
+  const [status, setStatus] = useState<VerifyStatus>('loading')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [resending, setResending] = useState(false)
 
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [success, setSuccess] = useState(false);
+  const token = searchParams.get('token')
+  const email = searchParams.get('email')
 
   useEffect(() => {
-    async function verify() {
-      if (!email || !token) {
-        setMessage("Invalid verification link.");
-        setLoading(false);
-        return;
-      }
+    if (!token || !email) {
+      setStatus('error')
+      setErrorMessage('Invalid verification link. Missing token or email.')
+      return
+    }
 
+    async function doVerification() {
       try {
-        const response = await api.post("/auth/verify-email", {
-          email,
-          token,
-        });
-
-        setSuccess(true);
-        setMessage(response.data.message);
+        const response = await api.post('/auth/verify-email', { email, token })
+        if (response.data.message) {
+          setStatus('success')
+        } else {
+          setStatus('error')
+          setErrorMessage('Verification failed. Please try again.')
+        }
       } catch (err: any) {
-        setSuccess(false);
-
-        setMessage(
+        setStatus('error')
+        setErrorMessage(
           err.response?.data?.error ||
-            "Email verification failed."
-        );
-      } finally {
-        setLoading(false);
+          err.response?.data?.detail ||
+          'Verification failed. The link may have expired.'
+        )
       }
     }
 
-    verify();
-  }, [email, token]);
+    doVerification()
+  }, [token, email])
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        Verifying...
-      </div>
-    );
+  const handleResend = async () => {
+    if (!email) return
+    setResending(true)
+    try {
+      await api.post('/auth/resend-verification', { email })
+      toast({
+        title: t('common.success', 'Success'),
+        description: t(
+          'verifyEmail.resent',
+          'If an account exists with this email, a new verification link has been sent.'
+        ),
+      })
+    } catch (err: any) {
+      toast({
+        title: t('common.error', 'Error'),
+        description: err.response?.data?.error || 'Failed to resend verification email.',
+        variant: 'destructive',
+      })
+    } finally {
+      setResending(false)
+    }
   }
 
   return (
-    <div className="max-w-lg mx-auto mt-20 text-center">
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <Card>
+          <CardContent className="pt-6 text-center">
+            {status === 'loading' && (
+              <>
+                <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+                <h2 className="text-xl font-bold mb-2">
+                  {t('verifyEmail.verifying', 'Verifying your email...')}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t('verifyEmail.pleaseWait', 'Please wait a moment.')}
+                </p>
+              </>
+            )}
 
-      <h1 className="text-3xl font-bold mb-6">
-        Email Verification
-      </h1>
+            {status === 'success' && (
+              <>
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                <h2 className="text-xl font-bold mb-2">
+                  {t('verifyEmail.success', 'Email Verified!')}
+                </h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {t(
+                    'verifyEmail.successDesc',
+                    'Your email has been verified successfully. You can now log in to your account.'
+                  )}
+                </p>
+                <Button onClick={() => navigate('/login')} className="w-full">
+                  {t('verifyEmail.goToLogin', 'Go to Login')}
+                </Button>
+              </>
+            )}
 
-      <p>{message}</p>
+            {status === 'error' && (
+              <>
+                <XCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+                <h2 className="text-xl font-bold mb-2">
+                  {t('verifyEmail.failed', 'Verification Failed')}
+                </h2>
+                <p className="text-sm text-muted-foreground mb-6">{errorMessage}</p>
 
-      {success && (
-        <Link
-          to="/login"
-          className="mt-6 inline-block bg-blue-600 text-white px-5 py-2 rounded"
-        >
-          Go to Login
-        </Link>
-      )}
+                {email && (
+                  <div className="space-y-3">
+                    <Button
+                      onClick={handleResend}
+                      disabled={resending}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {resending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <RotateCw className="h-4 w-4 mr-2" />
+                      )}
+                      {t('verifyEmail.resend', 'Resend Verification Email')}
+                    </Button>
 
+                    <div className="text-sm text-muted-foreground">
+                      <Mail className="h-4 w-4 inline mr-1" />
+                      {email}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-6 pt-6 border-t">
+                  <Link to="/login" className="text-sm text-primary hover:underline">
+                    {t('verifyEmail.backToLogin', 'Back to Login')}
+                  </Link>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
-  );
+  )
 }
