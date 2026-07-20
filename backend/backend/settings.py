@@ -19,8 +19,9 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 STATIC_ROOT.mkdir(parents=True, exist_ok=True)
 # Load environment variables
-if not os.getenv("DATABASE_URL"):
-    load_dotenv(os.path.join(BASE_DIR, ".env"))
+PROJECT_ROOT = BASE_DIR.parent
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 # Replicate API token (used for AI-generated images)
 REPLICATE_API_TOKEN = os.environ.get("REPLICATE_API_TOKEN")
