@@ -20,7 +20,7 @@ PyJWT==2.13.0
 
 # AI / Image generation
 groq==1.0.0
-replicate==1.0.7
+
 requests==2.34.2
 requests-oauthlib==2.0.0
 oauthlib==3.3.1

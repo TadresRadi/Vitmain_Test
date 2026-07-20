@@ -36,10 +36,6 @@ VODAFONE_RECEIVER_NUMBER=<your_vodafone_number>
 
 # Optional — AI features will degrade gracefully if missing
 GROQ_API_KEY=
-REPLICATE_API_TOKEN=
-STABILITY_API_TOKEN=
-DEEPAI_API_TOKEN=
-
 # Optional — Google OAuth
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
