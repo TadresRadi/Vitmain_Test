@@ -94,11 +94,17 @@ class SecureAxios {
       async (error) => {
         const originalRequest = error.config
 
+        // Helper: refresh URLs may be configured with or without a leading
+        // slash depending on the caller, so normalize before comparing.
+        const isRefreshUrl = (url?: string) =>
+          typeof url === 'string' && url.replace(/^\/+/, '').includes('auth/refresh')
+
         // Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
           // If the refresh endpoint itself returned 401, the cookie is
-          // invalid/expired — redirect to login.
-          if (originalRequest.url?.includes('/auth/refresh')) {
+          // missing/invalid/expired — clear tokens and redirect to login.
+          // This is the loop-breaker: never attempt to refresh a refresh.
+          if (isRefreshUrl(originalRequest.url)) {
             tokenStorage.clear()
             window.location.href = '/login'
             return Promise.reject(error)
@@ -107,8 +113,10 @@ class SecureAxios {
           originalRequest._retry = true
 
           try {
-            // Call refresh — refresh token is sent automatically via cookie
-            const response = await instance.post('auth/refresh', {})
+            // Call refresh — refresh token is sent automatically via cookie.
+            // Use an absolute path so the URL never collides with the
+            // current request's base/relative resolution.
+            const response = await instance.post('/auth/refresh', {})
 
             if (response.data.access) {
               // Store the new access token
@@ -118,6 +126,11 @@ class SecureAxios {
               originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`
               return instance(originalRequest)
             }
+
+            // No access token in the response — treat as auth failure
+            tokenStorage.clear()
+            window.location.href = '/login'
+            return Promise.reject(error)
           } catch (refreshError) {
             // Refresh failed — clear token and redirect to login
             tokenStorage.clear()
