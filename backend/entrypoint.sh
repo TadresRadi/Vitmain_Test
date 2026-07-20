@@ -11,5 +11,6 @@ python manage.py collectstatic --noinput
 echo "Seeding database..."
 python manage.py seed_db
 
+
 echo "Starting server..."
 exec "$@"
