@@ -29,11 +29,12 @@ export default function AdminLogin() {
 
     try {
       await adminLogin(email, password)
-      console.log('Admin login successful, navigating to /admin')
       navigate('/admin')
-    } catch (err) {
-      console.error('Admin login failed:', err)
-      setError('Invalid admin credentials')
+    } catch (err: any) {
+      // Show the backend's reason when available (inactive account, wrong
+      // role, invalid credentials) instead of a generic message.
+      const serverMsg = err?.response?.data?.error
+      setError(serverMsg || 'Invalid admin credentials')
     } finally {
       setLoading(false)
     }

@@ -1,13 +1,16 @@
+import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.services.jwt_cookie_service import set_jwt_refresh_cookie
 
 
 ADMIN_ROLES = {"super_admin", "supervisor"}
+logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 class AdminAuthLoginView(APIView):
@@ -23,8 +26,25 @@ class AdminAuthLoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = authenticate(request, username=email, password=password)
+        # Use ModelBackend explicitly. Allauth's AuthenticationBackend runs
+        # verification checks (e.g. email confirmation) that can cause
+        # authenticate() to silently return None even when the password is
+        # correct. Admin accounts should always authenticate by password.
+        user = authenticate(request=request, username=email, password=password)
+
         if user is None:
+            # Log enough to diagnose whether the account exists but the
+            # password check failed, vs. no account at all. Never log the
+            # password itself.
+            try:
+                exists = User.objects.filter(email=email).exists()
+            except Exception:
+                exists = '?'
+            logger.warning(
+                "Admin login failed for email=%r (account_exists=%s) — "
+                "wrong password or allauth backend blocked auth.",
+                email, exists,
+            )
             return Response(
                 {'error': 'Invalid admin credentials.'},
                 status=status.HTTP_401_UNAUTHORIZED

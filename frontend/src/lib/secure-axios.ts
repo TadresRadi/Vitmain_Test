@@ -99,14 +99,39 @@ class SecureAxios {
         const isRefreshUrl = (url?: string) =>
           typeof url === 'string' && url.replace(/^\/+/, '').includes('auth/refresh')
 
+        // Auth endpoints that should NEVER trigger a refresh attempt. A 401
+        // from these means "invalid credentials" (or "no refresh cookie"),
+        // NOT "your access token expired". Refreshing on a failed login is
+        // what caused the endless redirect loop admin-login → /login.
+        const isAuthEndpoint = (url?: string) => {
+          if (typeof url !== 'string') return false
+          const normalized = url.replace(/^\/+/, '')
+          return (
+            normalized.includes('auth/refresh') ||
+            normalized.includes('auth/login') ||
+            normalized.includes('admin/auth/login') ||
+            normalized.includes('auth/register') ||
+            normalized.includes('auth/password/') ||
+            normalized.includes('auth/verify-email')
+          )
+        }
+
         // Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
-          // If the refresh endpoint itself returned 401, the cookie is
+          // If a refresh attempt itself returned 401, the cookie is
           // missing/invalid/expired — clear tokens and redirect to login.
           // This is the loop-breaker: never attempt to refresh a refresh.
           if (isRefreshUrl(originalRequest.url)) {
             tokenStorage.clear()
             window.location.href = '/login'
+            return Promise.reject(error)
+          }
+
+          // A 401 from any other auth endpoint (login, register, password
+          // reset, etc.) means invalid credentials — DO NOT try to refresh.
+          // Refreshing a failed login was causing the admin-login page to
+          // bounce users to /login. Let the caller handle the error.
+          if (isAuthEndpoint(originalRequest.url)) {
             return Promise.reject(error)
           }
 
