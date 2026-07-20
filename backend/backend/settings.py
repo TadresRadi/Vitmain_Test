@@ -4,6 +4,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import logging.config
 import sys
+import dj_database_url
 
 
 
@@ -170,15 +171,12 @@ DB_HOST = os.environ.get("DB_HOST", "vitmain_db")
 DB_PORT = os.environ.get('DB_PORT', '5432')
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': DB_NAME,
-        'USER': DB_USER,
-        'PASSWORD': DB_PASSWORD,
-        'HOST': DB_HOST,
-        'PORT': DB_PORT,
-    }
-}
+    "default": dj_database_url.config(
+        default=f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
+        conn_max_age=600,
+        ssl_require=not DEBUG,
+    )
+}}
 # ============================================================================
 # CACHING CONFIGURATION
 # ============================================================================
