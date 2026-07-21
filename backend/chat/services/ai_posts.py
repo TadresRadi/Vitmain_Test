@@ -4,23 +4,20 @@ Shared Groq post generation used by onboarding completion and premium-posts.
 import logging
 import os
 
-from groq import Groq
+from openai import OpenAI
 
 from chat.models import AIChatSession, AIChatMessage, AIPostGeneration
 
 
 logger = logging.getLogger(__name__)
 
-GROQ_API_KEY_ENV = "GROQ_API_KEY"
-DEFAULT_GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+DEFAULT_OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
-
-def get_groq_client():
-    """Read API key from environment and return Groq client instance."""
-    api_key = os.environ.get(GROQ_API_KEY_ENV, "").strip()
+def get_openai_client():
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not api_key:
         return None
-    return Groq(api_key=api_key)
+    return OpenAI(api_key=api_key)
 
 
 def build_marketing_posts_prompt(onboarding, user_lang="en"):
@@ -101,15 +98,15 @@ def generate_posts_from_onboarding(onboarding, user_lang="en"):
                     "content": prompt,
                 }
             ],
-            model=DEFAULT_GROQ_MODEL,
+            model=DEFAULT_OPENAI_MODEL,
         )
         response_text = chat_completion.choices[0].message.content
         posts = parse_ai_posts(response_text)
-        if len(posts) != 5:
-            error_message = f"AI returned {len(posts)} valid posts; expected exactly 5."
+        if len(posts) != 10:
+            error_message = f"AI returned {len(posts)} valid posts; expected exactly 10."
             logger.warning("%s onboarding_id=%s", error_message, onboarding.id)
             return [], False, error_message
-        return posts[:5], True, None
+        return posts[:10], True, None
     except Exception as exc:
         logger.exception(
             "Groq post generation failed (onboarding_id=%s, model=%s)",

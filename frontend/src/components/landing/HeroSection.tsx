@@ -66,7 +66,7 @@ export function HeroSection() {
         >
           <motion.h1
             dir="ltr"
-            className="text-[5rem] sm:text-[8rem] md:text-[12rem] lg:text-[14rem] font-bold text-white leading-none select-none cursor-pointer relative flex justify-center transition-colors duration-1000"
+            className="text-[4rem] sm:text-[8rem] md:text-[12rem] lg:text-[14rem] font-bold text-white leading-none select-none cursor-pointer relative flex justify-center transition-colors duration-1000"
             style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}
             whileHover={{ scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}

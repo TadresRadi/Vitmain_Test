@@ -94,7 +94,7 @@ Do not return any markdown code blocks, backticks, or other text outside the JSO
                             "content": prompt,
                         }
                     ],
-                    model=GROQ_MODEL,
+                    model=DEFAULT_OPENAI_MODEL,
                 )
                 response_text = chat_completion.choices[0].message.content
                 updated_posts = parse_ai_posts(response_text)

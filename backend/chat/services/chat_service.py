@@ -106,7 +106,7 @@ def _call_groq(prompt: str) -> str:
     try:
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model=DEFAULT_GROQ_MODEL,
+            model=DEFAULT_OPENAI_MODEL,
         )
         return chat_completion.choices[0].message.content
     except Exception:

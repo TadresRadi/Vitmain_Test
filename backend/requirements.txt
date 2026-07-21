@@ -19,7 +19,7 @@ psycopg2-binary==2.9.12
 PyJWT==2.13.0
 
 # AI / Image generation
-groq==1.0.0
+openai==1.12.0
 dj-database-url==2.3.0
 requests==2.34.2
 requests-oauthlib==2.0.0

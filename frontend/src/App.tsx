@@ -84,7 +84,7 @@ function AppContent() {
   const isAdminPage = location.pathname === '/admin' || location.pathname === '/admin-login'
 
   return (
-    <div className="min-h-screen flex flex-col relative text-white bg-black/40 dark:bg-black/60 transition-colors duration-1000">
+    <div className="min-h-screen flex flex-col relative text-white bg-black/40 dark:bg-black/60 transition-colors duration-1000 overflow-x-hidden w-full">
       <AnimatedBackground />
       {!isAdminPage && <Navbar />}
       <main className="flex-grow flex flex-col relative z-10 w-full">

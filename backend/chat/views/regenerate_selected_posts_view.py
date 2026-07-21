@@ -114,7 +114,7 @@ class RegenerateSelectedPostsView(APIView):
                 prompt = _build_regeneration_prompt(onboarding, current_posts, index, language)
                 completion = client.chat.completions.create(
                     messages=[{"role": "user", "content": prompt}],
-                    model=GROQ_MODEL,
+                    model=DEFAULT_OPENAI_MODEL,
                 )
                 new_post = parse_ai_post_text(completion.choices[0].message.content)
                 if not new_post:
