@@ -1,0 +1,82 @@
+services:
+  - type: pserv
+    name: vitmain-db
+    env: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./Dockerfile.db
+
+  - type: web
+    name: vitmain-backend
+    env: docker
+    region: oregon
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health/
+    envVars:
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: DB_NAME
+        value: vitmain_db
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        value: postgres
+      - key: DB_HOST
+        value: vitmain-db
+      - key: DB_PORT
+        value: "5432"
+      - key: REDIS_URL
+        value: ""
+      - key: CORS_ALLOW_ALL_ORIGINS
+        value: "true"
+      - key: VODAFONE_WEBHOOK_SECRET_TOKEN
+        generateValue: true
+      - key: VODAFONE_RECEIVER_NUMBER
+        value: "01000000000"
+      - key: VODAFONE_TESTING_PRICE
+        value: "200.00"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: POLLINATIONS_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        value: "113060445399-6b2b5k5k8caahrit76jg3nus0stmap46.apps.googleusercontent.com"
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SESSION_COOKIE_SECURE
+        value: "false"
+      - key: CSRF_COOKIE_SECURE
+        value: "false"
+      - key: JWT_AUTH_COOKIE_SECURE
+        value: "false"
+      - key: SECURE_SSL_REDIRECT
+        value: "false"
+      - key: SECURE_HSTS_SECONDS
+        value: "0"
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.console.EmailBackend"
+      - key: ENABLE_PROMETHEUS
+        value: "false"
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+
+  - type: web
+    name: vitmain-frontend
+    env: docker
+    region: oregon
+    plan: free
+    rootDir: frontend
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: VITE_API_URL
+        value: "/api"
+      - key: VITE_GOOGLE_CLIENT_ID
+        value: "113060445399-6b2b5k5k8caahrit76jg3nus0stmap46.apps.googleusercontent.com"
+      - key: BACKEND_URL
+        value: "https://vitmain-backend.onrender.com"

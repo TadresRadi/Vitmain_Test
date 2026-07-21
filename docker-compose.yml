@@ -97,6 +97,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: /api
+        BACKEND_URL: http://backend:8000
 
     container_name: vitmain_frontend
     restart: always
@@ -109,14 +110,3 @@ services:
 
     ports:
       - "80:80"
-
-volumes:
-  postgres_data:
-  redis_data:
-  static_volume:
-  media_volume:
-  logs_volume:
-
-networks:
-  vitmain_network:
-    driver: bridge
