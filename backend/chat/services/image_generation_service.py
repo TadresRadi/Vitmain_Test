@@ -15,7 +15,6 @@ from chat.models.generation_history import (
 )
 from onboarding.models import OnboardingResponse
 from chat.services.image_prompt_builder import build_imagen4_prompt
-from chat.services.pollinations_images import generate_pollinations_image_bytes
 from core.utils import log_user_activity
 
 
@@ -120,7 +119,7 @@ def process_image_generation(user, post_gen: AIPostGeneration, base_url: str):
 
             return None, {
                 "error": "Image generation failed",
-                "provider": "pollinations",
+                "provider": os.environ.get("IMAGE_PROVIDER", "gemini"),
                 "details": str(exc),
                 "failed_post_index": i,
                 "images_status": "failed",

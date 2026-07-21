@@ -41,10 +41,14 @@ services:
         value: "01000000000"
       - key: VODAFONE_TESTING_PRICE
         value: "200.00"
-      - key: GROQ_API_KEY
+      - key: OPENAI_API_KEY
         sync: false
-      - key: POLLINATIONS_API_KEY
+      - key: OPENAI_MODEL
+        value: "gpt-4o-mini"
+      - key: GEMINI_API_KEY
         sync: false
+      - key: IMAGE_PROVIDER
+        value: "gemini"
       - key: GOOGLE_CLIENT_ID
         value: "113060445399-6b2b5k5k8caahrit76jg3nus0stmap46.apps.googleusercontent.com"
       - key: GOOGLE_CLIENT_SECRET

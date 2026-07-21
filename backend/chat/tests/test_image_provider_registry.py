@@ -73,9 +73,9 @@ def test_list_configured_providers():
     assert "failing" not in configured
 
 
-def test_pollinations_provider_is_registered():
-    """The Pollinations provider should be auto-registered on import."""
+def test_gemini_provider_is_registered():
+    """The Gemini provider should be auto-registered on import."""
     # Importing the module triggers registration
-    import chat.services.pollinations_images  # noqa: F401
+    import chat.services.gemini_images  # noqa: F401
     registry = get_image_registry()
-    assert "pollinations" in registry.list_providers()
+    assert "gemini" in registry.list_providers()

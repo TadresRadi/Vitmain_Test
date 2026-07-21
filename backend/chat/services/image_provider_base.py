@@ -1,7 +1,7 @@
 """
 Abstract base class for image generation providers.
 
-All image providers (Pollinations, Replicate, Stability, DeepAI) implement
+All image providers (Gemini, etc.) implement
 this interface so they can be swapped via configuration without changing
 call sites.
 """
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class ImageProvider(ABC):
     """Abstract interface for image generation providers."""
 
-    #: Provider name (e.g. "pollinations", "replicate"). Must be unique.
+    #: Provider name (e.g. "gemini"). Must be unique.
     name: str = "base"
 
     @abstractmethod
@@ -63,14 +63,14 @@ class ImageProviderRegistry:
     def get_provider(self, name: Optional[str] = None) -> ImageProvider:
         """
         Get a provider by name. If name is None, returns the provider
-        selected by the IMAGE_PROVIDER env var (default: pollinations).
+        selected by the IMAGE_PROVIDER env var (default: gemini).
 
         Raises:
             ValueError: If the requested provider is not registered.
         """
         import os
         if name is None:
-            name = os.environ.get("IMAGE_PROVIDER", "pollinations")
+            name = os.environ.get("IMAGE_PROVIDER", "gemini")
 
         if name not in self._providers:
             available = ", ".join(self._providers.keys()) or "(none)"
