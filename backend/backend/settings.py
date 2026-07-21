@@ -64,7 +64,11 @@ DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS if h.strip()]
 
-# Add ngrok domain for development
+# Add ngrok domain for development/testing (always, regardless of DEBUG)
+ngrok_url = os.environ.get('NGROK_URL')
+if ngrok_url:
+    ALLOWED_HOSTS.append(ngrok_url)
+
 if DEBUG:
     ALLOWED_HOSTS.extend([
         '127.0.0.1',
@@ -73,10 +77,6 @@ if DEBUG:
         'localhost:8000',
         "host.docker.internal",
     ])
-    # Only add ngrok if explicitly configured
-    ngrok_url = os.environ.get('NGROK_URL')
-    if ngrok_url:
-        ALLOWED_HOSTS.append(ngrok_url)
 
 if not ALLOWED_HOSTS and not DEBUG:
     raise RuntimeError("ALLOWED_HOSTS env var is required when DEBUG=false")

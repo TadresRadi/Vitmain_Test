@@ -109,7 +109,7 @@ services:
       - vitmain_network
 
     ports:
-      - "80:80"
+      - "8000:80"
       
 volumes:
   postgres_data:

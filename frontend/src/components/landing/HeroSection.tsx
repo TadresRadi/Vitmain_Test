@@ -3,67 +3,53 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useMouseFollower } from '@/hooks/useMouseFollower'
 
 export function HeroSection() {
   const { t } = useTranslation()
   const [isHovering, setIsHovering] = useState(false)
-  const [videoVisible, setVideoVisible] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const { mousePosition, smoothedMousePosition, handleMouseMove } = useMouseFollower(isHovering)
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVideoVisible(true)
-            observer.disconnect()
-          }
-        })
-      },
-      { threshold: 0.1 }
-    )
-
-    const heroSection = document.querySelector('.hero-section')
-    if (heroSection) {
-      observer.observe(heroSection)
-    }
-
-    return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
-    if (videoRef.current && videoVisible) {
-      videoRef.current.load()
-    }
-  }, [videoVisible])
+  // Touch handlers for mobile
+  const handleTouchStart = () => setIsHovering(true)
+  const handleTouchEnd = () => setIsHovering(false)
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isHovering) setIsHovering(true)
+    const touch = e.touches[0]
+    const target = e.currentTarget as HTMLElement
+    const fakeMouseEvent = {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      currentTarget: target,
+      target: target,
+    } as any
+    handleMouseMove(fakeMouseEvent)
+  }
 
   return (
     <section className="hero-section relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-      {videoVisible && (
-        <div className="absolute inset-0 z-0">
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              willChange: 'auto',
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden',
-            }}
-          >
-            <source src="/Backeground-video.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
-        </div>
-      )}
+      <div className="absolute inset-0 z-0">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            willChange: 'auto',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+          }}
+        >
+          <source src="/Backeground-video.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
+      </div>
 
       <div className="relative z-10 text-center px-4">
         <motion.div
@@ -74,10 +60,13 @@ export function HeroSection() {
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
           onMouseMove={handleMouseMove as any}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={handleTouchMove}
         >
           <motion.h1
             dir="ltr"
-            className="text-[10rem] md:text-[14rem] font-bold text-white leading-none select-none cursor-pointer relative flex justify-center transition-colors duration-1000"
+            className="text-[5rem] sm:text-[8rem] md:text-[12rem] lg:text-[14rem] font-bold text-white leading-none select-none cursor-pointer relative flex justify-center transition-colors duration-1000"
             style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}
             whileHover={{ scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -132,7 +121,7 @@ export function HeroSection() {
           transition={{ duration: 1, delay: 0.5 }}
           className="mt-8"
         >
-          <p className="text-xl md:text-2xl text-white/80 font-light max-w-2xl mx-auto mb-10 transition-colors duration-1000">
+          <p className="text-lg md:text-2xl text-white/80 font-light max-w-2xl mx-auto mb-10 transition-colors duration-1000">
             {t('landing.heroDesc')}
           </p>
 
