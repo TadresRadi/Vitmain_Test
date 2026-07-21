@@ -1,145 +1,65 @@
-import json
+"""
+View to modify a specific post using AI.
+"""
 import logging
 import os
-
-from groq import Groq
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from openai import OpenAI
 
-from core.utils import log_user_activity
-from chat.models import AIChatSession, AIChatMessage, AIPostGeneration
-from chat.serializers import AIPostGenerationSerializer
-from chat.services.parsing import parse_ai_posts, get_language_instruction
 logger = logging.getLogger(__name__)
-
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
-
+DEFAULT_OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
 class ModifyPostsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        post_gen_id = request.data.get("post_generation_id")
-        modifications = request.data.get("modifications")
+    def post(self, request, post_generation_id):
+        from chat.models import AIPostGeneration
+        try:
+            post_gen = AIPostGeneration.objects.get(id=post_generation_id, user=request.user)
+        except AIPostGeneration.DoesNotExist:
+            return Response({"error": "Post generation not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        if not post_gen_id or modifications is None:
-            return Response(
-                {"error": "post_generation_id and modifications are required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        post_index = request.data.get("post_index")
+        modification_request = request.data.get("modification_request")
 
-        if not isinstance(modifications, list):
-            return Response(
-                {"error": "modifications must be a list."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if post_index is None or modification_request is None:
+            return Response({"error": "post_index and modification_request are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            post_gen = AIPostGeneration.objects.get(id=post_gen_id, user=request.user)
-        except AIPostGeneration.DoesNotExist:
-            return Response({"error": "Post generation record not found."}, status=status.HTTP_404_NOT_FOUND)
+            post_index = int(post_index)
+            if post_index < 0 or post_index >= len(post_gen.posts):
+                return Response({"error": "Invalid post index."}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({"error": "post_index must be an integer."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if post_gen.edit_count >= 1:
-            return Response({"error": "Post modification is allowed only once. You have already modified these posts."}, status=status.HTTP_400_BAD_REQUEST)
-
-        current_posts = list(post_gen.posts)
-        user_lang = request.user.language or "en"
-
-        mod_instructions = ""
-        for mod in modifications:
-            if not isinstance(mod, dict):
-                continue
-
-            post_index_raw = mod.get("post_index")
-            inst = mod.get("instruction")
-
-            if inst is None or not isinstance(inst, str):
-                continue
-
+        original_post = post_gen.posts[post_index]
+        
+        api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+        if api_key:
             try:
-                idx = int(post_index_raw)
-            except (TypeError, ValueError):
-                continue
-
-            if 0 <= idx < len(current_posts):
-                mod_instructions += f"- Post #{idx + 1} ('{current_posts[idx]}'): {inst}\n"
-
-        lang_instruction = get_language_instruction(user_lang)
-        prompt = f"""
-You are a senior social media copywriter. I have some generated social media posts, and I want to edit them based on specific instructions.
-Keep all other posts unchanged.
-
-Here are the modification instructions:
-{mod_instructions}
-
-Return the complete updated list of 5 posts in {lang_instruction}.
-You must format your output EXACTLY as a raw JSON array of strings:
-[
-  "Post 1 text here",
-  "Post 2 text here",
-  ...
-]
-Do not return any markdown code blocks, backticks, or other text outside the JSON array.
-"""
-        updated_posts = current_posts
-        if GROQ_API_KEY:
-            try:
-                client = Groq(api_key=GROQ_API_KEY)
+                client = OpenAI(api_key=api_key)
+                prompt = f"""
+                You are an expert copywriter. A user wants to modify one of their marketing posts.
+                Original Post: "{original_post}"
+                User Request: "{modification_request}"
+                Please provide the modified post. Return ONLY the modified post text, no explanations.
+                """
                 chat_completion = client.chat.completions.create(
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": prompt,
-                        }
-                    ],
+                    messages=[{"role": "user", "content": prompt}],
                     model=DEFAULT_OPENAI_MODEL,
                 )
-                response_text = chat_completion.choices[0].message.content
-                updated_posts = parse_ai_posts(response_text)
-            except Exception:
-                logger.exception(
-                    "Groq modification error (user_id=%s, post_generation_id=%s)",
-                    getattr(request.user, "id", None),
-                    post_gen_id,
-                )
-                return Response(
-                    {"error": "Failed to generate modified posts."},
-                    status=status.HTTP_502_BAD_GATEWAY,
-                )
+                modified_post = chat_completion.choices[0].message.content.strip()
+                
+                post_gen.posts[post_index] = modified_post
+                post_gen.edit_count += 1
+                post_gen.save()
 
-
-        if not isinstance(updated_posts, list) or len(updated_posts) != len(current_posts):
-            logger.error(
-                "Invalid updated_posts from parse_ai_posts (user_id=%s, post_generation_id=%s)",
-                getattr(request.user, "id", None),
-                post_gen_id,
-            )
-            return Response(
-                {"error": "Modified posts output was invalid."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        post_gen.posts = updated_posts
-        post_gen.edit_count += 1
-        post_gen.save()
-
-        session, _ = AIChatSession.objects.get_or_create(user=request.user)
-        AIChatMessage.objects.create(
-            session=session,
-            sender='user',
-            content=f"Requesting post modifications: {json.dumps(modifications)}"
-        )
-        AIChatMessage.objects.create(
-            session=session,
-            sender='ai',
-            content="Here are your modified posts. No further edits can be made."
-        )
-
-        log_user_activity(request.user, 'modify_marketing_posts', {
-            'post_generation_id': str(post_gen.id),
-            'modifications': modifications
-        })
-
-        return Response(AIPostGenerationSerializer(post_gen).data)
+                from chat.serializers import AIPostGenerationSerializer
+                return Response(AIPostGenerationSerializer(post_gen).data, status=status.HTTP_200_OK)
+            except Exception as e:
+                logger.exception("OpenAI modification error (user_id=%s, post_generation_id=%s)", request.user.id, post_generation_id)
+                return Response({"error": "Failed to modify post."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response({"error": "OpenAI API key is not configured."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

@@ -1,5 +1,5 @@
 """
-Shared Groq post generation used by onboarding completion and premium-posts.
+Shared OpenAI post generation used by onboarding completion and premium-posts.
 """
 import logging
 import os
@@ -11,14 +11,14 @@ from chat.models import AIChatSession, AIChatMessage, AIPostGeneration
 
 logger = logging.getLogger(__name__)
 
+OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
 DEFAULT_OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
 def get_openai_client():
-    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    api_key = os.environ.get(OPENAI_API_KEY_ENV, "").strip()
     if not api_key:
         return None
     return OpenAI(api_key=api_key)
-
 
 def build_marketing_posts_prompt(onboarding, user_lang="en"):
     """Build the marketing posts prompt from onboarding answers."""
@@ -50,7 +50,7 @@ def build_marketing_posts_prompt(onboarding, user_lang="en"):
     
     return f"""
 You are a senior social media marketing copywriter and strategist.
-Generate exactly 5 tailored, creative, engaging, and professional social media marketing posts (text-only) for my brand:
+Generate exactly 10 tailored, creative, engaging, and professional social media marketing posts (text-only) for my brand:
 - Business Name: {onboarding.business_name}
 - {location_context}
 - Industry/Type: {business_type_desc}
@@ -74,20 +74,20 @@ Do not return any markdown code blocks, backticks, or other text outside the JSO
 
 def generate_posts_from_onboarding(onboarding, user_lang="en"):
     """
-    Generate exactly 5 posts using Groq when configured, otherwise fallbacks.
+    Generate exactly 10 posts using OpenAI when configured, otherwise fallbacks.
 
     Returns:
         tuple: (posts: list[str], used_ai: bool, error_message: str | None)
     """
     from chat.services.parsing import parse_ai_posts
-    client = get_groq_client()
+    client = get_openai_client()
     if not client:
         logger.warning(
             "%s is not set; cannot generate marketing posts for business=%s",
-            GROQ_API_KEY_ENV,
+            OPENAI_API_KEY_ENV,
             onboarding.business_name,
         )
-        return [], False, f"{GROQ_API_KEY_ENV} is not configured."
+        return [], False, f"{OPENAI_API_KEY_ENV} is not configured."
 
     prompt = build_marketing_posts_prompt(onboarding, user_lang)
     try:
@@ -109,9 +109,9 @@ def generate_posts_from_onboarding(onboarding, user_lang="en"):
         return posts[:10], True, None
     except Exception as exc:
         logger.exception(
-            "Groq post generation failed (onboarding_id=%s, model=%s)",
+            "OpenAI post generation failed (onboarding_id=%s, model=%s)",
             onboarding.id,
-            DEFAULT_GROQ_MODEL,
+            DEFAULT_OPENAI_MODEL,
         )
         return [], False, "AI post generation failed."
 
